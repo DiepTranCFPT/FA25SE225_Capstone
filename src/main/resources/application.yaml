@@ -1,3 +1,10 @@
 spring:
   application:
     name: capstone
+  profiles:
+      active: dev
+
+server:
+  port: 8080
+  servlet:
+    context-path: /edcare

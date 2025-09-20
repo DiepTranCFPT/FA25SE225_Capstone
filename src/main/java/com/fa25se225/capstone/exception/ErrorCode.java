@@ -9,6 +9,7 @@ public enum ErrorCode {
     UNCATEGORIZED_EXCEPTION(1001, "Uncategorized error", HttpStatus.INTERNAL_SERVER_ERROR),
     VALIDATION_ERROR(1002, "Invalid input data", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(1003, "You do not have permission", HttpStatus.FORBIDDEN),
+    CANNOT_SEND_EMAIL(1004, "Cannot send email", HttpStatus.BAD_REQUEST),
 
 
     ;

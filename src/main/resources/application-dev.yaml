@@ -8,4 +8,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+brevo:
+  api-key: ""
+  sender:
+    name: "edcare"
+    email: "dovantri1709@gmail.com"

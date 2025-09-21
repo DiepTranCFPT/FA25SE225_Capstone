@@ -5,6 +5,7 @@ spring:
     password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,5 +30,8 @@ brevo:
     name: "edcare"
     email: "dovantri1709@gmail.com"
   templates:
-    OTP_VERIFICATION: 1
-    FORGOT_PASSWORD: 2
+    VERIFY_EMAIL: 1
+    TEMPORARY_PASSWORD: 2
+    RESET_PASSWORD_OTP: 3
+    ACCOUNT_LOCKED: 4
+

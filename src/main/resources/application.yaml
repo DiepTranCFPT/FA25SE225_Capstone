@@ -3,6 +3,9 @@ spring:
     name: capstone
   profiles:
       active: dev
+  mvc:
+    servlet:
+      path: /api/v1
 
 server:
   port: 8080

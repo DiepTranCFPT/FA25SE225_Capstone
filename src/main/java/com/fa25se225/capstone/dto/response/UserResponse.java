@@ -8,9 +8,10 @@ import java.util.Set;
 @Builder
 public record UserResponse (
     String id,
-    String username,
+    String email,
     String firstName,
     String lastName,
+    String imgUrl,
     LocalDate dob,
-    Set<RoleResponse> roles
+    Set<String> roles
 ){}

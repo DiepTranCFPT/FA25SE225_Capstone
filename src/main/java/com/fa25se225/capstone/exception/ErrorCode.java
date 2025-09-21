@@ -11,9 +11,8 @@ public enum ErrorCode {
     UNAUTHORIZED(1003, "You do not have permission", HttpStatus.FORBIDDEN),
     CANNOT_SEND_EMAIL(1004, "Cannot send email", HttpStatus.BAD_REQUEST),
     TEMPLATE_NOT_FOUND(1005, "Brevo template not found", HttpStatus.BAD_REQUEST),
-
-
-    ;
+    USER_NOT_FOUND(1006,"User not found", HttpStatus.BAD_REQUEST ),
+    EXISTED_EMAIL(1007,"Email is existed" , HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

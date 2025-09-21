@@ -15,17 +15,16 @@ public class NotificationConsumerService {
 
     private final EmailService emailService;
 
-
     @KafkaListener(topics = "notifications", groupId = "notification-group")
     public void handleNotification(NotificationEvent event) {
-        log.info("🐧🐧🐧 Received notification event: {}", event);
+        log.info("Received notification event: {}", event);
 
         switch (event.chanel().toUpperCase()) {
             case "EMAIL":
                 try {
-                    emailService.sendEmailWithTemplate(event.recipient(), event.templateCode(), event.params());
+                    emailService.sendEmailWithTemplate(event.recipients(), event.templateName(), event.params());
                 } catch (Exception e) {
-                    log.error("Failed to process email notification for recipient {}:", event.recipient(), e);
+                    log.error("Failed to process email notification for recipient {}:", event.recipients(), e);
                 }
                 break;
             default:
@@ -33,11 +32,5 @@ public class NotificationConsumerService {
         }
     }
 
-    @KafkaListener(topics = "message_test", groupId = "notification-group")
-    public String handleMessage(String message) {
-        log.info("🐧🐧🐧 Received notification event: {}", message);
-        return message;
 
-
-    }
 }

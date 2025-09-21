@@ -16,51 +16,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+//controller này để test kafka thôi
 public class EmailController {
     private final NotificationProducerService notificationProducerService;
     private final NotificationConsumerService notificationConsumerService;
-    private final EmailService emailService;
 
     @PostMapping("/send-verification-email")
-    public String testVerificationEmail(@RequestParam String email) {
-        log.info("Received request to test verification email for: {}", email);
+    public String testVerificationEmail(@RequestParam Set<String> emails) {
+        log.info("Received request to test verification email for: {}", emails);
 
         Map<String, Object> emailParams = Map.of(
-                "firstName", "Test User",
-                "verificationLink", "http://yourapp.com/verify?token=dummy-test-token-12345"
+                "firstName", "Test User123",
+                "verificationLink", "http://frontend.app..."
         );
 
         NotificationEvent event = NotificationEvent.builder()
                 .chanel("EMAIL")
-                .recipient(email)
-                .templateCode("VERIFY_EMAIL")
+                .recipients(emails)
+                .templateName("OTP_VERIFICATION")
                 .params(emailParams)
                 .build();
 
         notificationProducerService.sendNotification(event);
 
-        return "Test email request sent to Kafka for: " + email;
-    }
-
-    @PostMapping("/message")
-    public String kafka(@RequestParam String message){
-        notificationProducerService.sendMessage(message);
-        return notificationConsumerService.handleMessage(message);
-    }
-
-    @PostMapping("/send-email")
-    public EmailResponse sendEmail(@RequestParam String message){
-        return emailService.sendEmailWithTemplate(
-                "dovantri1709@gmail.com",
-                "1",
-                Map.of(
-                        "firstName", "Test User",
-                        "verificationLink", "http://yourapp.com/verify?token=dummy-test-token-12345"
-                ));
+        return "Test email request sent to Kafka for: " + emails;
     }
 }
 

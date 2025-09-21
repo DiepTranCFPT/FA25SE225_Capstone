@@ -15,10 +15,6 @@ public class NotificationProducerService {
     private final KafkaTemplate<String, NotificationEvent> kafkaTemplate;
     private static final String NOTIFICATION_TOPIC = "notifications";
 
-    private final KafkaTemplate<String, String> kafkaString;
-    private static final String MESSAGE_TEST_TOPIC = "message_test";
-
-
     public void sendNotification(NotificationEvent event) {
         log.info("Sending notification event to topic '{}': {}", NOTIFICATION_TOPIC, event);
         try {
@@ -27,14 +23,7 @@ public class NotificationProducerService {
             log.error("Failed to send notification event to Kafka", e);
         }
     }
-    public void sendMessage(String message) {
-        log.info("Sending notification event to topic '{}': {}", kafkaString, message);
-        try {
-            kafkaString.send(MESSAGE_TEST_TOPIC, message);
-        } catch (Exception e) {
-            log.error("Failed to send notification event to Kafka", e);
-        }
-    }
+
 
 
 

@@ -16,5 +16,4 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     KafkaTemplate<String, NotificationEvent> kafkaTemplate;
 
-
 }

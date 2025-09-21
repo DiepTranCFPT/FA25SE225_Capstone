@@ -115,6 +115,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        System.out.println("🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧🐧");
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -152,6 +153,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void handleFailedLogin(User user){
         user.setFailedLoginAttempts(user.getFailedLoginAttempts() + 1);
+        userRepository.save(user);
         if (user.getFailedLoginAttempts() >= MAX_FAILED_ATTEMPTS) {
             handleAccountLock(user);
             throw new AppException(ErrorCode.MORE_THAN_5_FAILED_PASSWORD);
@@ -162,6 +164,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private void handleAccountLock(User user) {
         user.setAccountLocked(true);
         user.setLockTime(LocalDateTime.now());
+        user.setFailedLoginAttempts(0);
         userRepository.save(user);
 
         sendAccountLockedEmail(user);

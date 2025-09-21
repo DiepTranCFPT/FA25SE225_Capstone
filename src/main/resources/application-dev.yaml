@@ -35,3 +35,14 @@ brevo:
     RESET_PASSWORD_OTP: 3
     ACCOUNT_LOCKED: 4
 
+outbound:
+  identity:
+    client-id: "<clientId>"
+    client-secret: "<clientSecret>"
+    redirect-uri: "http://localhost:3000/authenticate"
+
+jwt:
+  signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
+  valid-duration: 3600
+  refreshable-duration: 36000
+

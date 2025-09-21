@@ -12,7 +12,11 @@ public enum ErrorCode {
     CANNOT_SEND_EMAIL(1004, "Cannot send email", HttpStatus.BAD_REQUEST),
     TEMPLATE_NOT_FOUND(1005, "Brevo template not found", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1006,"User not found", HttpStatus.BAD_REQUEST ),
-    EXISTED_EMAIL(1007,"Email is existed" , HttpStatus.BAD_REQUEST);
+    EXISTED_EMAIL(1007,"Email is existed" , HttpStatus.BAD_REQUEST),
+    LOCKED_ACCOUNT(1008,"Your account is locked, try again in 24 hours" , HttpStatus.UNAUTHORIZED),
+    UNAUTHENTICATED(1009, "Unauthenticated", HttpStatus.UNAUTHORIZED),
+    UNVERIFIED_EMAIL(1010,"Your email is unverify" , HttpStatus.UNAUTHORIZED),
+    MORE_THAN_5_FAILED_PASSWORD(1011, "Your account is locked for 24 hours due to entering the wrong password more than 5 times", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -10,7 +10,8 @@ spring:
       ddl-auto: update
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:9094
+
     consumer:
       group-id: notification-group
       auto-offset-reset: earliest
@@ -18,13 +19,12 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-        spring.json.value.default.type: com.fa25se225.capstone.dto.kafka.NotificationEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 brevo:
-  api-key: ""
+  api-key: "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"
   sender:
     name: "edcare"
     email: "dovantri1709@gmail.com"

@@ -1,14 +1,11 @@
 package com.fa25se225.capstone.dto.response;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+import com.fa25se225.capstone.dto.request.UserUpdateRequest;
+import lombok.Builder;
+
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionResponse {
-    String name;
-    String description;
-}
+public record PermissionResponse (
+    String name,
+    String description
+){}

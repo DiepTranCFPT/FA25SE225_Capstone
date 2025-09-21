@@ -10,6 +10,7 @@ public enum ErrorCode {
     VALIDATION_ERROR(1002, "Invalid input data", HttpStatus.BAD_REQUEST),
     UNAUTHORIZED(1003, "You do not have permission", HttpStatus.FORBIDDEN),
     CANNOT_SEND_EMAIL(1004, "Cannot send email", HttpStatus.BAD_REQUEST),
+    TEMPLATE_NOT_FOUND(1005, "Brevo template not found", HttpStatus.BAD_REQUEST),
 
 
     ;

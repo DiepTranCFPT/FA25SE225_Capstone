@@ -7,18 +7,15 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.util.List;
 
-@Data
+
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdateRequest {
-    String password;
-    String firstName;
-    String lastName;
+public record UserUpdateRequest (
+    String password,
+    String firstName,
+    String lastName,
 
     @DobConstraint(min = 10, message = "INVALID_DOB")
-    LocalDate dob;
+    LocalDate dob,
 
-    List<String> roles;
-}
+    List<String> roles
+){}

@@ -1,21 +1,16 @@
 package com.fa25se225.capstone.dto.response;
 
-import lombok.*;
-import lombok.experimental.FieldDefaults;
+import lombok.Builder;
 
 import java.time.LocalDate;
 import java.util.Set;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserResponse {
-    String id;
-    String username;
-    String firstName;
-    String lastName;
-    LocalDate dob;
-    Set<RoleResponse> roles;
-}
+public record UserResponse (
+    String id,
+    String username,
+    String firstName,
+    String lastName,
+    LocalDate dob,
+    Set<RoleResponse> roles
+){}

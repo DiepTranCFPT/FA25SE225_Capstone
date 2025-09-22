@@ -30,6 +30,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -58,6 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     NotificationProducerService notificationProducerService;
     OtpRepository otpRepository;
     OutboundUserClient outboundUserClient;
+    RedisTemplate<String, Object> redisTemplate;
 
     static int MAX_FAILED_ATTEMPTS = 5;
 
@@ -259,10 +262,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String jit = claimsSet.getJWTID();
         Date expiryTime = claimsSet.getExpirationTime();
 
-        InvalidatedToken invalidatedToken =
-                InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+        String redisKey = "logout_token" + jit;
+        Duration remainingTime = Duration.between(Instant.now(), expiryTime.toInstant());
+        if(!remainingTime.isNegative() && !remainingTime.isZero()){
+            redisTemplate.opsForValue().set(redisKey, "logged_out", remainingTime);
+        }
 
-        invalidatedTokenRepository.save(invalidatedToken);
+//        InvalidatedToken invalidatedToken =
+//                InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+//        invalidatedTokenRepository.save(invalidatedToken);
     }
 
 
@@ -298,9 +306,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 throw new AppException(ErrorCode.INVALID_TOKEN);
             }
 
-            if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-                throw new AppException(ErrorCode.INVALID_TOKEN);
+            String jit = getClaimSetFromJwt(signedJWT).getJWTID();
+            String redisKey = "logout_token" + jit;
+            Boolean isLoggedOut = redisTemplate.hasKey(redisKey);
+
+            if (Boolean.TRUE.equals(isLoggedOut)) {
+                throw new AppException(ErrorCode.INVALID_TOKEN); // Token đã bị logout
             }
+
+
+//            if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+//                throw new AppException(ErrorCode.INVALID_TOKEN);
+//            }
 
             return signedJWT;
         } catch (JOSEException | ParseException e) {

@@ -2,14 +2,13 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.configuration.properties.JwtProperties;
 import com.fa25se225.capstone.configuration.properties.OAuthProperties;
+import com.fa25se225.capstone.constant.PredefinedRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.AuthenticationResponse;
 import com.fa25se225.capstone.dto.response.IntrospectResponse;
-import com.fa25se225.capstone.entity.InvalidatedToken;
-import com.fa25se225.capstone.entity.LoginHistory;
-import com.fa25se225.capstone.entity.OtpEntity;
-import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.dto.response.OutboundUserResponse;
+import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.InvalidatedTokenRepository;
@@ -17,6 +16,7 @@ import com.fa25se225.capstone.repository.LoginHistoryRepository;
 import com.fa25se225.capstone.repository.OtpRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.httpclient.OutboundIdentityClient;
+import com.fa25se225.capstone.repository.httpclient.OutboundUserClient;
 import com.fa25se225.capstone.service.AuthenticationService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -56,6 +57,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     LoginHistoryRepository loginHistoryRepository;
     NotificationProducerService notificationProducerService;
     OtpRepository otpRepository;
+    OutboundUserClient outboundUserClient;
 
     static int MAX_FAILED_ATTEMPTS = 5;
 
@@ -66,6 +68,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
 
+    @Override
+    @Transactional
     public AuthenticationResponse outboundAuthenticate(String code){
         var response = outboundIdentityClient.exchangeToken(ExchangeTokenRequest.builder()
                 .code(code)
@@ -75,11 +79,56 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .grantType(oAuthProperties.getGrantType())
                 .build());
 
-        log.info("TOKEN RESPONSE {}", response);
+        var userInfo = outboundUserClient.getUserInfo("json", response.getAccessToken());
+        User user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
+                () -> processNewOauthUser(userInfo));
+
+        var token = generateToken(user);
 
         return AuthenticationResponse.builder()
-                .token(response.getAccessToken())
+                .token(token)
                 .build();
+    }
+
+    private User processNewOauthUser(OutboundUserResponse userInfo) {
+        String temporaryPassword = UUID.randomUUID().toString();
+
+        User newUser = createUserForFirstTimeUsingOauth2Login(userInfo, temporaryPassword);
+        sendTemporaryPasswordEmail(newUser.getEmail(), newUser.getFirstName(), temporaryPassword);
+
+        return newUser;
+    }
+
+
+
+    private User createUserForFirstTimeUsingOauth2Login(OutboundUserResponse userInfo, String temporaryPassword){
+        Set<Role> roles = new HashSet<>();
+        roles.add(Role.builder().name(PredefinedRole.USER_ROLE).build());
+
+        User user = User.builder()
+                .email(userInfo.getEmail())
+                .password(passwordEncoder.encode(temporaryPassword))
+                .firstName(userInfo.getGivenName())
+                .lastName(userInfo.getFamilyName())
+                .roles(roles)
+                .emailVerified(true)
+                .build();
+        return userRepository.save(user);
+    }
+
+    private void sendTemporaryPasswordEmail(String email, String firstName, String password) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
+
+        notificationProducerService.sendNotification(NotificationEvent.builder()
+                .chanel("EMAIL")
+                .recipients(Set.of(email))
+                .templateName("TEMPORARY_PASSWORD")
+                .params(Map.of(
+                        "firstName", firstName != null ? firstName : email.split("@")[0],
+                        "password", password
+                ))
+                .build());
+
     }
 
     @Override
@@ -348,15 +397,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         otpRepository.save(otpEntity);
 
-        notificationProducerService.sendNotification(NotificationEvent.builder()
-                        .chanel("EMAIL")
-                        .templateName("RESET_PASSWORD_OTP")
-                        .params(Map.of("otp", otp))
-                        .recipients(Set.of(request.email()))
-                .build());
-
+        sendResetPasswordEmail(request.email(), otp);
 
         return "OTP has been sent to your email";
+    }
+
+    private void sendResetPasswordEmail(String email, String otp){
+        notificationProducerService.sendNotification(NotificationEvent.builder()
+                .chanel("EMAIL")
+                .templateName("RESET_PASSWORD_OTP")
+                .params(Map.of("otp", otp))
+                .recipients(Set.of(email))
+                .build());
     }
 
     @Override

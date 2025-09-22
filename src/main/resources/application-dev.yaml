@@ -25,7 +25,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 brevo:
-  api-key: "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"
+  api-key: ${BREVO_API_KEY:xkeysib-bbd927f57f517d690af7b0098e63ff7023f7d539d8c855a0eaef38993d3c68a7-}
   sender:
     name: "edcare"
     email: "dovantri1709@gmail.com"
@@ -37,13 +37,12 @@ brevo:
 
 outbound:
   oauth2:
-    client-id: "<clientId>"
-    client-secret: "<clientSecret>"
+    client-id: ${OAUTH2_CLIENT_ID:aaaaaaaa}
+    client-secret: ${OAUTH2_CLIENT_SECRET:aaaaaaaa}
     redirect-uri: "http://localhost:3000/authenticate"
     grant-type: "authorization_code"
-
 jwt:
-  signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
   valid-duration-in-second: 3600
   refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"

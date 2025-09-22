@@ -16,7 +16,10 @@ public enum ErrorCode {
     LOCKED_ACCOUNT(1008,"Your account is locked, try again in 24 hours" , HttpStatus.UNAUTHORIZED),
     UNAUTHENTICATED(1009, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     UNVERIFIED_EMAIL(1010,"Your email is unverify" , HttpStatus.UNAUTHORIZED),
-    MORE_THAN_5_FAILED_PASSWORD(1011, "Your account is locked for 24 hours due to entering the wrong password more than 5 times", HttpStatus.BAD_REQUEST);
+    MORE_THAN_5_FAILED_PASSWORD(1011, "Your account is locked for 24 hours due to entering the wrong password more than 5 times", HttpStatus.BAD_REQUEST),
+    ACCESS_TOKEN_EXPIRED(1012, "Access token expired", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_EXPIRED(1013, "Refresh token expired", HttpStatus.UNAUTHORIZED),
+    INVALID_TOKEN(1014, "Invalid token", HttpStatus.UNAUTHORIZED),;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

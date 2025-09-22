@@ -1,6 +1,5 @@
-package com.fa25se225.capstone.configuration;
+package com.fa25se225.capstone.configuration.properties;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;

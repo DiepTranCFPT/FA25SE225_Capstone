@@ -1,5 +1,7 @@
 package com.fa25se225.capstone.service.implementation;
 
+import com.fa25se225.capstone.configuration.properties.JwtProperties;
+import com.fa25se225.capstone.configuration.properties.OAuthProperties;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.AuthenticationResponse;
@@ -29,10 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -58,47 +57,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     NotificationProducerService notificationProducerService;
     OtpRepository otpRepository;
 
-    private static final int MAX_FAILED_ATTEMPTS = 5;
+    static int MAX_FAILED_ATTEMPTS = 5;
 
-    @NonFinal
-    @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
+    JwtProperties jwtProperties;
 
-    @NonFinal
-    @Value("${jwt.valid-duration}")
-    protected long VALID_DURATION;
+    OAuthProperties oAuthProperties;
 
-    @NonFinal
-    @Value("${jwt.issuer}")
-    protected String issuer;
 
-    @NonFinal
-    @Value("${jwt.refreshable-duration}")
-    protected long REFRESHABLE_DURATION;
-
-    @NonFinal
-    @Value("${outbound.identity.client-id}")
-    protected String CLIENT_ID;
-
-    @NonFinal
-    @Value("${outbound.identity.client-secret}")
-    protected String CLIENT_SECRET;
-
-    @NonFinal
-    @Value("${outbound.identity.redirect-uri}")
-    protected String REDIRECT_URI;
-
-    @NonFinal
-    protected final String GRANT_TYPE = "authorization_code";
 
 
     public AuthenticationResponse outboundAuthenticate(String code){
         var response = outboundIdentityClient.exchangeToken(ExchangeTokenRequest.builder()
                 .code(code)
-                .clientId(CLIENT_ID)
-                .clientSecret(CLIENT_SECRET)
-                .redirectUri(REDIRECT_URI)
-                .grantType(GRANT_TYPE)
+                .clientId(oAuthProperties.getClientId())
+                .clientSecret(oAuthProperties.getClientSecret())
+                .redirectUri(oAuthProperties.getRedirectUri())
+                .grantType(oAuthProperties.getGrantType())
                 .build());
 
         log.info("TOKEN RESPONSE {}", response);
@@ -268,7 +242,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             SignedJWT signedJWT = SignedJWT.parse(token);
 
-            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+            JWSVerifier verifier = new MACVerifier(jwtProperties.getSignerKey().getBytes());
             boolean isSignatureValid = signedJWT.verify(verifier);
 
             if (!isSignatureValid) {
@@ -309,7 +283,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
             Date refreshableUntil = new Date(issueTime.toInstant()
-                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli());
+                    .plus(jwtProperties.getRefreshableDurationInSecond(), ChronoUnit.SECONDS).toEpochMilli());
 
             if (refreshableUntil.before(new Date())) {
                 throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
@@ -326,10 +300,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
-                .issuer(issuer)
+                .issuer(jwtProperties.getIssuer())
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()
+                        Instant.now().plus(jwtProperties.getValidDurationInSecond(), ChronoUnit.SECONDS).toEpochMilli()
                 ))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scp", user.getRoles().stream().map(role -> role.getName()).toList())
@@ -340,7 +314,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         JWSObject jwsObject = new JWSObject(header, payload);
 
         try {
-            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            jwsObject.sign(new MACSigner(jwtProperties.getSignerKey().getBytes()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("Cannot create token", e);

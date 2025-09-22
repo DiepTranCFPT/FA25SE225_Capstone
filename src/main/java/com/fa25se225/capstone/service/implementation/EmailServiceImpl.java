@@ -1,10 +1,9 @@
 package com.fa25se225.capstone.service.implementation;
 
 
-import com.fa25se225.capstone.configuration.BrevoProperties;
+import com.fa25se225.capstone.configuration.properties.BrevoProperties;
 import com.fa25se225.capstone.dto.request.EmailRequest;
 import com.fa25se225.capstone.dto.request.Recipient;
-import com.fa25se225.capstone.dto.request.SendEmailRequest;
 import com.fa25se225.capstone.dto.request.Sender;
 import com.fa25se225.capstone.dto.response.EmailResponse;
 import com.fa25se225.capstone.exception.AppException;
@@ -12,12 +11,8 @@ import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.httpclient.EmailClient;
 import com.fa25se225.capstone.service.EmailService;
 import feign.FeignException;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

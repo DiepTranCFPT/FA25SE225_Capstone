@@ -10,7 +10,7 @@ import java.text.ParseException;
 public interface AuthenticationService {
     AuthenticationResponse authenticate(AuthenticationRequest request);
     IntrospectResponse introspect(IntrospectRequest request);
-    AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException;
+    AuthenticationResponse refreshToken(RefreshRequest request);
     AuthenticationResponse outboundAuthenticate(String code);
     void logout(LogoutRequest request);
 

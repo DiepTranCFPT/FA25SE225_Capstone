@@ -36,14 +36,15 @@ brevo:
     ACCOUNT_LOCKED: 4
 
 outbound:
-  identity:
+  oauth2:
     client-id: "<clientId>"
     client-secret: "<clientSecret>"
     redirect-uri: "http://localhost:3000/authenticate"
+    grant-type: "authorization_code"
 
 jwt:
   signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
-  valid-duration: 3600
-  refreshable-duration: 36000
+  valid-duration-in-second: 3600
+  refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"
 

@@ -19,7 +19,13 @@ public enum ErrorCode {
     MORE_THAN_5_FAILED_PASSWORD(1011, "Your account is locked for 24 hours due to entering the wrong password more than 5 times", HttpStatus.BAD_REQUEST),
     ACCESS_TOKEN_EXPIRED(1012, "Access token expired", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_EXPIRED(1013, "Refresh token expired", HttpStatus.UNAUTHORIZED),
-    INVALID_TOKEN(1014, "Invalid token", HttpStatus.UNAUTHORIZED),;
+    INVALID_TOKEN(1014, "Invalid token", HttpStatus.UNAUTHORIZED),
+    INVALID_OTP(1015,"Invalid OTP" , HttpStatus.BAD_REQUEST ),
+    EXPIRED_OTP(1016,"OTP has expired" , HttpStatus.BAD_REQUEST ),
+    FAIL_TO_RESET_PASSWORD(1017,"Fail to reset password" , HttpStatus.BAD_REQUEST ),
+    INVALID_VERIFICATION_TOKEN(1018,"Invalid verification token" ,HttpStatus.BAD_REQUEST ),
+    INVALID_PASSWORD(1019,"Current password is incorrect" ,HttpStatus.BAD_REQUEST ),
+    INVALID_NEW_PASSWORD(1020, "New password must be different from current password" , HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

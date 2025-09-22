@@ -6,11 +6,13 @@ import com.fa25se225.capstone.dto.response.AuthenticationResponse;
 import com.fa25se225.capstone.dto.response.IntrospectResponse;
 import com.fa25se225.capstone.entity.InvalidatedToken;
 import com.fa25se225.capstone.entity.LoginHistory;
+import com.fa25se225.capstone.entity.OtpEntity;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.InvalidatedTokenRepository;
 import com.fa25se225.capstone.repository.LoginHistoryRepository;
+import com.fa25se225.capstone.repository.OtpRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.httpclient.OutboundIdentityClient;
 import com.fa25se225.capstone.service.AuthenticationService;
@@ -27,6 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -52,6 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     PasswordEncoder passwordEncoder;
     LoginHistoryRepository loginHistoryRepository;
     NotificationProducerService notificationProducerService;
+    OtpRepository otpRepository;
 
     private static final int MAX_FAILED_ATTEMPTS = 5;
 
@@ -106,7 +111,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         try {
             verifyAccessToken(token);
-        } catch (AppException | JOSEException | ParseException e) {
+        } catch (AppException e) {
             isValid = false;
         }
 
@@ -115,8 +120,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = findUserByEmailOrThrowException(request.getEmail());
 
         if (!user.isAccountNonLocked()) {
             throw new AppException(ErrorCode.LOCKED_ACCOUNT);
@@ -237,6 +241,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
+
     @Override
     public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
         var signedJWT = verifyRefreshToken(request.getToken());
@@ -257,47 +262,61 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return AuthenticationResponse.build(token, true, user.getRoles());
     }
 
-    private SignedJWT parseAndVerifySignature(String token) throws JOSEException, ParseException {
-        SignedJWT signedJWT = SignedJWT.parse(token);
+    private SignedJWT parseAndVerifySignature(String token){
+        try {
+            SignedJWT signedJWT = SignedJWT.parse(token);
 
-        JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
-        boolean isSignatureValid = signedJWT.verify(verifier);
+            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+            boolean isSignatureValid = signedJWT.verify(verifier);
 
-        if (!isSignatureValid) {
+            if (!isSignatureValid) {
+                throw new AppException(ErrorCode.INVALID_TOKEN);
+            }
+
+            if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+                throw new AppException(ErrorCode.INVALID_TOKEN);
+            }
+
+            return signedJWT;
+        } catch (JOSEException | ParseException e) {
+            log.error("Invalid token format or signature", e);
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
 
-        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+    }
+
+    private SignedJWT verifyAccessToken(String token) {
+        try {
+            SignedJWT signedJWT = parseAndVerifySignature(token);
+
+            Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+            if (expiryTime.before(new Date())) {
+                throw new AppException(ErrorCode.ACCESS_TOKEN_EXPIRED);
+            }
+
+            return signedJWT;
+        }catch (ParseException e){
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
-
-        return signedJWT;
     }
 
-    private SignedJWT verifyAccessToken(String token) throws JOSEException, ParseException {
-        SignedJWT signedJWT = parseAndVerifySignature(token);
+    private SignedJWT verifyRefreshToken(String token) {
+        try {
+            SignedJWT signedJWT = parseAndVerifySignature(token);
 
-        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
+            Date refreshableUntil = new Date(issueTime.toInstant()
+                    .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli());
 
-        if (expiryTime.before(new Date())) {
-            throw new AppException(ErrorCode.ACCESS_TOKEN_EXPIRED);
+            if (refreshableUntil.before(new Date())) {
+                throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
+            }
+
+            return signedJWT;
+        }catch (ParseException e){
+            throw new AppException(ErrorCode.INVALID_TOKEN);
         }
-
-        return signedJWT;
-    }
-
-    private SignedJWT verifyRefreshToken(String token) throws JOSEException, ParseException {
-        SignedJWT signedJWT = parseAndVerifySignature(token);
-
-        Date issueTime = signedJWT.getJWTClaimsSet().getIssueTime();
-        Date refreshableUntil = new Date(issueTime.toInstant()
-                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS).toEpochMilli());
-
-        if (refreshableUntil.before(new Date())) {
-            throw new AppException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
-
-        return signedJWT;
     }
 
     private String generateToken(User user) {
@@ -340,4 +359,110 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //
 //        return stringJoiner.toString();
 //    }
+
+    @Override
+    public String forgotPassword(ForgotPasswordRequest request) {
+        User user = findUserByEmailOrThrowException(request.email());
+        String otp = generateOTP();
+        OtpEntity otpEntity = OtpEntity.builder()
+                .email(request.email())
+                .otp(otp)
+                .expiryTime(LocalDateTime.now().plusMinutes(5))
+                .used(false)
+                .build();
+        otpRepository.save(otpEntity);
+
+        notificationProducerService.sendNotification(NotificationEvent.builder()
+                        .chanel("EMAIL")
+                        .templateName("RESET_PASSWORD_OTP")
+                        .params(Map.of("otp", otp))
+                        .recipients(Set.of(request.email()))
+                .build());
+
+
+        return "OTP has been sent to your email";
+    }
+
+    @Override
+    public String verifyOtp(VerifyOtpRequest request) {
+        OtpEntity otpEntity = otpRepository.findByEmailAndOtpAndUsedFalse(request.email(), request.otp())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_OTP));
+
+        if (otpEntity.isExpired()) throw new AppException(ErrorCode.EXPIRED_OTP);
+
+        User user = findUserByEmailOrThrowException(request.email());
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        otpEntity.setUsed(true);
+        otpRepository.save(otpEntity);
+
+
+        return "Password has been reset successfully";
+    }
+
+    @Override
+    public String verifyEmail(VerifyEmailRequest request) {
+        var user = userRepository.findByEmailAndVerificationToken(request.email(), request.token())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_VERIFICATION_TOKEN));
+
+        user.setEmailVerified(true);
+        user.setVerificationToken(null);
+        userRepository.save(user);
+
+        return "Email verified successfully";
+    }
+
+    @Override
+    public String resetPassword(ResetPasswordRequest request) {
+        SignedJWT signedJWT = verifyAccessToken(request.token());
+        String email = getEmailFromJwt(signedJWT);
+
+        User user = findUserByEmailOrThrowException(email);
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        return "Password has been reset successfully";
+
+    }
+
+    @Override
+    public String changePassword(ChangePasswordRequest request) {
+            SignedJWT signedJWT = verifyAccessToken(request.token());
+        String email = getEmailFromJwt(signedJWT);
+            User user = findUserByEmailOrThrowException(email);
+
+           if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+               throw new AppException(ErrorCode.INVALID_PASSWORD);
+            }
+           if (passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+               throw new AppException(ErrorCode.INVALID_NEW_PASSWORD);
+           }
+
+            user.setPassword(passwordEncoder.encode(request.newPassword()));
+            userRepository.save(user);
+
+
+
+
+        return "Password changed successfully";
+    }
+
+    private String generateOTP() {
+        Random random = new Random();
+        return String.format("%06d", random.nextInt(1000000));
+    }
+
+    private User findUserByEmailOrThrowException(String email){
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private String getEmailFromJwt(SignedJWT signedJWT) {
+        try {
+            return signedJWT.getJWTClaimsSet().getSubject();
+        } catch (ParseException e) {
+            log.error("Could not get subject from JWT claims", e);
+            throw new AppException(ErrorCode.INVALID_TOKEN);
+        }
+    }
 }

@@ -69,6 +69,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     protected long VALID_DURATION;
 
     @NonFinal
+    @Value("${jwt.issuer}")
+    protected String issuer;
+
+    @NonFinal
     @Value("${jwt.refreshable-duration}")
     protected long REFRESHABLE_DURATION;
 
@@ -324,7 +328,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
-                .issuer("Edcare")
+                .issuer(issuer)
                 .issueTime(new Date())
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()

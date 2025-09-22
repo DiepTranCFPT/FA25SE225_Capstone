@@ -229,35 +229,33 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
-        try {
-            var signedJWT = verifyAccessToken(request.getToken());
+    public void logout(LogoutRequest request) {
+        var signedJWT = verifyAccessToken(request.getToken());
+        JWTClaimsSet claimsSet = getClaimSetFromJwt(signedJWT);
 
-            String jit = signedJWT.getJWTClaimsSet().getJWTID();
-            Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        String jit = claimsSet.getJWTID();
+        Date expiryTime = claimsSet.getExpirationTime();
 
-            InvalidatedToken invalidatedToken =
-                    InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+        InvalidatedToken invalidatedToken =
+                InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
 
-            invalidatedTokenRepository.save(invalidatedToken);
-        } catch (AppException exception){
-            log.warn("Token is invalid or already expired during logout: {}", exception.getMessage());
-        }
+        invalidatedTokenRepository.save(invalidatedToken);
     }
 
 
     @Override
-    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
+    public AuthenticationResponse refreshToken(RefreshRequest request)  {
         var signedJWT = verifyRefreshToken(request.getToken());
+        JWTClaimsSet claimsSet = getClaimSetFromJwt(signedJWT);
 
-        var jit = signedJWT.getJWTClaimsSet().getJWTID();
-        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+        String jit = claimsSet.getJWTID();
+        Date expiryTime = claimsSet.getExpirationTime();
 
         InvalidatedToken invalidatedToken =
                 InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
         invalidatedTokenRepository.save(invalidatedToken);
 
-        var email = signedJWT.getJWTClaimsSet().getSubject();
+        var email = claimsSet.getSubject();
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
@@ -420,7 +418,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public String resetPassword(ResetPasswordRequest request) {
         SignedJWT signedJWT = verifyAccessToken(request.token());
-        String email = getEmailFromJwt(signedJWT);
+        String email = getClaimSetFromJwt(signedJWT).getSubject();
 
         User user = findUserByEmailOrThrowException(email);
         user.setPassword(passwordEncoder.encode(request.newPassword()));
@@ -432,7 +430,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public String changePassword(ChangePasswordRequest request) {
             SignedJWT signedJWT = verifyAccessToken(request.token());
-        String email = getEmailFromJwt(signedJWT);
+        String email = getClaimSetFromJwt(signedJWT).getSubject();
             User user = findUserByEmailOrThrowException(email);
 
            if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
@@ -461,12 +459,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
-    private String getEmailFromJwt(SignedJWT signedJWT) {
+    private JWTClaimsSet getClaimSetFromJwt(SignedJWT signedJWT) {
         try {
-            return signedJWT.getJWTClaimsSet().getSubject();
+            return signedJWT.getJWTClaimsSet();
         } catch (ParseException e) {
-            log.error("Could not get subject from JWT claims", e);
+            log.error("Could not get Jwt claims set form JWT", e);
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
     }
+
+
+
 }

@@ -8,7 +8,6 @@ import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.Parameter;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -41,7 +40,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    ApiResponse<String> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+    ApiResponse<String> logout(@RequestBody LogoutRequest request){
         authenticationService.logout(request);
         return ApiResponse.success("Log out successfully");
     }

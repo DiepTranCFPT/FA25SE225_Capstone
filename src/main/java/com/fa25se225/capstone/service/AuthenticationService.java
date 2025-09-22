@@ -12,7 +12,7 @@ public interface AuthenticationService {
     IntrospectResponse introspect(IntrospectRequest request);
     AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException;
     AuthenticationResponse outboundAuthenticate(String code);
-    void logout(LogoutRequest request) throws ParseException, JOSEException;
+    void logout(LogoutRequest request);
 
     String forgotPassword(ForgotPasswordRequest request);
     String verifyOtp(VerifyOtpRequest request);

@@ -25,7 +25,10 @@ public enum ErrorCode {
     FAIL_TO_RESET_PASSWORD(1017,"Fail to reset password" , HttpStatus.BAD_REQUEST ),
     INVALID_VERIFICATION_TOKEN(1018,"Invalid verification token" ,HttpStatus.BAD_REQUEST ),
     INVALID_PASSWORD(1019,"Current password is incorrect" ,HttpStatus.BAD_REQUEST ),
-    INVALID_NEW_PASSWORD(1020, "New password must be different from current password" , HttpStatus.BAD_REQUEST );
+    INVALID_NEW_PASSWORD(1020, "New password must be different from current password" , HttpStatus.BAD_REQUEST ),
+    INVALID_ROLE_NAME(1021, "Invalid role name", HttpStatus.BAD_REQUEST ),
+    EXISTED_ROLE(1022,"Role is existed" , HttpStatus.BAD_REQUEST ),
+    PERMISSION_NOT_FOUND(1023,"Permission not found" ,HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -17,16 +17,16 @@ import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.UserService;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
@@ -42,6 +42,7 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
     NotificationProducerService notificationProducerService;
+    CloudinaryService cloudinaryService;
 
     @Override
     public UserResponse register(UserCreationRequest request) {
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMyProfile() {
         String email = getCurrentEmail();
-        return userMapper.toResponse(findUserByEmail(email));
+        return userMapper.toResponse(findUserByEmailOrThrowException(email));
     }
 
     @Override
@@ -97,7 +98,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse update(UserUpdateRequest request) {
-        User user = findUserByEmail(getCurrentEmail());
+        User user = findUserByEmailOrThrowException(getCurrentEmail());
         userMapper.updateUser(user, request);
         user.setPassword(passwordEncoder.encode(request.password()));
         return userMapper.toResponse(userRepository.save(user));
@@ -106,7 +107,7 @@ public class UserServiceImpl implements UserService {
     //
     @Override
     public UserResponse updateUserRole(String id, UserRoleUpdateRequest request) {
-        User user = findUserId(id);
+        User user = findUserIdOrThrowException(id);
         List<Role> roles = roleRepository.findAllById(request.roles());
 
         user.setRoles(new HashSet<>(roles));
@@ -116,17 +117,51 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void delete(String userId) {
-        User user = findUserId(userId);
+        User user = findUserIdOrThrowException(userId);
         user.setDeleted(true);
         userRepository.save(user);
     }
 
-    public User findUserByEmail(String email){
+    @Override
+    @Transactional
+    public UserResponse updateUserAvatar(MultipartFile file) {
+        User user = findUserByEmailOrThrowException(getCurrentEmail());
+        if(Strings.isNotEmpty(user.getImgUrl())){
+            String publicId = cloudinaryService.getPublicIdFromUrl(user.getImgUrl());
+            if (Objects.nonNull(publicId)) {
+                cloudinaryService.deleteFile(publicId);
+            }
+        }
+        String newAvatarUrl = cloudinaryService.uploadFile(file, "user_avatars");
+        user.setImgUrl(newAvatarUrl);
+        userRepository.save(user);
+
+        return userMapper.toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse deleteUserAvatar() {
+        User user = findUserByEmailOrThrowException(getCurrentEmail());
+        String avatarUrl = user.getImgUrl();
+        if(Strings.isEmpty(avatarUrl)){
+            return userMapper.toResponse(user);
+        }
+        String publicId = cloudinaryService.getPublicIdFromUrl(avatarUrl);
+        if(Strings.isNotEmpty(publicId)){
+            cloudinaryService.deleteFile(publicId);
+        }
+
+        user.setImgUrl(null);
+        return userMapper.toResponse(user);
+    }
+
+    private User findUserByEmailOrThrowException(String email){
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
-    public User findUserId(String id){
+    private User findUserIdOrThrowException(String id){
         return userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }

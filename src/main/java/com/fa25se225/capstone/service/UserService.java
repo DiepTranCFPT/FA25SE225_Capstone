@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.request.UserCreationRequest;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.UserResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ public interface UserService {
     UserResponse update(UserUpdateRequest request);
     UserResponse updateUserRole(String id, UserRoleUpdateRequest request);
     void delete(String userId);
+    UserResponse updateUserAvatar(MultipartFile file);
+    UserResponse deleteUserAvatar();
 
 
 }

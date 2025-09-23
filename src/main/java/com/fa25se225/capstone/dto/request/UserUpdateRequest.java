@@ -16,7 +16,7 @@ public record UserUpdateRequest (
     String password,
     String firstName,
     String lastName,
-    String imgUrl,
+//    String imgUrl,
 
     @DobConstraint(min = 10, message = "INVALID_DOB")
     LocalDate dob

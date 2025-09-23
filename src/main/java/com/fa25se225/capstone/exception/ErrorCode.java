@@ -28,7 +28,8 @@ public enum ErrorCode {
     INVALID_NEW_PASSWORD(1020, "New password must be different from current password" , HttpStatus.BAD_REQUEST ),
     INVALID_ROLE_NAME(1021, "Invalid role name", HttpStatus.BAD_REQUEST ),
     EXISTED_ROLE(1022,"Role is existed" , HttpStatus.BAD_REQUEST ),
-    PERMISSION_NOT_FOUND(1023,"Permission not found" ,HttpStatus.BAD_REQUEST );
+    PERMISSION_NOT_FOUND(1023,"Permission not found" ,HttpStatus.BAD_REQUEST ),
+    INVALID_IO(1024,"There are something wrong with file IO " , HttpStatus.INTERNAL_SERVER_ERROR);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -9,7 +9,9 @@ import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/users")
@@ -54,5 +56,16 @@ public class UserController {
         userService.delete(userId);
         return ApiResponse.success("Delete successfully");
     }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UserResponse> updateUserAvatar(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(userService.updateUserAvatar(file));
+    }
+
+    @DeleteMapping("/me/avatar")
+    public ApiResponse<UserResponse> deleteUserAvatar() {
+        return ApiResponse.success(userService.deleteUserAvatar());
+    }
+
 
 }

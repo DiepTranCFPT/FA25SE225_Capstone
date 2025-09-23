@@ -54,3 +54,8 @@ jwt:
   refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"
 
+cloudinary:
+  cloud-name: dtmd2wn3b
+  api-key: 866634622149899
+  api-secret: 0gENq_hlEN2b3Xsci4hsgBUqLYI
+

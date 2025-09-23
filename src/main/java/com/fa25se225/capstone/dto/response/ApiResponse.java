@@ -19,7 +19,14 @@ public class ApiResponse<T> {
         return ApiResponse.<T>builder()
                 .code(1000)
                 .data(data)
-                .message("Success")
+                .message("Successfully")
+                .build();
+    }
+
+    public static <T> ApiResponse<T> successWithMessage(String message) {
+        return ApiResponse.<T>builder()
+                .code(1000)
+                .message("message")
                 .build();
     }
 

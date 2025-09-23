@@ -11,7 +11,7 @@ public class PageResponse<T> {
     private int pageNo;
     private int pageSize;
     private int totalPage;
-    private int totalElement;
+    private long totalElement;
     private String[] sortBy;
     private T items;
 }

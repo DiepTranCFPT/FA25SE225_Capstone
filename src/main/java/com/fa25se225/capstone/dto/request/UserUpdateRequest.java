@@ -12,11 +12,9 @@ import java.util.List;
 @Builder
 public record UserUpdateRequest (
 
-    @Min(8)
-    String password,
+
     String firstName,
     String lastName,
-//    String imgUrl,
 
     @DobConstraint(min = 10, message = "INVALID_DOB")
     LocalDate dob

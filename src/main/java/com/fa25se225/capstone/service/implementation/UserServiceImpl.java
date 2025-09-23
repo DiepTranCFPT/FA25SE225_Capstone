@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
     RoleRepository roleRepository;
     NotificationProducerService notificationProducerService;
     CloudinaryService cloudinaryService;
+    static String AVATAR_FOLDER = "user_avatars";
 
     @Override
     public UserResponse register(UserCreationRequest request) {
@@ -90,7 +91,7 @@ public class UserServiceImpl implements UserService {
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .totalPage(page.getTotalPages())
-                .totalElement(userResponses.size())
+                .totalElement(page.getTotalElements())
                 .sortBy(sorts)
                 .items(userResponses)
                 .build();
@@ -100,7 +101,6 @@ public class UserServiceImpl implements UserService {
     public UserResponse update(UserUpdateRequest request) {
         User user = findUserByEmailOrThrowException(getCurrentEmail());
         userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.password()));
         return userMapper.toResponse(userRepository.save(user));
     }
 
@@ -111,8 +111,8 @@ public class UserServiceImpl implements UserService {
         List<Role> roles = roleRepository.findAllById(request.roles());
 
         user.setRoles(new HashSet<>(roles));
-        userRepository.save(user);
-        return null;
+        return userMapper.toResponse(userRepository.save(user));
+
     }
 
     @Override
@@ -132,7 +132,7 @@ public class UserServiceImpl implements UserService {
                 cloudinaryService.deleteFile(publicId);
             }
         }
-        String newAvatarUrl = cloudinaryService.uploadFile(file, "user_avatars");
+        String newAvatarUrl = cloudinaryService.uploadFile(file, AVATAR_FOLDER);
         user.setImgUrl(newAvatarUrl);
         userRepository.save(user);
 
@@ -153,6 +153,7 @@ public class UserServiceImpl implements UserService {
         }
 
         user.setImgUrl(null);
+        userRepository.save(user);
         return userMapper.toResponse(user);
     }
 

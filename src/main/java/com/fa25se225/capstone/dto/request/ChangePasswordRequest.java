@@ -1,4 +1,6 @@
 package com.fa25se225.capstone.dto.request;
 
-public record ChangePasswordRequest(String currentPassword, String newPassword, String token) {
+import jakarta.validation.constraints.Min;
+
+public record ChangePasswordRequest(String currentPassword, @Min(8) String newPassword, String token) {
 }

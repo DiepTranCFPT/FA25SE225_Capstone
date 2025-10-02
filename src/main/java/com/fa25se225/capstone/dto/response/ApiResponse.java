@@ -26,7 +26,7 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> successWithMessage(String message) {
         return ApiResponse.<T>builder()
                 .code(1000)
-                .message("message")
+                .message(message)
                 .build();
     }
 

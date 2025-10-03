@@ -1,11 +1,71 @@
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+
 spring:
   datasource:
-    url: ${DBMS_CONNECTION}
-    username: ${DBMS_USERNAME}
-    password: ${DBMS_PASSWORD}
+    url: ${DATABASE_URL}       # Railway MySQL plugin cấp sẵn JDBC URL
+    username: ${DB_USER}       # hoặc tách riêng user/pass nếu Railway cấp
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    redis:
+      host: ${REDIS_HOST}      # Redis plugin cấp sẵn
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+  cache:
+    type: redis
 
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}   # Confluent/Upstash/Redpanda…
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_USERNAME}' password='${KAFKA_PASSWORD}';
+
+brevo:
+  api-key: ${BREVO_API_KEY}
+  sender:
+    name: "edcare"
+    email: "dovantri1709@gmail.com"
+  templates:
+    VERIFY_EMAIL: 1
+    TEMPORARY_PASSWORD: 2
+    RESET_PASSWORD_OTP: 3
+    ACCOUNT_LOCKED: 4
+
+outbound:
+  oauth2:
+    client-id: ${OAUTH2_CLIENT_ID}
+    client-secret: ${OAUTH2_CLIENT_SECRET}
+    redirect-uri: ${OAUTH2_REDIRECT_URI}   # đổi khi deploy FE thật
+    grant-type: "authorization_code"
+
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration-in-second: 3600
+  refreshable-duration-in-second: 36000
+  issuer: "Tri dep trai"
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD}
+  api-key: ${CLOUDINARY_KEY}
+  api-secret: ${CLOUDINARY_SECRET}
+

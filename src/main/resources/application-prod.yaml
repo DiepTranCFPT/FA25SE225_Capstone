@@ -1,18 +1,19 @@
 server:
-  port : 8080
-  forward-headers-strategy : native
+  port: ${PORT:8080}
+  forward-headers-strategy: native
 
 spring:
   datasource:
-    url: ${url}
-    username: ${usr}
-    password: ${pass}
+    url: ${DATABASE_URL}       # Railway MySQL plugin cấp sẵn JDBC URL
+    username: ${DB_USER}       # hoặc tách riêng user/pass nếu Railway cấp
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: supersecretpassword
+      host: ${REDIS_HOST}      # Redis plugin cấp sẵn
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
   cache:
     type: redis
 
@@ -23,8 +24,7 @@ spring:
     show-sql: true
 
   kafka:
-    bootstrap-servers: localhost:9094
-
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}   # Confluent/Upstash/Redpanda…
     consumer:
       group-id: notification-group
       auto-offset-reset: earliest
@@ -35,6 +35,10 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_USERNAME}' password='${KAFKA_PASSWORD}';
 
 brevo:
   api-key: ${BREVO_API_KEY}
@@ -49,10 +53,11 @@ brevo:
 
 outbound:
   oauth2:
-    client-id: ${OAUTH2_CLIENT_ID:aaaaaaaa}
-    client-secret: ${OAUTH2_CLIENT_SECRET:aaaaaaaa}
-    redirect-uri: "http://localhost:3000/authenticate"
+    client-id: ${OAUTH2_CLIENT_ID}
+    client-secret: ${OAUTH2_CLIENT_SECRET}
+    redirect-uri: ${OAUTH2_REDIRECT_URI}   # đổi khi deploy FE thật
     grant-type: "authorization_code"
+
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
   valid-duration-in-second: 3600
@@ -60,8 +65,6 @@ jwt:
   issuer: "Tri dep trai"
 
 cloudinary:
-  cloud-name: ${cloud}
-  api-key: ${API_KEY}
-  api-secret: ${secret}
-
-
+  cloud-name: ${CLOUDINARY_CLOUD}
+  api-key: ${CLOUDINARY_KEY}
+  api-secret: ${CLOUDINARY_SECRET}

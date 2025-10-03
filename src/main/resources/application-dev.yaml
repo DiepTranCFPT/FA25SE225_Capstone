@@ -12,8 +12,6 @@ spring:
   cache:
     type: redis
 
-
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -61,3 +59,8 @@ cloudinary:
   cloud-name: ${cloud}
   api-key: ${API_KEY}
   api-secret: ${secret}
+
+server:
+  port : 8080
+  forward-headers-strategy : native
+

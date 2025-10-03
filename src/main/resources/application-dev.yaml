@@ -19,7 +19,7 @@ spring:
     show-sql: true
 
   kafka:
-    bootstrap-servers: kafka:9094
+    bootstrap-servers: localhost:9094
 
     consumer:
       group-id: notification-group

@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${url}
-    username: ${usr}
-    password: ${pass}
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -15,8 +15,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQLDialect
-    show-sql: true
 
   kafka:
     bootstrap-servers: localhost:9094
@@ -63,4 +61,3 @@ cloudinary:
 server:
   port : 8080
   forward-headers-strategy : native
-

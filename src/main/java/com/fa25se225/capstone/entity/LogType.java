@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "log_types")
+public class LogType {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -26,9 +26,6 @@ public class GradeLevel {
 
     @Column(name = "description")
     private String description;
-
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
 
     @Column(name = "created_at")
     private LocalDate createdAt;

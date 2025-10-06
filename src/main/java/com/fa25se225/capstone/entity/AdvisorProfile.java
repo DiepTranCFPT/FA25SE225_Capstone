@@ -4,7 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,8 +13,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "student_profiles")
-public class StudentProfile {
+@Table(name = "advisor_profiles")
+public class AdvisorProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -26,26 +27,26 @@ public class StudentProfile {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "school_name")
-    private String schoolName;
+    @Column(name = "specialization")
+    private String specialization;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "grade_level_id")
-    private GradeLevel gradeLevel;
+    @Column(name = "biography", columnDefinition = "TEXT")
+    private String biography;
 
-    @Column(name = "parent_phone")
-    private String parentPhone;
+    @Column(name = "qualification")
+    private String qualification;
 
-    @Column(name = "emergency_contact")
-    private String emergencyContact;
+    @Column(name = "years_of_experience")
+    private Integer yearsOfExperience;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "advisor_profile_id")
-    private AdvisorProfile advisorProfile;
+    @OneToMany(mappedBy = "advisorProfile")
+    private List<StudentProfile> advisedStudents = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_profile_id")
-    private ParentProfile parentProfile;
+    @Column(name = "is_available")
+    private Boolean isAvailable;
+
+    @Column(name = "max_students")
+    private Integer maxStudents;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -57,6 +58,7 @@ public class StudentProfile {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (isAvailable == null) isAvailable = true;
     }
 
     @PreUpdate

@@ -1,24 +1,21 @@
 spring:
   datasource:
-    url: ${url}
-    username: ${usr}
-    password: ${pass}
+    url: jdbc:mysql://localhost:3306/FA25SE225_Capstone
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: localhost
+      host: localhost #or redis
       port: 6379
       password: supersecretpassword
   cache:
     type: redis
 
 
-
   jpa:
     hibernate:
       ddl-auto: update
-    database-platform: org.hibernate.dialect.MySQLDialect
-    show-sql: true
 
   kafka:
     bootstrap-servers: localhost:9094
@@ -35,7 +32,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 brevo:
-  api-key: ${BREVO_API_KEY}
+  api-key: ${BREVO_API_KEY:xkeysib-bbd927f57f517d690af7b0098e63ff7023f7d539d8c855a0eaef38993d3c68a7-}
   sender:
     name: "edcare"
     email: "dovantri1709@gmail.com"
@@ -52,12 +49,13 @@ outbound:
     redirect-uri: "http://localhost:3000/authenticate"
     grant-type: "authorization_code"
 jwt:
-  signerKey: ${JWT_SIGNER_KEY}
+  signerKey: ${JWT_SIGNER_KEY:1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij}
   valid-duration-in-second: 3600
   refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"
 
 cloudinary:
-  cloud-name: ${cloud}
-  api-key: ${API_KEY}
-  api-secret: ${secret}
+  cloud-name: dtmd2wn3b
+  api-key: 866634622149899
+  api-secret: 0gENq_hlEN2b3Xsci4hsgBUqLYI
+

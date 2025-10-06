@@ -3,6 +3,7 @@ package com.fa25se225.capstone.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
@@ -11,24 +12,29 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "token_transactions")
+public class TokenTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
 
-    @Column(name = "code", nullable = false, unique = true)
-    private String code;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal amount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false)
+    private TokenTransactionType type;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @Column(name = "balance_after", precision = 10, scale = 2)
+    private BigDecimal balanceAfter;
 
     @Column(name = "created_at")
     private LocalDate createdAt;

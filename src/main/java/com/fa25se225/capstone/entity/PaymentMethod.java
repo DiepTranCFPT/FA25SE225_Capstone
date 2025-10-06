@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "payment_methods")
+public class PaymentMethod {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -27,8 +27,8 @@ public class GradeLevel {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -40,6 +40,7 @@ public class GradeLevel {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (isActive == null) isActive = true;
     }
 
     @PreUpdate

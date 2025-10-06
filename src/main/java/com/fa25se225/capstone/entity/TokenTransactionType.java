@@ -11,8 +11,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "token_transaction_types")
+public class TokenTransactionType {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -27,8 +27,11 @@ public class GradeLevel {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @Column(name = "affects_balance", nullable = false)
+    private Boolean affectsBalance;
+
+    @Column(name = "multiplier")
+    private Integer multiplier;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -40,6 +43,8 @@ public class GradeLevel {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (affectsBalance == null) affectsBalance = true;
+        if (multiplier == null) multiplier = 1;
     }
 
     @PreUpdate

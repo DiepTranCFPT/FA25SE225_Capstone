@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,8 +14,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "student_profiles")
-public class StudentProfile {
+@Table(name = "parent_profiles")
+public class ParentProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
@@ -26,26 +28,20 @@ public class StudentProfile {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "school_name")
-    private String schoolName;
+    @Column(name = "occupation")
+    private String occupation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "grade_level_id")
-    private GradeLevel gradeLevel;
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
 
-    @Column(name = "parent_phone")
-    private String parentPhone;
+    @Column(name = "alternate_phone")
+    private String alternatePhone;
 
-    @Column(name = "emergency_contact")
-    private String emergencyContact;
+    @Column(name = "address")
+    private String address;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "advisor_profile_id")
-    private AdvisorProfile advisorProfile;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_profile_id")
-    private ParentProfile parentProfile;
+    @OneToMany(mappedBy = "parentProfile")
+    private List<StudentProfile> children = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDate createdAt;

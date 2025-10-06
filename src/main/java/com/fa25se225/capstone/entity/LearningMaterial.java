@@ -11,24 +11,36 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "learning_materials")
+public class LearningMaterial {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
 
-    @Column(name = "code", nullable = false, unique = true)
-    private String code;
-
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "title", nullable = false)
+    private String title;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @Column(name = "content_url", nullable = false)
+    private String contentUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false)
+    private MaterialType type;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
+    @Column(name = "is_public", nullable = false)
+    private Boolean isPublic;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -40,6 +52,7 @@ public class GradeLevel {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (isPublic == null) isPublic = false;
     }
 
     @PreUpdate

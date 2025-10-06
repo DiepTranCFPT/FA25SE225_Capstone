@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,24 +13,27 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "grade_levels")
-public class GradeLevel {
+@Table(name = "subjects")
+public class Subject {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
 
-    @Column(name = "code", nullable = false, unique = true)
-    private String code;
-
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "code", nullable = false, unique = true)
+    private String code;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order_number", nullable = false)
-    private Integer orderNumber;
+    @OneToMany(mappedBy = "subject")
+    private List<Exam> exams = new ArrayList<>();
+
+    @OneToMany(mappedBy = "subject")
+    private List<LearningMaterial> learningMaterials = new ArrayList<>();
 
     @Column(name = "created_at")
     private LocalDate createdAt;

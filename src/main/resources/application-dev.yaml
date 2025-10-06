@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${url}
-    username: ${usr}
-    password: ${pass}
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:

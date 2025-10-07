@@ -17,7 +17,7 @@ spring:
       ddl-auto: update
 
   kafka:
-    bootstrap-servers: ${KafkaHost}
+    bootstrap-servers: nozomi.proxy.rlwy.net:22359
     properties:
       security:
         protocol: PLAINTEXT

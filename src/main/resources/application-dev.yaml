@@ -24,12 +24,24 @@ spring:
       client:
         dns:
           lookup: use_all_dns_ips
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.fa25se225.capstone.dto.kafka"
 
 brevo:
   api-key: ${BREVO_API_KEY}
   sender:
-    name: "edcare"
-    email: "dovantri1709@gmail.com"
+    name: "APCertificate"
+    email: "diep.tranc@gmail.com"
   templates:
     VERIFY_EMAIL: 1
     TEMPORARY_PASSWORD: 2

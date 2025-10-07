@@ -56,6 +56,11 @@ public class EmailServiceImpl implements EmailService {
                 .build();
 
         try {
+            if (brevoProperties.getApiKey().isBlank()) {
+                log.error("BREVO API key is MISSING");
+            } else {
+                log.info("BREVO API key loaded (len={}, endsWith=****{})", brevoProperties.getApiKey().length(), brevoProperties.getApiKey().substring(Math.max(0, brevoProperties.getApiKey().length()-4)));
+            }
             log.info("Sending email with templateId '{}' (code: '{}') to {} recipients", templateId, templateName, listRecipients.size());
             return emailClient.sendEmail(brevoProperties.getApiKey(), emailRequest);
         } catch (FeignException e) {

@@ -6,7 +6,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: localhost
+
+      host: ${RedisHost}
       port: 6379
       password: supersecretpassword
   cache:
@@ -17,18 +18,14 @@ spring:
       ddl-auto: update
 
   kafka:
-    bootstrap-servers: localhost:9094
 
-    consumer:
-      group-id: notification-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    bootstrap-servers: nozomi.proxy.rlwy.net:22359
+    properties:
+      security:
+        protocol: PLAINTEXT
+      client:
+        dns:
+          lookup: use_all_dns_ips
 
 brevo:
   api-key: ${BREVO_API_KEY}

@@ -27,11 +27,7 @@ import org.springframework.context.annotation.Configuration;
                         url = "http://www.apache.org/licenses/LICENSE-2.0.html"
                 )
         ),
-        security = @SecurityRequirement(name = "bearerAuth"),
-        servers = {
-                @Server(url = "http://localhost:8080", description = "Local Development Server"),
-                @Server(url = "https://edcare.trideptrai", description = "Production Server")
-        }
+        security = @SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
         name = "bearerAuth",

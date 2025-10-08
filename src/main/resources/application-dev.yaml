@@ -6,36 +6,43 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: localhost #or redis
+
+      host: ${RedisHost}
       port: 6379
       password: supersecretpassword
   cache:
     type: redis
-
 
   jpa:
     hibernate:
       ddl-auto: update
 
   kafka:
-    bootstrap-servers: localhost:9094
-
+    bootstrap-servers: ${KafkaHost}
+    properties:
+      security:
+        protocol: PLAINTEXT
+      client:
+        dns:
+          lookup: use_all_dns_ips
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
     consumer:
       group-id: notification-group
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "*"
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        spring.json.trusted.packages: "com.fa25se225.capstone.dto.kafka"
 
 brevo:
   api-key: ${BREVO_API_KEY:xkeysib-bbd927f57f517d690af7b0098e63ff7023f7d539d8c855a0eaef38993d3c68a7-}
   sender:
-    name: "edcare"
-    email: "dovantri1709@gmail.com"
+    name: "APCertificate"
+    email: "diep.tranc@gmail.com"
   templates:
     VERIFY_EMAIL: 1
     TEMPORARY_PASSWORD: 2
@@ -55,7 +62,10 @@ jwt:
   issuer: "Tri dep trai"
 
 cloudinary:
-  cloud-name: dtmd2wn3b
-  api-key: 866634622149899
-  api-secret: 0gENq_hlEN2b3Xsci4hsgBUqLYI
+  cloud-name: ${cloud}
+  api-key: ${API_KEY}
+  api-secret: ${secret}
 
+server:
+  port : 8080
+  forward-headers-strategy : native

@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.utils.CodeGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,8 @@ public class PaymentStatus {
     private String id;
 
     @Column(name = "code", nullable = false, unique = true)
-    private String code;
+    @Builder.Default
+    private String code = CodeGenerator.generateRandomCode();
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -39,10 +41,18 @@ public class PaymentStatus {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (deleted == null) deleted = false;
+        if (code == null || code.isEmpty()) {
+            code = CodeGenerator.generateRandomCode();
+        }
     }
 
     @PreUpdate

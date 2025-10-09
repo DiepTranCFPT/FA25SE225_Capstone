@@ -1,9 +1,13 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.utils.CodeGenerator;
+import io.netty.util.internal.StringUtil;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -19,10 +23,14 @@ public class UserStatus {
     private String id;
 
     @Column(name = "code", nullable = false, unique = true)
-    private String code;
+    @Builder.Default
+    private String code = CodeGenerator.generateRandomCode();
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    private User user;
 
     @Column(name = "description")
     private String description;
@@ -39,11 +47,19 @@ public class UserStatus {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
-        if (canLogin == null) canLogin = false;
+        if (Objects.isNull(canLogin)) canLogin = false;
+        if (Objects.isNull(deleted)) deleted = false;
+        if (StringUtils.isEmpty(code)) {
+            code = CodeGenerator.generateRandomCode();
+        }
     }
 
     @PreUpdate

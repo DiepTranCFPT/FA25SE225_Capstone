@@ -41,8 +41,13 @@ public class SystemLog {
     @Column(name = "created_at")
     private LocalDate createdAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
+        if (deleted == null) deleted = false;
     }
 }

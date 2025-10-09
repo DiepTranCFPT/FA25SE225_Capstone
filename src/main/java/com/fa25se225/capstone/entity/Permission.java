@@ -18,4 +18,7 @@ public class Permission {
     @Id
     String name;
     String description;
+
+    @Builder.Default
+    Boolean deleted = false;
 }

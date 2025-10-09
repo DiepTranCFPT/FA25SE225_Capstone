@@ -50,7 +50,8 @@ public class User implements UserDetails {
     Set<Role> roles;
 
     @CreationTimestamp
-    Instant createdOn;
+    @Column(name = "created_on", updatable = false, nullable = false)
+    private Instant createdAt;
 
     @UpdateTimestamp
     Instant updateOn;

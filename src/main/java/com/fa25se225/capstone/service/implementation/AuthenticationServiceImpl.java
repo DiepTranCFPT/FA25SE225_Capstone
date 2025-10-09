@@ -18,6 +18,8 @@ import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.httpclient.OutboundIdentityClient;
 import com.fa25se225.capstone.repository.httpclient.OutboundUserClient;
 import com.fa25se225.capstone.service.AuthenticationService;
+import com.fa25se225.capstone.utils.RequestContextUtil;
+import com.fa25se225.capstone.utils.TimeUtils;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -42,6 +44,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -61,6 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     OtpRepository otpRepository;
     OutboundUserClient outboundUserClient;
     RedisTemplate<String, Object> redisTemplate;
+    RequestContextUtil requestContextUtil;
 
     static int MAX_FAILED_ATTEMPTS = 5;
 
@@ -196,7 +200,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private void handleAccountLock(User user) {
         user.setAccountLocked(true);
-        user.setLockTime(LocalDateTime.now());
+        user.setLockTime(Instant.now());
         user.setFailedLoginAttempts(0);
         userRepository.save(user);
 
@@ -204,19 +208,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private void sendAccountLockedEmail(User user) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
 
-            notificationProducerService.sendNotification(NotificationEvent.builder()
-                    .chanel("EMAIL")
-                    .recipients(Set.of(user.getEmail()))
-                    .templateName("ACCOUNT_LOCKED")
-                    .params(Map.of(
-                                    "firstName", user.getFirstName(),
-                                    "email", user.getEmail(),
-                                    "attempts", MAX_FAILED_ATTEMPTS,
-                                    "lockTime", user.getLockTime().format(formatter),
-                                    "unlockTime", user.getLockTime().plusHours(24).format(formatter)))
-                            .build());
+        ZoneId userZone = requestContextUtil.getZoneIdOrDefault();
+        String pattern = "HH:mm:ss dd/MM/yyyy";
+        String lockTime = TimeUtils.formatInstant(user.getLockTime(), userZone, pattern);
+        String unlockTime = TimeUtils.formatInstant(user.getLockTime().plus(24, ChronoUnit.HOURS), userZone, pattern);
+
+
+        notificationProducerService.sendNotification(NotificationEvent.builder()
+                .chanel("EMAIL")
+                .recipients(Set.of(user.getEmail()))
+                .templateName("ACCOUNT_LOCKED")
+                .params(Map.of(
+                                "firstName", user.getFirstName(),
+                                "email", user.getEmail(),
+                                "attempts", MAX_FAILED_ATTEMPTS,
+                                "lockTime", lockTime,
+                                "unlockTime", unlockTime))
+                        .build());
 
     }
 
@@ -227,8 +236,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .loginTime(LocalDateTime.now())
                     .loginSuccess(success)
                     .failureReason(failureReason)
-                    .ipAddress(getCurrentIpAddress())
-                    .userAgent(getCurrentUserAgent())
+                    .ipAddress(requestContextUtil.getCurrentIpAddress())
+                    .userAgent(requestContextUtil.getCurrentUserAgent())
                     .build();
             loginHistoryRepository.save(history);
         } catch (Exception e) {
@@ -236,23 +245,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
 
-    private String getCurrentIpAddress() {
-        try {
-            return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                    .getRequest().getRemoteAddr();
-        } catch (Exception e) {
-            return "Unknown";
-        }
-    }
 
-    private String getCurrentUserAgent() {
-        try {
-            return ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
-                    .getRequest().getHeader("User-Agent");
-        } catch (Exception e) {
-            return "Unknown";
-        }
-    }
 
     @Override
     public void logout(LogoutRequest request) {

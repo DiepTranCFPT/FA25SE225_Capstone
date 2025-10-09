@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.utils.CodeGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,8 @@ public class LogType {
     private String id;
 
     @Column(name = "code", nullable = false, unique = true)
-    private String code;
+    @Builder.Default
+    private String code = CodeGenerator.generateRandomCode();
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -37,6 +39,9 @@ public class LogType {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (code == null || code.isEmpty()) {
+            code = CodeGenerator.generateRandomCode();
+        }
     }
 
     @PreUpdate

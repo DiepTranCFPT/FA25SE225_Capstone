@@ -19,4 +19,7 @@ public class InvalidatedToken {
     String id;
 
     Date expiryTime;
+
+    @Builder.Default
+    Boolean deleted = false;
 }

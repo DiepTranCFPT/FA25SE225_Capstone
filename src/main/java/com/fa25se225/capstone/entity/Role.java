@@ -25,4 +25,7 @@ public class Role {
 
     @ManyToMany
     Set<Permission> permissions;
+
+    @Builder.Default
+    Boolean deleted = false;
 }

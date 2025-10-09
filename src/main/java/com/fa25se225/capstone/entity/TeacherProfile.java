@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,11 +56,16 @@ public class TeacherProfile {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
         if (isVerified == null) isVerified = false;
+        if (deleted == null) deleted = false;
     }
 
     @PreUpdate

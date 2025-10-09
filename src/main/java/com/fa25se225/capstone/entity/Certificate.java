@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -51,11 +52,16 @@ public class Certificate {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
-        if (isValid == null) isValid = true;
+        if (Objects.isNull(isValid)) isValid = true;
+        if (Objects.isNull(deleted)) deleted = false;
     }
 
     @PreUpdate

@@ -42,10 +42,15 @@ public class TokenTransaction {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
+        if (deleted == null) deleted = false;
     }
 
     @PreUpdate

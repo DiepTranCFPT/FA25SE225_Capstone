@@ -1,5 +1,7 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.utils.CodeGenerator;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +21,8 @@ public class TokenTransactionType {
     private String id;
 
     @Column(name = "code", nullable = false, unique = true)
-    private String code;
+    @Builder.Default
+    private String code = CodeGenerator.generateRandomCode();
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -28,9 +31,11 @@ public class TokenTransactionType {
     private String description;
 
     @Column(name = "affects_balance", nullable = false)
+    @Schema(description = "thay transaction kiem tra xem user co nhan token chua")
     private Boolean affectsBalance;
 
     @Column(name = "multiplier")
+    @Schema(description = "He So Nhan Token User vd 100k = 100token * multiplier")
     private Integer multiplier;
 
     @Column(name = "created_at")
@@ -39,12 +44,20 @@ public class TokenTransactionType {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
         if (affectsBalance == null) affectsBalance = true;
         if (multiplier == null) multiplier = 1;
+        if (deleted == null) deleted = false;
+        if (code == null || code.isEmpty()) {
+            code = CodeGenerator.generateRandomCode();
+        }
     }
 
     @PreUpdate

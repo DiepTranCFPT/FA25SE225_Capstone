@@ -10,6 +10,24 @@ spring:
   cache:
     type: redis
 
+  ai:
+    openai:
+      api-key: ${GEMINI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta
+      chat:
+        options:
+          model: gemini-1.5-flash
+          temperature: 0.2
+      embedding:
+        options:
+          model: text-embedding-004
+    vectorstore:
+      redis:
+        index: faq_idx
+        prefix: faq
+        dimension: 768
+
+
   jpa:
     hibernate:
       ddl-auto: update

@@ -115,16 +115,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = User.builder()
                 .email(userInfo.getEmail())
                 .password(passwordEncoder.encode(temporaryPassword))
-                .firstName(userInfo.getGivenName())
-                .lastName(userInfo.getFamilyName())
+//                .firstName(userInfo.getGivenName())
+//                .lastName(userInfo.getFamilyName())
                 .roles(roles)
                 .emailVerified(true)
                 .build();
+        System.out.println("========= " + user.getEmail());
         return userRepository.save(user);
     }
 
     private void sendTemporaryPasswordEmail(String email, String firstName, String password) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss dd/MM/yyyy");
 
         notificationProducerService.sendNotification(NotificationEvent.builder()
                 .chanel("EMAIL")

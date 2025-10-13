@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      url: ${RedisUrl}
+      url: ${REDIS_URL}
   cache:
     type: redis
 
@@ -33,7 +33,7 @@ spring:
       ddl-auto: update
 
   kafka:
-    bootstrap-servers: ${KafkaHost}
+    bootstrap-servers: ${KAFKA_SERVERS}
     properties:
       security:
         protocol: PLAINTEXT

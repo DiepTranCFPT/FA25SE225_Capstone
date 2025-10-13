@@ -29,7 +29,10 @@ public enum ErrorCode {
     INVALID_ROLE_NAME(1021, "Invalid role name", HttpStatus.BAD_REQUEST ),
     EXISTED_ROLE(1022,"Role is existed" , HttpStatus.BAD_REQUEST ),
     PERMISSION_NOT_FOUND(1023,"Permission not found" ,HttpStatus.BAD_REQUEST ),
-    INVALID_IO(1024,"There are something wrong with file IO " , HttpStatus.INTERNAL_SERVER_ERROR);
+    INVALID_IO(1024,"There are something wrong with file IO " , HttpStatus.INTERNAL_SERVER_ERROR),
+    LEARNING_MATERIAL_NOT_FOUND(1025, "Learning material not found", HttpStatus.BAD_REQUEST),
+    MATERIAL_TYPE_NOT_FOUND(1026, "Material type not found", HttpStatus.BAD_REQUEST),
+    SUBJECT_NOT_FOUND(1027, "Subject not found", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

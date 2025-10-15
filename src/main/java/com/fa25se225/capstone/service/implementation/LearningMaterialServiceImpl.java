@@ -44,23 +44,23 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     public LearningMaterialResponse create(LearningMaterialCreationRequest request) {
         log.info("Creating learning material with title: {}", request.title());
         
-        // Get current user
+        log.debug("Getting current user for learning material creation");
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
-        // Validate and get material type
+        log.debug("Validating and getting material type with id: {}", request.typeId());
         MaterialType materialType = materialTypeRepository.findByIdNotDeleted(request.typeId())
                 .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
         
-        // Validate and get subject if provided
+        log.debug("Validating and getting subject if provided: {}", request.subjectId());
         Subject subject = null;
         if (request.subjectId() != null && !request.subjectId().trim().isEmpty()) {
             subject = subjectRepository.findByIdNotDeleted(request.subjectId())
                     .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
         }
         
-        // Create learning material
+        log.debug("Creating learning material entity from request");
         LearningMaterial learningMaterial = learningMaterialMapper.toEntity(request);
         learningMaterial.setAuthor(currentUser);
         learningMaterial.setType(materialType);
@@ -83,7 +83,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
-        // Check if user has permission to view this material
+        log.debug("Checking if user has permission to view material with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -169,7 +169,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     public PageResponse<List<LearningMaterialResponse>> getBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting learning materials by subject: {} with pagination - page: {}, size: {}", subjectId, pageNo, pageSize);
         
-        // Validate subject exists
+        log.debug("Validating subject exists with id: {}", subjectId);
         subjectRepository.findByIdNotDeleted(subjectId)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
         
@@ -195,7 +195,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     public PageResponse<List<LearningMaterialResponse>> getByType(String typeId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting learning materials by type: {} with pagination - page: {}, size: {}", typeId, pageNo, pageSize);
         
-        // Validate material type exists
+        log.debug("Validating material type exists with id: {}", typeId);
         materialTypeRepository.findByIdNotDeleted(typeId)
                 .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
         
@@ -247,7 +247,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
-        // Check if current user is the author
+        log.debug("Checking if current user is the author of learning material with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -256,14 +256,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
-        // Update material type if provided
+        log.debug("Updating material type if provided: {}", request.typeId());
         if (request.typeId() != null && !request.typeId().trim().isEmpty()) {
             MaterialType materialType = materialTypeRepository.findByIdNotDeleted(request.typeId())
                     .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
             learningMaterial.setType(materialType);
         }
         
-        // Update subject if provided
+        log.debug("Updating subject if provided: {}", request.subjectId());
         if (request.subjectId() != null) {
             if (request.subjectId().trim().isEmpty()) {
                 learningMaterial.setSubject(null);
@@ -274,7 +274,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             }
         }
         
-        // Update other fields
+        log.debug("Updating other fields of learning material");
         learningMaterialMapper.updateEntity(learningMaterial, request);
         
         LearningMaterial updatedMaterial = learningMaterialRepository.save(learningMaterial);
@@ -291,7 +291,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
-        // Check if current user is the author
+        log.debug("Checking if current user is the author of learning material to delete with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -300,7 +300,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
-        // Soft delete
+        log.debug("Performing soft delete for learning material with id: {}", id);
         learningMaterial.setDeleted(true);
         learningMaterialRepository.save(learningMaterial);
         

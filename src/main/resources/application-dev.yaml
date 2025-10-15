@@ -16,7 +16,7 @@ spring:
       base-url: https://generativelanguage.googleapis.com/v1beta
       chat:
         options:
-          model: gemini-1.5-flash
+          model: gemini-2.0-flash
           temperature: 0.2
       embedding:
         options:
@@ -60,9 +60,9 @@ brevo:
     email: "diep.tranc@gmail.com"
   templates:
     VERIFY_EMAIL: 1
-    TEMPORARY_PASSWORD: 2
-    RESET_PASSWORD_OTP: 3
-    ACCOUNT_LOCKED: 4
+    TEMPORARY_PASSWORD: 7
+    RESET_PASSWORD_OTP: 8
+    ACCOUNT_LOCKED: 9
 
 outbound:
   oauth2:

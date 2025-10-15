@@ -2,7 +2,7 @@
 docker-compose up -d
 http://localhost:8080/edcare/api/v1/swagger-ui/index.html
 
-
+https://fa25se225capstone-production.up.railway.app/edcare/api/v1
 
 frontend lấy oauth2 code từ url của google rồi gửi code đó cho backend (gửi vào endpoint outbound)
 backend nhận code đó và tự liên lạc với google để nhân token của google rồi trả (token này dùng được). nhưng sẽ đổi ngang vớitoken của hệ thống để hoàn toàn kiểm soát

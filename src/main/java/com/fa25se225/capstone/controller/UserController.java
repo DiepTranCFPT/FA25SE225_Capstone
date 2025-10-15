@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/users")
@@ -101,5 +102,17 @@ public class UserController {
         return ApiResponse.success(userService.deleteUserAvatar());
     }
 
+
+    @PostMapping("/{userId}/permissions/grant")
+    public ApiResponse<String> grantPermissionsToUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
+        userService.grantPermissions(userId, permissions);
+        return ApiResponse.success("Permissions granted successfully.");
+    }
+
+    @PostMapping("/{userId}/permissions/revoke")
+    public ApiResponse<String> revokePermissionsFromUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
+        userService.revokePermissions(userId, permissions);
+        return ApiResponse.success("Permissions revoked successfully.");
+    }
 
 }

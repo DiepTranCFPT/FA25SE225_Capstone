@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.configuration;
 
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.service.PermissionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,6 +24,9 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 @Configuration
 @EnableWebSecurity
@@ -38,7 +43,8 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder customJwtDecoder) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder customJwtDecoder,
+                                                   JwtAuthenticationConverter customJwtAuthenticationConverter) throws Exception {
             http.csrf(csrf -> csrf.disable())
                     .cors(cors -> cors.configurationSource(request -> {
                         CorsConfiguration config = new CorsConfiguration();
@@ -58,23 +64,52 @@ public class SecurityConfig {
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer
                         .decoder(customJwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .jwtAuthenticationConverter(customJwtAuthenticationConverter))
                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
             return http.build();
 
 
     }
 
+//    @Bean
+//    public JwtAuthenticationConverter jwtAuthenticationConverter(){
+//        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
+//        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+//        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+//        authenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+//
+//        return authenticationConverter;
+//
+//    }
+
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter(){
-        JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
-        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
-        authenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);
+    public JwtAuthenticationConverter jwtAuthenticationConverter(PermissionService permissionService){
+        JwtGrantedAuthoritiesConverter roleConverter = new JwtGrantedAuthoritiesConverter();
+        roleConverter.setAuthorityPrefix("ROLE_");
+        roleConverter.setAuthoritiesClaimName("scp"); // Đảm bảo claim name là 'scp'
 
-        return authenticationConverter;
+        JwtAuthenticationConverter customConverter = new JwtAuthenticationConverter();
 
+        customConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            String email = jwt.getSubject();
+            if (email == null) {
+                return new HashSet<>();
+            }
+
+            Collection<GrantedAuthority> roles = roleConverter.convert(jwt);
+
+            Collection<GrantedAuthority> permissions = permissionService.getAuthoritiesForUser(email);
+
+            Collection<GrantedAuthority> allAuthorities = new HashSet<>();
+            allAuthorities.addAll(roles);
+            allAuthorities.addAll(permissions);
+
+            return allAuthorities;
+        });
+
+        return customConverter;
     }
+
 
     @Bean
     PasswordEncoder passwordEncoder(){

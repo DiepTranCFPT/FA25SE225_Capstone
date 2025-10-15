@@ -7,13 +7,16 @@ import com.fa25se225.capstone.dto.request.UserCreationRequest;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.UserResponse;
+import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Role;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.UserMapper;
+import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.RoleRepository;
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.UserService;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.AccessLevel;
@@ -44,6 +47,8 @@ public class UserServiceImpl implements UserService {
     NotificationProducerService notificationProducerService;
     CloudinaryService cloudinaryService;
     static String AVATAR_FOLDER = "user_avatars";
+    PermissionService permissionService;
+    PermissionRepository permissionRepository;
 
     @Override
     public UserResponse register(UserCreationRequest request) {
@@ -172,6 +177,34 @@ public class UserServiceImpl implements UserService {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
+
+    @Override
+    @Transactional
+    public void grantPermissions(String userId, Set<String> permissionNames) {
+        User user = findUserIdOrThrowException(userId);
+        Set<Permission> permissionsToGrant = new HashSet<>(permissionRepository.findAllById(permissionNames));
+
+        user.getGrantedPermissions().addAll(permissionsToGrant);
+        user.getRevokedPermissions().removeAll(permissionsToGrant);
+
+        userRepository.save(user);
+
+        permissionService.clearUserPermissionsCache(user.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void revokePermissions(String userId, Set<String> permissionNames) {
+        User user = findUserIdOrThrowException(userId);
+        Set<Permission> permissionsToRevoke = new HashSet<>(permissionRepository.findAllById(permissionNames));
+
+        user.getRevokedPermissions().addAll(permissionsToRevoke);
+        user.getGrantedPermissions().removeAll(permissionsToRevoke);
+
+        userRepository.save(user);
+
+        permissionService.clearUserPermissionsCache(user.getEmail());
+    }
 
 
 

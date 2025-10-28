@@ -82,6 +82,10 @@ public class User implements UserDetails {
     @UpdateTimestamp
     Instant updateOn;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+    List<ConversationAI> conversationAI;
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

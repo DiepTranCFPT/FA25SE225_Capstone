@@ -6,28 +6,26 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      url: ${REDIS_URL}
+      url: ${REDIS_URL:redis://default:nQZGarDxzUTiLOCawvBOQkNHCjhmzRGh@caboose.proxy.rlwy.net:57131}
   cache:
     type: redis
 
   ai:
     openai:
-      api-key: ${GEMINI_API_KEY}
-      base-url: https://generativelanguage.googleapis.com/v1beta
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
       chat:
         options:
-          model: gemini-2.0-flash
-          temperature: 0.2
+          model: gemini-2.5-flash
       embedding:
         options:
           model: text-embedding-004
-    vectorstore:
+    vector-store:
       redis:
         index: faq_idx
         prefix: faq
-        dimension: 768
-
-
+  main:
+    allow-bean-definition-overriding: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -84,3 +82,4 @@ cloudinary:
 server:
   port : 8080
   forward-headers-strategy : native
+

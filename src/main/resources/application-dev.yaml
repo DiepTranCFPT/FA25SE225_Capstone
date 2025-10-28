@@ -6,28 +6,26 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      url: ${REDIS_URL}
+      url: ${REDIS_URL:redis://default:nQZGarDxzUTiLOCawvBOQkNHCjhmzRGh@caboose.proxy.rlwy.net:57131}
   cache:
     type: redis
 
   ai:
     openai:
-      api-key: ${GEMINI_API_KEY}
-      base-url: https://generativelanguage.googleapis.com/v1beta
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
       chat:
         options:
-          model: gemini-1.5-flash
-          temperature: 0.2
+          model: gemini-2.5-flash
       embedding:
         options:
           model: text-embedding-004
-    vectorstore:
+    vector-store:
       redis:
         index: faq_idx
         prefix: faq
-        dimension: 768
-
-
+  main:
+    allow-bean-definition-overriding: true
   jpa:
     hibernate:
       ddl-auto: update
@@ -60,15 +58,15 @@ brevo:
     email: "diep.tranc@gmail.com"
   templates:
     VERIFY_EMAIL: 1
-    TEMPORARY_PASSWORD: 2
-    RESET_PASSWORD_OTP: 3
-    ACCOUNT_LOCKED: 4
+    TEMPORARY_PASSWORD: 7
+    RESET_PASSWORD_OTP: 8
+    ACCOUNT_LOCKED: 9
 
 outbound:
   oauth2:
     client-id: ${OAUTH2_CLIENT_ID:aaaaaaaa}
     client-secret: ${OAUTH2_CLIENT_SECRET:aaaaaaaa}
-    redirect-uri: "http://localhost:3000/authenticate"
+    redirect-uri: ${OAUTH2_REDIRECT_URI}
     grant-type: "authorization_code"
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
@@ -84,3 +82,4 @@ cloudinary:
 server:
   port : 8080
   forward-headers-strategy : native
+

@@ -27,7 +27,7 @@ public class QuestionController {
     private final QuestionService questionService;
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new question (Admin only)",
             description = "Creates a new question. The current authenticated user will be set as the creator. Only accessible by administrators.")
     public ApiResponse<QuestionResponse> createQuestion(@Valid @RequestBody QuestionCreationRequest request) {
@@ -35,7 +35,7 @@ public class QuestionController {
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get question by ID (Admin only)",
             description = "Retrieves a question by its ID. Only accessible by administrators.")
     public ApiResponse<QuestionResponse> getQuestionById(@PathVariable String id) {
@@ -43,7 +43,7 @@ public class QuestionController {
     }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all questions (Admin only)",
             description = "Retrieves a paginated list of all questions. Only accessible by administrators. " +
                     "Example: /questions?pageNo=0&pageSize=10&sorts=createdAt:desc")
@@ -62,7 +62,7 @@ public class QuestionController {
     }
     
     @GetMapping("/by-teacher/{teacherId}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get questions by teacher (Admin)",
             description = "Retrieves a paginated list of questions created by a specific teacher. Only accessible by administrators. " +
                     "Example: /questions/by-teacher/{teacherId}?pageNo=0&pageSize=10&sorts=createdAt:desc")
@@ -84,7 +84,7 @@ public class QuestionController {
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a question (Admin only)",
             description = "Updates an existing question. Only accessible by administrators.")
     public ApiResponse<QuestionResponse> updateQuestion(
@@ -96,7 +96,7 @@ public class QuestionController {
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a question (Admin only)",
             description = "Soft deletes a question by setting its deleted flag to true. Only accessible by administrators.")
     public ApiResponse<Void> deleteQuestion(

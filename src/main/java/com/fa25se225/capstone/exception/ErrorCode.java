@@ -32,7 +32,10 @@ public enum ErrorCode {
     INVALID_IO(1024,"There are something wrong with file IO " , HttpStatus.INTERNAL_SERVER_ERROR),
     LEARNING_MATERIAL_NOT_FOUND(1025, "Learning material not found", HttpStatus.BAD_REQUEST),
     MATERIAL_TYPE_NOT_FOUND(1026, "Material type not found", HttpStatus.BAD_REQUEST),
-    SUBJECT_NOT_FOUND(1027, "Subject not found", HttpStatus.BAD_REQUEST);
+    SUBJECT_NOT_FOUND(1027, "Subject not found", HttpStatus.BAD_REQUEST),
+    EXAM_NOT_FOUND(1028, "Exam not found", HttpStatus.BAD_REQUEST),
+    EXAM_QUESTION_NOT_FOUND(1029, "Exam question not found", HttpStatus.BAD_REQUEST),
+    QUESTION_NOT_FOUND(1030, "Question not found", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

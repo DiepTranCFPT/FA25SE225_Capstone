@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SubjectRepository extends JpaRepository<Subject, String> {
@@ -14,4 +15,7 @@ public interface SubjectRepository extends JpaRepository<Subject, String> {
     
     @Query("SELECT s FROM Subject s WHERE s.code = :code AND s.deleted = false")
     Optional<Subject> findByCodeNotDeleted(@Param("code") String code);
+
+    @Query("SELECT s FROM Subject s WHERE s.deleted = false")
+    List<Subject> findAllNotDeleted();
 }

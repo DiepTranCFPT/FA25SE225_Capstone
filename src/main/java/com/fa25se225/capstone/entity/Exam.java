@@ -33,7 +33,11 @@ public class Exam {
     private Integer passingScore;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id")
+    @JoinTable(
+        name = "exam_subject",
+        joinColumns = @JoinColumn(name = "exam_id"),
+        inverseJoinColumns = @JoinColumn(name = "subject_id")
+    )
     private List<Subject> subject;
 
     @ManyToOne(fetch = FetchType.LAZY)

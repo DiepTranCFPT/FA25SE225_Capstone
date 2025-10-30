@@ -35,9 +35,8 @@ public enum ErrorCode {
     SUBJECT_NOT_FOUND(1027, "Subject not found", HttpStatus.BAD_REQUEST),
     EXAM_NOT_FOUND(1028, "Exam not found", HttpStatus.BAD_REQUEST),
     EXAM_QUESTION_NOT_FOUND(1029, "Exam question not found", HttpStatus.BAD_REQUEST),
-    QUESTION_NOT_FOUND(1030, "Question not found", HttpStatus.BAD_REQUEST);
-    QUESTION_NOT_FOUND(1028, "Question not found", HttpStatus.BAD_REQUEST),
-    QUESTION_DIFFICULTY_NOT_FOUND(1029, "Question difficulty not found", HttpStatus.BAD_REQUEST);
+    QUESTION_NOT_FOUND(1030, "Question not found", HttpStatus.BAD_REQUEST),
+    QUESTION_DIFFICULTY_NOT_FOUND(1031, "Question difficulty not found", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

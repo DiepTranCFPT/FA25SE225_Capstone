@@ -11,20 +11,20 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface LearningMaterialMapper {
-
+    
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "type", ignore = true)
     @Mapping(target = "subject", ignore = true)
     LearningMaterial toEntity(LearningMaterialCreationRequest request);
-
+    
     @Mapping(target = "typeId", source = "type.id")
     @Mapping(target = "typeName", source = "type.name")
-    @Mapping(target = "subjectId", source = "subject.id")
-    @Mapping(target = "subjectName", source = "subject.name")
+    @Mapping(target = "subjectId", expression = "java(entity.getSubject() != null ? entity.getSubject().getId() : null)")
+    @Mapping(target = "subjectName", expression = "java(entity.getSubject() != null ? entity.getSubject().getName() : null)")
     @Mapping(target = "authorId", source = "author.id")
     @Mapping(target = "authorName", expression = "java(entity.getAuthor() != null ? entity.getAuthor().getFirstName() + \" \" + entity.getAuthor().getLastName() : null)")
     LearningMaterialResponse toResponse(LearningMaterial entity);
-
+    
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "type", ignore = true)
     @Mapping(target = "subject", ignore = true)

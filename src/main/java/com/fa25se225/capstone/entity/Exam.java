@@ -32,9 +32,9 @@ public class Exam {
     @Column(name = "passing_score", nullable = false)
     private Integer passingScore;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
-    private Subject subject;
+    private List<Subject> subject;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")

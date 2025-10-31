@@ -40,7 +40,7 @@ outbound:
   oauth2:
     client-id: ${OAUTH2_CLIENT_ID:aaaaaaaa}
     client-secret: ${OAUTH2_CLIENT_SECRET:aaaaaaaa}
-    redirect-uri: "http://localhost:3000/authenticate"
+    redirect-uri: "https://capstoneproject-production-857f.up.railway.app/authenticate"
     grant-type: "authorization_code"
 jwt:
   signerKey: ${JWT_SIGNER_KEY}

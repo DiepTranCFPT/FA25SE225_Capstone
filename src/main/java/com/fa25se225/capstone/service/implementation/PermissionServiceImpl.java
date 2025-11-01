@@ -5,6 +5,8 @@ import com.fa25se225.capstone.dto.request.PermissionRequest;
 import com.fa25se225.capstone.dto.response.PermissionResponse;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.exception.AppException;
+import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.PermissionMapper;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.UserRepository;
@@ -108,6 +110,13 @@ public class PermissionServiceImpl implements PermissionService {
         String cacheKey = CACHE_KEY_PREFIX + userEmail;
         log.info("Clearing permission cache for user: {}", userEmail);
         redisTemplate.delete(cacheKey);
+    }
+
+    @Override
+    public List<PermissionResponse> getPermissionByUserId(String userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Set<String> permissionNames = calculateEffectivePermissions(user);
+        return permissionRepository.findAllById(permissionNames).stream().map(permissionMapper::toPermissionResponse).toList();
     }
 }
 

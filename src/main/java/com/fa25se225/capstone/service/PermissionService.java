@@ -13,4 +13,5 @@ public interface PermissionService {
     void delete(String permission);
     Collection<GrantedAuthority> getAuthoritiesForUser(String userEmail);
     void clearUserPermissionsCache(String userEmail);
+    List<PermissionResponse> getPermissionByUserId(String userId);
 }

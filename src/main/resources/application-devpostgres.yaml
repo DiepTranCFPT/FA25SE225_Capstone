@@ -1,0 +1,82 @@
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai/
+      chat:
+        options:
+          model: gemini-2.5-flash
+      embedding:
+        options:
+          model: text-embedding-004
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+
+    vectorstore:
+      pgvector:
+        dimensions: 768
+        max-document-batch-size: 10000
+        initialize-schema: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/capstone
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS}
+    properties:
+      security:
+        protocol: PLAINTEXT
+      client:
+        dns:
+          lookup: use_all_dns_ips
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+    consumer:
+      group-id: notification-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.fa25se225.capstone.dto.kafka"
+
+brevo:
+  api-key: ${BREVO_API_KEY}
+  sender:
+    name: "APCertificate"
+    email: "diep.tranc@gmail.com"
+  templates:
+    VERIFY_EMAIL: 1
+    TEMPORARY_PASSWORD: 2
+    RESET_PASSWORD_OTP: 3
+    ACCOUNT_LOCKED: 4
+
+outbound:
+  oauth2:
+    client-id: ${OAUTH2_CLIENT_ID}
+    client-secret: ${OAUTH2_CLIENT_SECRET}
+    redirect-uri: "http://localhost:5173/authenticate"
+    grant-type: "authorization_code"
+jwt:
+  signerKey: ${JWT_SIGNER_KEY}
+  valid-duration-in-second: 3600
+  refreshable-duration-in-second: 36000
+  issuer: "Tri dep trai"
+
+cloudinary:
+  cloud-name: ${cloud}
+  api-key: ${API_KEY}
+  api-secret: ${secret}
+
+server:
+  port : 8080
+  forward-headers-strategy : native

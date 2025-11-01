@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.constant.QuestionType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,14 @@ public class Question {
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "subject")
+    private String subject;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    @Builder.Default
+    private QuestionType type = QuestionType.MCQ;
 
     @ElementCollection
     @CollectionTable(

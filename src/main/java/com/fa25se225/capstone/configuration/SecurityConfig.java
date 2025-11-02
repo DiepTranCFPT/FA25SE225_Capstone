@@ -60,6 +60,7 @@ public class SecurityConfig {
                                     .requestMatchers(SWAGGER_UI_PATHS).permitAll()
                                     .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS_POST).permitAll()
                                     .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS_GET).permitAll()
+                                    .requestMatchers("/subjects/**").permitAll()
                                     .anyRequest().authenticated());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> jwtConfigurer

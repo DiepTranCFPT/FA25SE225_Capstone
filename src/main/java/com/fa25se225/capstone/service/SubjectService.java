@@ -1,15 +1,21 @@
 package com.fa25se225.capstone.service;
 
+import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.request.SubjectCreationRequest;
+import com.fa25se225.capstone.dto.request.SubjectUpdateRequest;
 import com.fa25se225.capstone.dto.response.SubjectResponse;
 
 import java.util.List;
 
 public interface SubjectService {
-    SubjectResponse create(SubjectCreationRequest request);
-    SubjectResponse getById(String id);
-    List<SubjectResponse> getAll();
-    SubjectResponse update(String id, SubjectCreationRequest request);
-    void delete(String id);
+    
+    SubjectResponse createSubject(SubjectCreationRequest request);
+    
+    SubjectResponse getSubjectById(String id);
+    
+    PageResponse<List<SubjectResponse>> getAllSubjects(int pageNo, int pageSize, String... sorts);
+    
+    SubjectResponse updateSubject(String id, SubjectUpdateRequest request);
+    
+    void deleteSubject(String id);
 }
-

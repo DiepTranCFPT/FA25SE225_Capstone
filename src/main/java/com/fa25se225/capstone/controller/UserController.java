@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -107,6 +108,8 @@ public class UserController {
 
 
     @PostMapping("/{userId}/permissions/grant")
+    @Operation(summary = "Grant permissions for the user",
+            description = "Grant permissions for the user by user id.")
     public ApiResponse<String> grantPermissionsToUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
         userService.grantPermissions(userId, permissions);
         return ApiResponse.success("Permissions granted successfully.");
@@ -118,9 +121,13 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/permissions/revoke")
+    @Operation(summary = "Revoke permissions for the user",
+            description = "Revoke permissions for the user by user id.")
     public ApiResponse<String> revokePermissionsFromUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
         userService.revokePermissions(userId, permissions);
         return ApiResponse.success("Permissions revoked successfully.");
     }
+
+
 
 }

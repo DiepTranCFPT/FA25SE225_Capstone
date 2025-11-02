@@ -24,4 +24,5 @@ public interface UserService {
     void grantPermissions(String userId, Set<String> permissions);
 
     void revokePermissions(String userId, Set<String> permissions);
+
 }

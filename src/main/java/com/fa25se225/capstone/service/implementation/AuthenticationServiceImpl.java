@@ -3,6 +3,7 @@ package com.fa25se225.capstone.service.implementation;
 import com.fa25se225.capstone.configuration.properties.JwtProperties;
 import com.fa25se225.capstone.configuration.properties.OAuthProperties;
 import com.fa25se225.capstone.constant.PredefinedRole;
+import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.AuthenticationResponse;
@@ -110,7 +111,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private User createUserForFirstTimeUsingOauth2Login(OutboundUserResponse userInfo, String temporaryPassword){
         Set<Role> roles = new HashSet<>();
-        roles.add(Role.builder().name(PredefinedRole.USER_ROLE).build());
+        roles.add(Role.builder().name(PredefinedSystemRole.STUDENT.name()).build());
 
         User user = User.builder()
                 .email(userInfo.getEmail())

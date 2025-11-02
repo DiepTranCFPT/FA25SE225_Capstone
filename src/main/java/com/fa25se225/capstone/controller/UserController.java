@@ -5,8 +5,10 @@ import com.fa25se225.capstone.dto.request.UserCreationRequest;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
+import com.fa25se225.capstone.dto.response.PermissionResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +29,7 @@ import java.util.Set;
 public class UserController {
 
     private final UserService userService;
+    private final PermissionService permissionService;
 
     @PostMapping
     @Operation(summary = "Register a new user",
@@ -107,6 +110,11 @@ public class UserController {
     public ApiResponse<String> grantPermissionsToUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
         userService.grantPermissions(userId, permissions);
         return ApiResponse.success("Permissions granted successfully.");
+    }
+
+    @GetMapping("/{userId}/permissions")
+    public ApiResponse<List<PermissionResponse>> getUsersPermissions(@PathVariable String userId) {
+        return ApiResponse.success(permissionService.getPermissionByUserId(userId));
     }
 
     @PostMapping("/{userId}/permissions/revoke")

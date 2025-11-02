@@ -30,7 +30,7 @@ public class Subject {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "subject")
+    @ManyToMany(mappedBy = "subject")
     private List<Exam> exams = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject")

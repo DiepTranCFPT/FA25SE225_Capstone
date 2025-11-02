@@ -1,10 +1,10 @@
 package com.fa25se225.capstone.dto.request;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
 
-@Data
-public class SubjectCreationRequest {
-    private String name;
-    private String description;
-}
-
+public record SubjectCreationRequest(
+    @NotBlank(message = "Name is required")
+    String name,
+    
+    String description
+) {}

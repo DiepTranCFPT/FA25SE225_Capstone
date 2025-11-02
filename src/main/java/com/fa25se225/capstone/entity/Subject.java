@@ -25,8 +25,7 @@ public class Subject {
     private String name;
 
     @Column(name = "code", nullable = false, unique = true)
-    @Builder.Default
-    private String code = CodeGenerator.generateRandomCode();
+    private String code = CodeGenerator.generateCodeFromName(name);;
 
     @Column(name = "description")
     private String description;
@@ -53,7 +52,7 @@ public class Subject {
         updatedAt = createdAt;
         if (deleted == null) deleted = false;
         if (code == null || code.isEmpty()) {
-            code = CodeGenerator.generateRandomCode();
+            code = CodeGenerator.generateCodeFromName(name);
         }
     }
 

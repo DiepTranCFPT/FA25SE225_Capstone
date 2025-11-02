@@ -19,4 +19,17 @@ public class CodeGenerator {
     public static String generateRandomCode() {
         return generateRandomCode(6);
     }
+
+    public static String generateCodeFromName(String name) {
+        if (name == null || name.isEmpty()) {
+            return generateRandomCode(6);
+        }
+        
+        String prefix = name.length() >= 3 
+            ? name.substring(0, 3).toUpperCase() 
+            : String.format("%-3s", name).replace(' ', 'X').toUpperCase();
+        
+        int randomNum = RANDOM.nextInt(1000);
+        return prefix + String.format("%03d", randomNum);
+    }
 }

@@ -116,8 +116,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = User.builder()
                 .email(userInfo.getEmail())
                 .password(passwordEncoder.encode(temporaryPassword))
-//                .firstName(userInfo.getGivenName())
-//                .lastName(userInfo.getFamilyName())
+                .firstName(userInfo.getGivenName())
+                .lastName(userInfo.getFamilyName())
                 .roles(roles)
                 .emailVerified(true)
                 .build();

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -39,7 +40,9 @@ public class User implements UserDetails {
     @Column(nullable = false)
     String password;
 
+    @Nationalized
     String firstName;
+    @Nationalized
     String lastName;
     LocalDate dob;
     String imgUrl;

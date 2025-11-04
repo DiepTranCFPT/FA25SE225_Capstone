@@ -28,4 +28,6 @@ public interface LearningMaterialService {
     LearningMaterialResponse update(String id, LearningMaterialUpdateRequest request);
     
     void delete(String id);
+
+    List<LearningMaterialResponse> getAllMaterials();
 }

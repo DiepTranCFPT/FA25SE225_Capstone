@@ -270,24 +270,25 @@ public class DataSeederV2 {
 
         ExamTemplateV2 template = ExamTemplateV2.builder()
                 .title("Comprehensive Math Exam V2")
-                .description("A 30-question comprehensive exam (20 MCQ, 10 FRQ) generated from V2 bank.")
+                .description("A 15-question comprehensive exam (10 MCQ, 5 FRQ) generated from V2 bank.")
                 .subject(subject)
                 .createdBy(teacher)
                 .duration(90)
-                .passingScore(50)
+                .passingScore(15)
                 .isActive(true)
                 .build();
 
         List<ExamRuleV2> rules = Arrays.asList(
-                // 10 MCQ Algebra
-                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffEasy).numberOfQuestions(5).points(2.0).build(),
-                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffMedium).numberOfQuestions(5).points(3.0).build(),
-                // 10 MCQ Geometry
-                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffEasy).numberOfQuestions(5).points(2.0).build(),
-                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffMedium).numberOfQuestions(5).points(3.0).build(),
+                //total 25 points
+                // 5 MCQ Algebra
+                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffEasy).questionType(QuestionType.MCQ).numberOfQuestions(2).points(2.0).build(),
+                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffMedium).questionType(QuestionType.MCQ).numberOfQuestions(3).points(2.0).build(),
+                // 5 MCQ Geometry
+                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffEasy).questionType(QuestionType.MCQ).numberOfQuestions(2).points(2.0).build(),
+                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffMedium).questionType(QuestionType.MCQ).numberOfQuestions(3).points(2.0).build(),
                 // 10 FRQ (Hard)
-                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffHard).numberOfQuestions(5).points(5.0).build(),
-                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffHard).numberOfQuestions(5).points(5.0).build()
+                ExamRuleV2.builder().template(template).topic(topicAlgebra).difficulty(diffHard).questionType(QuestionType.FRQ).numberOfQuestions(2).points(3.0).build(),
+                ExamRuleV2.builder().template(template).topic(topicGeometry).difficulty(diffHard).questionType(QuestionType.FRQ).numberOfQuestions(3).points(3.0).build()
         );
 
         template.setRules(rules);

@@ -30,7 +30,7 @@ public class QuestionV2 {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
+    @Column(name = "question_type", nullable = false)
     private QuestionType type;
 
     @ManyToOne(fetch = FetchType.LAZY)

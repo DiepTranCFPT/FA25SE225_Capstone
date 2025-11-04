@@ -56,6 +56,7 @@ public class ExamGenerationServiceV2 {
         for (ExamRuleV2 rule : template.getRules()) {
             List<QuestionV2> randomQuestions = questionRepository.findRandomQuestionsByCriteria(
                     rule.getTopic().getId(),
+                    rule.getQuestionType().getValue(),
                     rule.getDifficulty().getName(),
                     teacher.getId(),
                     rule.getNumberOfQuestions()

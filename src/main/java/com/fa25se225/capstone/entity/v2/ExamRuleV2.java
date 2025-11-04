@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.entity.v2;
 
 
+import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.entity.QuestionDifficulty;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
@@ -35,12 +36,16 @@ public class ExamRuleV2 {
     @Column(name = "num_questions", nullable = false)
     private Integer numberOfQuestions;
 
-    @Column(name = "points_per_question", nullable = false)
-    private Double points;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = false)
     private QuestionTopicV2 topic;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_type")
+    private QuestionType questionType;
+
+    @Column(name = "points_per_question", nullable = false)
+    private Double points;
 
     @CreationTimestamp
     private LocalDateTime create_at;

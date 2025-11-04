@@ -164,4 +164,11 @@ public class LearningMaterialController {
         learningMaterialService.delete(id);
         return ApiResponse.success("Learning material deleted successfully");
     }
+
+    @GetMapping("/all")
+    @Operation(summary = "Get all learning materials (not paged)",
+            description = "Retrieves all non-deleted learning materials as a list. No pagination.")
+    public ApiResponse<List<LearningMaterialResponse>> getAllMaterials() {
+        return ApiResponse.success(learningMaterialService.getAllMaterials());
+    }
 }

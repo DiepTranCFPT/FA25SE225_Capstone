@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service.v2;
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.v2.ExamAttemptV2Response;
+import com.fa25se225.capstone.dto.v2.GradingUserAnswerAIResponse;
 import com.fa25se225.capstone.dto.v2.StudentAnswerV2Request;
 import com.fa25se225.capstone.dto.v2.SubmitAttemptV2Request;
 import com.fa25se225.capstone.entity.v2.*;
@@ -13,9 +14,12 @@ import com.fa25se225.capstone.repository.v2.StudentAnswerV2Repository;
 import com.fa25se225.capstone.service.GeminiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -33,6 +37,7 @@ public class ExamGradingServiceV2 {
     private final AnswerV2Repository answerRepository;
     private final GeminiService geminiService;
     private final ObjectMapper objectMapper;
+    private final ChatClient chatClient;
 
     @Transactional
     public ExamAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
@@ -168,51 +173,37 @@ public class ExamGradingServiceV2 {
     }
 
     private double gradeFrqWithAI(QuestionV2 question, String studentAnswerText, double maxPoints, StudentAnswerV2 answerEntity) {
-//        if (studentAnswerText == null || studentAnswerText.isBlank()) {
-//            return 0.0;
-//        }
-//
-//
-//        AnswerV2 modelAnswer = question.getAnswers().stream()
-//                .filter(AnswerV2::getIsCorrect)
-//                .findFirst()
-//                .orElse(null);
-//
-//        if (modelAnswer == null) {
-//            log.error("Không tìm thấy đáp án mẫu (model answer) cho câu hỏi FRQ ID: {}", question.getId());
-//            return 0.0; // Không có đáp án mẫu, không chấm được
-//        }
-//
-//        // Tạo prompt cho AI
-//        String prompt = String.format(
-//                "You are an AI grading assistant. Grade the student's answer based on the model answer and the maximum points. " +
-//                        "Respond ONLY with a JSON object in the format: {\"score\": <number>, \"feedback\": \"<your_reasoning>\"}. " +
-//                        "The score must be a number between 0 and %.1f.\n\n" +
-//                        "--- MODEL ANSWER ---\n%s\n\n" +
-//                        "--- STUDENT'S ANSWER ---\n%s\n\n" +
-//                        "--- MAXIMUM POINTS: %.1f ---",
-//                maxPoints, modelAnswer.getContent(), studentAnswerText, maxPoints
-//        );
-//
-//        try {
-//            // Gọi GeminiService của bạn
-//            String aiResponse = geminiService.generateContent(prompt);
-//
-//            // Parse JSON response
-//            Map<String, Object> responseMap = objectMapper.readValue(aiResponse, Map.class);
-//            double score = ((Number) responseMap.get("score")).doubleValue();
-//            String feedback = (String) responseMap.get("feedback");
-//
-//            answerEntity.setFeedback(feedback); // Lưu feedback
-//
-//            // Đảm bảo điểm AI không vượt quá maxPoints
-//            return Math.min(score, maxPoints);
-//
-//        } catch (Exception e) {
-//            log.error("Lỗi khi chấm điểm bằng AI cho câu hỏi {}: {}", question.getId(), e.getMessage());
-//            answerEntity.setFeedback("Error during AI grading: " + e.getMessage());
-//            return 0.0; // Lỗi -> 0 điểm
-//        }
-        return 2.0;
+        if (!StringUtils.hasText(studentAnswerText)) {
+            return 0.0;
+        }
+
+
+        AnswerV2 modelAnswer = question.getAnswers().stream()
+                .filter(AnswerV2::getIsCorrect)
+                .findFirst()
+                .orElse(null);
+
+        if (modelAnswer == null) {
+            log.error("Không tìm thấy đáp án mẫu (model answer) cho câu hỏi FRQ ID: {}", question.getId());
+            return 0.0; // Không có đáp án mẫu, không chấm được
+        }
+
+        String systemPrompt = String.format(
+                "You are an AI grading assistant. Grade the student's answer based on the model answer and the maximum points. " +
+                        "The score must be a number between 0 and %.1f.\n\n" +
+                        "--- MODEL ANSWER ---\n%s\n\n" +
+                        "--- MAXIMUM POINTS: %.1f ---",
+                maxPoints, modelAnswer.getContent(), maxPoints
+        );
+
+            var aiResponse = chatClient.prompt().system(systemPrompt)
+                            .user(studentAnswerText)
+                                    .call().entity(GradingUserAnswerAIResponse.class);
+
+
+            answerEntity.setFeedback(aiResponse.getFeedback());
+
+
+            return Math.min(aiResponse.getPoint(), maxPoints);
     }
 }

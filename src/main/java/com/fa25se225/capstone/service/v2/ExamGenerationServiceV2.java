@@ -6,6 +6,7 @@ import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
+import com.fa25se225.capstone.mapper.v2.ExamV2Mapper;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ExamGenerationServiceV2 {
     private final ExamV2Repository examRepository;
     private final ExamAttemptV2Repository attemptRepository;
     private final AccountUtil accountUtil;
+    private final ExamV2Mapper examV2Mapper;
 
     @Transactional
     public ExamV2Response startExamFromTemplate(String templateId) {
@@ -95,14 +97,8 @@ public class ExamGenerationServiceV2 {
                 .build();
 
         attemptRepository.save(attempt);
-        return ExamV2Response.builder()
-                .id(savedExam.getId())
-                .title(savedExam.getTitle())
-                .subject(SubjectV2Response.builder()
-                        .name(savedExam.getSubject().getName())
-                        .id(savedExam.getSubject().getId())
-                        .build())
-                .examAttemptId(attempt.getId())
-                .build();
+        var response = examV2Mapper.toResponse(savedExam);
+        response.setExamAttemptId(attempt.getId());
+        return response;
     }
 }

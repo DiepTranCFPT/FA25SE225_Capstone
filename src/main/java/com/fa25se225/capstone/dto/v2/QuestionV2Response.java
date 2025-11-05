@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Builder
 @Getter
 @Setter
@@ -15,4 +17,5 @@ public class QuestionV2Response {
     private QuestionDifficultyV2Response difficulty;
     private String createdBy;
     private String topic;
+    private List<ExamAnswerV2Response> answers;
 }

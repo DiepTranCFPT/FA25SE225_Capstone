@@ -4,12 +4,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 
 @Builder
 @Getter
 @Setter
 public class ExamQuestionV2Response {
-    private String id;
+    private String examQuestionId;
     private QuestionV2Response question;
     private Integer orderNumber;
     private Double points;

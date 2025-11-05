@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.mapper.v2;
 
-import com.fa25se225.capstone.dto.v2.ExamAnswerV2Response;
+import com.fa25se225.capstone.dto.v2.response.ExamAnswerV2Response;
 import com.fa25se225.capstone.entity.v2.AnswerV2;
 import org.mapstruct.Mapper;
 

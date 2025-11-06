@@ -75,7 +75,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             List<QuestionV2> randomQuestions = questionRepository.findRandomQuestionsByCriteria(
                     rule.getTopic().getId(),
                     rule.getQuestionType().getValue(),
-                    rule.getDifficulty().getName(),
+                    rule.getDifficulty().getId(),
                     teacher.getId(),
                     rule.getNumberOfQuestions()
             );

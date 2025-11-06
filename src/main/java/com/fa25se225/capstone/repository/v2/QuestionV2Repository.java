@@ -36,7 +36,7 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
 
     @Query(value = "SELECT * FROM questions_v2 q WHERE q.topic_id = :topicId AND q.question_type = :questionType " +
             "AND q.difficulty_id = :difficultyId AND q.created_by = :creatorId ORDER BY RAND() LIMIT :count", nativeQuery = true)
-    List<QuestionV2> findRandomQuestionsByCriteria(@feign.Param("topicId") String topicId, @feign.Param("questionType") String questionType,
-                                                   @feign.Param("difficultyId") String difficultyId, @feign.Param("creatorId") String creatorId, @feign.Param("count") int count);
+    List<QuestionV2> findRandomQuestionsByCriteria(@Param("topicId") String topicId,@Param("questionType") String questionType,
+                                                   @Param("difficultyId") String difficultyId, @Param("creatorId") String creatorId, @Param("count") int count);
 
 }

@@ -19,22 +19,24 @@ public interface QuestionV2Mapper {
     @Mapping(target = "difficulty", source = "difficulty")
     @Mapping(target = "createdBy", source = "createdBy.id")
     @Mapping(target = "topic", source = "topic.name")
-    @Mapping(target = "answers", source = "answers", qualifiedByName = "conditionalAnswers")
+//    @Mapping(target = "answers", source = "answers", qualifiedByName = "conditionalAnswers")
+    @Mapping(target = "answers", source = "answers")
+
     QuestionV2Response toResponse(QuestionV2 questionV2);
 
 
-    List<ExamAnswerV2Response> mapAnswers(List<AnswerV2> answers);
-
-    @Named("conditionalAnswers")
-    default List<ExamAnswerV2Response> conditionalAnswers(List<AnswerV2> answers) {
-        if (answers == null) {
-            return null;
-        }
-        if (answers.size() == 1 && answers.get(0).getIsCorrect()) {
-            return null;
-        }
-        return mapAnswers(answers);
-    }
+//    List<ExamAnswerV2Response> mapAnswers(List<AnswerV2> answers);
+//
+//    @Named("conditionalAnswers")
+//    default List<ExamAnswerV2Response> conditionalAnswers(List<AnswerV2> answers) {
+//        if (answers == null) {
+//            return null;
+//        }
+//        if (answers.size() == 1 && answers.get(0).getIsCorrect()) {
+//            return null;
+//        }
+//        return mapAnswers(answers);
+//    }
 
     @Mapping(target = "type", expression = "java(QuestionType.valueOf(request.getType().toUpperCase()))")
     @Mapping(target = "subject", ignore = true)

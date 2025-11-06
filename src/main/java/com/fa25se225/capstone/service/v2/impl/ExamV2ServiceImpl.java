@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -115,6 +116,12 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         attemptRepository.save(attempt);
         ExamV2Response response = examV2Mapper.toResponse(savedExam);
         response.setExamAttemptId(attempt.getId());
+        response.getQuestions().stream().forEach(examQuestion -> {
+            var answers = examQuestion.getQuestion().getAnswers();
+            if (Objects.nonNull(answers) && answers.size() == 1) {
+                examQuestion.getQuestion().setAnswers(null);
+            }
+        });
         return response;
     }
 

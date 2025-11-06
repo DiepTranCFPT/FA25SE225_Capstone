@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface QuestionTopicV2Repository extends JpaRepository<QuestionTopicV2, String> {
-    Optional<QuestionTopicV2> findByName(String name);
+    Optional<QuestionTopicV2> findByNameIgnoreCase(String name);
 }

@@ -38,7 +38,7 @@ public class DataSeederV2 {
                 User teacher = userRepository.findByEmail("admin123@gmail.com")
                         .orElseThrow(() -> new RuntimeException("User 'admin123@gmail.com' not found. Please ensure this user exists."));
 
-                Subject mathSubject = subjectRepository.findByName("Mathematics")
+                Subject mathSubject = subjectRepository.findByNameIgnoreCase("Mathematics")
                         .orElseGet(() -> subjectRepository.save(
                                 Subject.builder().name("Mathematics").code("MATH").build()
                         ));
@@ -89,7 +89,7 @@ public class DataSeederV2 {
     }
 
     private QuestionTopicV2 createTopic(String name, Subject subject, User teacher) {
-        return topicRepository.findByName(name)
+        return topicRepository.findByNameIgnoreCase(name)
                 .orElseGet(() -> topicRepository.save(
                         QuestionTopicV2.builder()
                                 .name(name)

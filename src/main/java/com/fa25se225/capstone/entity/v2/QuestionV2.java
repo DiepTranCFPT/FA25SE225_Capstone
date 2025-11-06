@@ -54,9 +54,9 @@ public class QuestionV2 {
     private List<AnswerV2> answers = new ArrayList<>();
 
     @CreationTimestamp
-    private LocalDateTime create_at;
+    private LocalDateTime createAt;
     @UpdateTimestamp
-    private LocalDateTime update_at;
+    private LocalDateTime updateAt;
 
 
 }

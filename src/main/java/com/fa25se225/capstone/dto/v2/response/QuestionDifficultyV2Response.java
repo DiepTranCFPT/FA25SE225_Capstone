@@ -8,6 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class QuestionDifficultyV2Response {
+    private String id;
     private String name;
     private String description;
 }

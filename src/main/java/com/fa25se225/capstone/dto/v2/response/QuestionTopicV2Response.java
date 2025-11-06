@@ -7,8 +7,9 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class SubjectV2Response {
+public class QuestionTopicV2Response {
     private String id;
     private String name;
+    private String subject;
     private String description;
 }

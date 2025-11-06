@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
 @Table(name = "question_difficulties_v2")
 public class QuestionDifficultyV2 {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
     private String name;
 
     @Column(name = "description")

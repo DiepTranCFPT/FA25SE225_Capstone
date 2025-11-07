@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.configuration;
 
+import com.fa25se225.capstone.configuration.dataseed.DataSeederV2;
 import com.fa25se225.capstone.constant.PredefinedSystemPermission;
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.entity.Permission;
@@ -36,7 +37,8 @@ public class ApplicationInitConfig {
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository,
                                         RoleRepository roleRepository,
-                                        PermissionRepository permissionRepository) {
+                                        PermissionRepository permissionRepository,
+                                        DataSeederV2 dataSeederV2) {
         return args -> {
 
             log.info("Seeding permissions...");
@@ -51,6 +53,7 @@ public class ApplicationInitConfig {
 
             createAdminUserIfNotFound(userRepository, roleRepository);
 
+            dataSeederV2.createExamDataSeed();
             log.info("Application data seeding finished.");
         };
     }
@@ -99,4 +102,6 @@ public class ApplicationInitConfig {
             log.warn("Default admin user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", ADMIN_EMAIL, ADMIN_PASSWORD);
         }
     }
+
+
 }

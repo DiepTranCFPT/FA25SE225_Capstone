@@ -15,6 +15,7 @@ public interface ExamTemplateV2Repository extends JpaRepository<ExamTemplateV2, 
 
     Page<ExamTemplateV2> findByCreatedById(String createdById, Pageable pageable);
 
+    Page<ExamTemplateV2> findBySubjectIdAndIsActiveTrueOrderByAverageRatingDesc(String subjectId, Pageable pageable);
 
 
 }

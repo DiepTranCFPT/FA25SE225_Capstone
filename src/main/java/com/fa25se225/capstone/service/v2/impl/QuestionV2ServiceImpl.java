@@ -60,7 +60,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
         User currentUser = accountUtil.getCurrentUser();
 
-        Subject subject = subjectRepository.findByNameIgnoreCase(request.getSubject())
+        Subject subject = subjectRepository.findById(request.getSubjectId())
                 .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
 
         QuestionDifficultyV2 difficulty = questionDifficultyV2Repository.findByNameIgnoreCase(request.getDifficultyName())
@@ -69,14 +69,12 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(request.getTopicName())
                 .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
 
-        // Create question entity
         QuestionV2 questionV2 = questionV2Mapper.toEntity(request);
         questionV2.setCreatedBy(currentUser);
         questionV2.setSubject(subject);
         questionV2.setDifficulty(difficulty);
         questionV2.setTopic(topic);
 
-        // Create answers
         if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
             List<AnswerV2> answers = request.getAnswers().stream()
                     .map(answerRequest -> {

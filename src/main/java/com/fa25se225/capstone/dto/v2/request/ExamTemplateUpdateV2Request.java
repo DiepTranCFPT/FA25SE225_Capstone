@@ -16,7 +16,7 @@ import java.util.List;
 public class ExamTemplateUpdateV2Request {
     private String title;
     private String description;
-    private String subject;
+    private String subjectId;
     private Integer duration;
     private Integer passingScore;
     private Boolean isActive = false;

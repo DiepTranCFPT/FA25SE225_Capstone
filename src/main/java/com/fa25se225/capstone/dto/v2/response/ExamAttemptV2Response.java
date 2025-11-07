@@ -12,8 +12,8 @@ public class ExamAttemptV2Response {
     private String examId;
     private String doneBy;
     private Double score;
-    private LocalDateTime startAt;
-    private LocalDateTime endAt;
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     private Integer rating;
 

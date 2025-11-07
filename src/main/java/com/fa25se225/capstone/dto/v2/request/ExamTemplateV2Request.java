@@ -17,8 +17,9 @@ public class ExamTemplateV2Request {
     @NotBlank
     private String title;
     private String description;
-    @NotBlank
-    private String subject;
+
+    @NotBlank(message = "Subject ID is required")
+    private String subjectId;
     @NotNull
     private Integer duration;
     @NotNull

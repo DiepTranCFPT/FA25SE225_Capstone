@@ -57,7 +57,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public ExamTemplateV2Response createTemplate(ExamTemplateV2Request request) {
         log.info("Creating ExamTemplateV2: {}", request.getTitle());
         ExamTemplateV2 template = templateMapper.toEntity(request);
-        template.setSubject(getSubject(request.getSubject()));
+        template.setSubject(getSubjectById(request.getSubjectId()));
         User currentUser = accountUtil.getCurrentUser();
         template.setCreatedBy(currentUser);
         if (template.getIsActive() == null) {
@@ -79,8 +79,8 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         ExamTemplateV2 existing = templateRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
         templateMapper.updateEntity(existing, request);
-        if (StringUtils.hasText(request.getSubject())) {
-            existing.setSubject(getSubject(request.getSubject()));
+        if (StringUtils.hasText(request.getSubjectId())) {
+            existing.setSubject(getSubjectById(request.getSubjectId()));
         }
         if (request.getRules() != null) {
             updateRulesCollection(existing, request.getRules());
@@ -175,13 +175,13 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     public PageResponse<List<ExamTemplateV2Response>> browseActiveTemplates(
-            String subject, String teacherId, double minRating,
+            String subjectId, String teacherId, double minRating,
             int pageNo, int pageSize, String... sorts) {
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
         Specification<ExamTemplateV2> spec = ExamTemplateSpecification.findActiveWithFilters(
-                subject, teacherId, minRating
+                subjectId, teacherId, minRating
         );
 
         Page<ExamTemplateV2> page = templateRepository.findAll(spec, pageable);
@@ -239,8 +239,8 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         currentRules.addAll(newRules);
     }
 
-    private Subject getSubject(String name) {
-        return subjectRepository.findByNameIgnoreCase(name)
+    private Subject getSubjectById(String subjectId) {
+        return subjectRepository.findById(subjectId)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
     }
 

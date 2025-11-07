@@ -14,16 +14,16 @@ import jakarta.persistence.criteria.Predicate;
 public class ExamTemplateSpecification {
 
     public static Specification<ExamTemplateV2> findActiveWithFilters(
-            String subjectName, String teacherId, double minRating) {
+            String subjectId, String teacherId, double minRating) {
 
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             predicates.add(cb.isTrue(root.get("isActive")));
 
-            if (StringUtils.hasText(subjectName)) {
+            if (StringUtils.hasText(subjectId)) {
                 Join<ExamTemplateV2, Subject> subjectJoin = root.join("subject");
-                predicates.add(cb.equal(subjectJoin.get("name"), subjectName));
+                predicates.add(cb.equal(subjectJoin.get("id"), subjectId));
             }
 
             if (StringUtils.hasText(teacherId)) {

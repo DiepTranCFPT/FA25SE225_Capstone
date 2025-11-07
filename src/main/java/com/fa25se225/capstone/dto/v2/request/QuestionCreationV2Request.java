@@ -21,8 +21,8 @@ public class QuestionCreationV2Request {
     @NotNull(message = "Question type is required")
     private String type;
 
-    @NotNull(message = "Subject name is required")
-    private String subject;
+    @NotBlank(message = "Subject ID is required")
+    private String subjectId;
 
     @NotBlank(message = "Difficulty name is required")
     private String difficultyName;

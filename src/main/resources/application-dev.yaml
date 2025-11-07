@@ -4,11 +4,18 @@ spring:
     username: ${usr}
     password: ${pass}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximumPoolSize: 20
+      minimumIdle: 5
+      maxLifetime: 540000     # 9 phút
+      idleTimeout: 300000     # 5 phút
+      keepaliveTime: 240000   # 4 phút
   data:
     redis:
       url: ${REDIS_URL:redis://default:nQZGarDxzUTiLOCawvBOQkNHCjhmzRGh@caboose.proxy.rlwy.net:57131}
   cache:
     type: redis
+
 
   ai:
     openai:
@@ -27,8 +34,13 @@ spring:
   main:
     allow-bean-definition-overriding: true
   jpa:
+    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        use_nationalized_character_data: false
+
 
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}

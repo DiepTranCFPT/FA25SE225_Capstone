@@ -10,12 +10,12 @@ spring:
       maxLifetime: 540000     # 9 phút
       idleTimeout: 300000     # 5 phút
       keepaliveTime: 240000   # 4 phút
+      connectionInitSql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   data:
     redis:
       url: ${REDIS_URL:redis://default:nQZGarDxzUTiLOCawvBOQkNHCjhmzRGh@caboose.proxy.rlwy.net:57131}
   cache:
     type: redis
-
 
   ai:
     openai:
@@ -34,13 +34,8 @@ spring:
   main:
     allow-bean-definition-overriding: true
   jpa:
-    database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        use_nationalized_character_data: false
-
 
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS}

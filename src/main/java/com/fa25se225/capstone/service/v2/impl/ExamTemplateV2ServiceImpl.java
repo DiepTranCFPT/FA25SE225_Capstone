@@ -3,6 +3,7 @@ package com.fa25se225.capstone.service.v2.impl;
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
+import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
@@ -59,43 +60,21 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public ExamTemplateV2Response createTemplate(ExamTemplateV2Request request) {
         log.info("Creating ExamTemplateV2: {}", request.getTitle());
 
+        ExamTemplateV2 template = templateMapper.toEntity(request);
+
         Subject subject = subjectRepository.findByNameIgnoreCase(request.getSubject())
                 .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
+        template.setSubject(subject);
 
         User currentUser = accountUtil.getCurrentUser();
+        template.setCreatedBy(currentUser);
 
-        ExamTemplateV2 template = ExamTemplateV2.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .subject(subject)
-                .createdBy(currentUser)
-                .duration(request.getDuration())
-                .passingScore(request.getPassingScore())
-                .isActive(Objects.isNull(request.getIsActive()) ? true : request.getIsActive())
-                .build();
+        if (template.getIsActive() == null) {
+            template.setIsActive(true);
+        }
 
         if (request.getRules() != null && !request.getRules().isEmpty()) {
-            List<ExamRuleV2> rules = request.getRules().stream().map(r -> {
-                QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(r.getTopicName())
-                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
-                QuestionDifficultyV2 difficulty = questionDifficultyV2Repository.findByNameIgnoreCase(r.getDifficultyName())
-                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_DIFFICULTY_V2_NOT_FOUND));
-                QuestionType qt;
-                try {
-                    qt = QuestionType.fromValue(r.getQuestionType().toUpperCase());
-                } catch (Exception ex) {
-                    throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
-                }
-                ExamRuleV2 rule = ExamRuleV2.builder()
-                        .template(template)
-                        .topic(topic)
-                        .difficulty(difficulty)
-                        .numberOfQuestions(r.getNumberOfQuestions())
-                        .questionType(qt)
-                        .points(r.getPoints())
-                        .build();
-                return rule;
-            }).collect(Collectors.toList());
+            List<ExamRuleV2> rules = createRulesFromRequest(request.getRules(), template);
             template.setRules(rules);
         }
 
@@ -106,16 +85,12 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
-    public ExamTemplateV2Response updateTemplate(String id, ExamTemplateV2Request request) {
+    public ExamTemplateV2Response updateTemplate(String id, ExamTemplateUpdateV2Request request) {
         log.info("Updating ExamTemplateV2 id={}", id);
         ExamTemplateV2 existing = templateRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
 
-        if (StringUtils.hasText(request.getTitle())) existing.setTitle(request.getTitle());
-        if (StringUtils.hasText(request.getDescription())) existing.setDescription(request.getDescription());
-        if (Objects.nonNull(request.getDuration())) existing.setDuration(request.getDuration());
-        if (Objects.nonNull(request.getPassingScore())) existing.setPassingScore(request.getPassingScore());
-        if (Objects.nonNull(request.getIsActive())) existing.setIsActive(request.getIsActive());
+        templateMapper.updateEntity(existing, request);
 
         if (StringUtils.hasText(request.getSubject())) {
             Subject subject = subjectRepository.findByNameIgnoreCase(request.getSubject())
@@ -124,30 +99,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         }
 
         if (request.getRules() != null) {
-            // remove existing rules and attach new ones
-            existing.getRules().clear();
-            List<ExamRuleV2> rules = request.getRules().stream().map(r -> {
-                QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(r.getTopicName())
-                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
-                QuestionDifficultyV2 difficulty = questionDifficultyV2Repository.findByNameIgnoreCase(r.getDifficultyName())
-                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_DIFFICULTY_V2_NOT_FOUND));
-                QuestionType qt;
-                try {
-                    qt = QuestionType.fromValue(r.getQuestionType().toUpperCase());
-                } catch (Exception ex) {
-                    throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
-                }
-                ExamRuleV2 rule = ExamRuleV2.builder()
-                        .template(existing)
-                        .topic(topic)
-                        .difficulty(difficulty)
-                        .numberOfQuestions(r.getNumberOfQuestions())
-                        .questionType(qt)
-                        .points(r.getPoints())
-                        .build();
-                return rule;
-            }).collect(Collectors.toList());
-            existing.setRules(rules);
+            updateRulesCollection(existing, request.getRules());
         }
 
         ExamTemplateV2 saved = templateRepository.save(existing);
@@ -256,5 +208,42 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         }
         ruleRepository.deleteById(ruleId);
     }
-}
 
+    private List<ExamRuleV2> createRulesFromRequest(List<ExamRuleV2Request> ruleRequests, ExamTemplateV2 template) {
+        return ruleRequests.stream().map(r -> {
+            ExamRuleV2 rule = ruleMapper.toEntity(r);
+
+            // Set required fields that mapper ignores
+            QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(r.getTopicName())
+                    .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
+            QuestionDifficultyV2 difficulty = questionDifficultyV2Repository.findByNameIgnoreCase(r.getDifficultyName())
+                    .orElseThrow(() -> new AppException(ErrorCode.QUESTION_DIFFICULTY_V2_NOT_FOUND));
+            QuestionType qt;
+            try {
+                qt = QuestionType.fromValue(r.getQuestionType().toUpperCase());
+            } catch (Exception ex) {
+                throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
+            }
+
+            rule.setTemplate(template);
+            rule.setTopic(topic);
+            rule.setDifficulty(difficulty);
+            rule.setQuestionType(qt);
+
+            return rule;
+        }).collect(Collectors.toList());
+    }
+
+
+    private void updateRulesCollection(ExamTemplateV2 template, List<ExamRuleV2Request> newRuleRequests) {
+        List<ExamRuleV2> currentRules = template.getRules();
+
+        currentRules.clear();
+
+        templateRepository.flush();
+
+        List<ExamRuleV2> newRules = createRulesFromRequest(newRuleRequests, template);
+
+        currentRules.addAll(newRules);
+    }
+}

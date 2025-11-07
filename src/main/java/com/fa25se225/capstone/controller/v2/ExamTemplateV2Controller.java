@@ -2,6 +2,7 @@ package com.fa25se225.capstone.controller.v2;
 
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
+import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
@@ -40,7 +41,7 @@ public class ExamTemplateV2Controller {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<ExamTemplateV2Response> updateTemplate(@PathVariable String id, @RequestBody ExamTemplateV2Request request) {
+    public ApiResponse<ExamTemplateV2Response> updateTemplate(@PathVariable String id, @RequestBody ExamTemplateUpdateV2Request request) {
         return ApiResponse.success(templateService.updateTemplate(id, request));
     }
 

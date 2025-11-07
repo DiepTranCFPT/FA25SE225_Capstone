@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,6 +33,10 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
     static String ADMIN_EMAIL = "admin123@gmail.com";
     static String ADMIN_PASSWORD = "admin123";
+
+    static String TEACHER_EMAIL = "teacher@gmail.com";
+    static String TEACHER_PASSWORD = "teacher123";
+
 
 
     @Bean
@@ -84,6 +89,7 @@ public class ApplicationInitConfig {
                 });
     }
 
+
     private void createAdminUserIfNotFound(UserRepository userRepository, RoleRepository roleRepository) {
         if (userRepository.findByEmail(ADMIN_EMAIL).isEmpty()) {
 
@@ -98,8 +104,18 @@ public class ApplicationInitConfig {
                     .emailVerified(true)
                     .roles(adminRoles)
                     .build();
-            userRepository.save(adminUser);
+            User teacher = User.builder()
+                    .email(TEACHER_EMAIL)
+                    .password(passwordEncoder.encode(TEACHER_PASSWORD))
+                    .firstName("Teacher")
+                    .lastName("System")
+                    .emailVerified(true)
+                    .roles(Set.of(roleRepository.findByName("TEACHER"), roleRepository.findByName("STUDENT")))
+                    .build();
+            userRepository.saveAll(List.of(adminUser,teacher));
             log.warn("Default admin user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", ADMIN_EMAIL, ADMIN_PASSWORD);
+            log.warn("Default teacher user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", TEACHER_EMAIL, TEACHER_PASSWORD);
+
         }
     }
 

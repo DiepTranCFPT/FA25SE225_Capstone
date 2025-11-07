@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MaterialTypeRepository extends JpaRepository<MaterialType, String> {
@@ -14,4 +15,7 @@ public interface MaterialTypeRepository extends JpaRepository<MaterialType, Stri
     
     @Query("SELECT mt FROM MaterialType mt WHERE mt.code = :code AND mt.deleted = false")
     Optional<MaterialType> findByCodeNotDeleted(@Param("code") String code);
+
+    @Query("SELECT mt FROM MaterialType mt WHERE mt.deleted = false")
+    List<MaterialType> findAllNotDeleted();
 }

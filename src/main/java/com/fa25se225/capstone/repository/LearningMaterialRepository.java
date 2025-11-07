@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LearningMaterialRepository extends JpaRepository<LearningMaterial, String> {
@@ -61,4 +62,11 @@ public interface LearningMaterialRepository extends JpaRepository<LearningMateri
            "OR LOWER(lm.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "AND lm.deleted = false")
     Page<LearningMaterial> findByKeywordNotDeleted(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT lm FROM LearningMaterial lm " +
+           "LEFT JOIN FETCH lm.type " +
+           "LEFT JOIN FETCH lm.subject " +
+           "LEFT JOIN FETCH lm.author " +
+           "WHERE lm.deleted = false")
+    List<LearningMaterial> findAllNotDeleted();
 }

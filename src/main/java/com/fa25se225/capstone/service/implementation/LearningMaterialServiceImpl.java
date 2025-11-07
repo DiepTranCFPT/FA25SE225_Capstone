@@ -307,6 +307,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         log.info("Successfully deleted learning material with id: {}", id);
     }
     
+    @Override
+    public List<LearningMaterialResponse> getAllMaterials() {
+        List<LearningMaterial> materials = learningMaterialRepository.findAllNotDeleted();
+        return materials.stream()
+                .map(learningMaterialMapper::toResponse)
+                .toList();
+    }
+
     private String getCurrentUserEmail() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }

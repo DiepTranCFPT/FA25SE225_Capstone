@@ -17,5 +17,9 @@ public class ExamTemplateV2Response {
     private Boolean isActive;
     private String createdBy;
     private List<ExamRuleV2Response> rules;
+
+    private Double averageRating;
+    private Integer totalRatings;
+    private Integer totalTakers;
 }
 

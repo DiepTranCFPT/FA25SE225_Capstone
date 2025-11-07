@@ -110,6 +110,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .user(currentUser)
                 .startTime(LocalDateTime.now())
                 .status(AttemptStatusV2.IN_PROGRESS)
+                .sourceTemplate(template)
                 .score(0.0)
                 .build();
 

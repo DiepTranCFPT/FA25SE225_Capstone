@@ -3,6 +3,7 @@ import com.fa25se225.capstone.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -46,6 +47,17 @@ public class ExamAttemptV2 {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private AttemptStatusV2 status;
+
+    @Column(name = "rating")
+    private Integer rating;
+
+    @Nationalized
+    @Column(name = "comment", columnDefinition = "TEXT")
+    private String comment;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    private ExamTemplateV2 sourceTemplate;
 
     @CreationTimestamp
     @Column(name = "created_at")

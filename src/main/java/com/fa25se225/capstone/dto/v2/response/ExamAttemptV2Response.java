@@ -8,11 +8,13 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ExamAttemptV2Response {
-    String id;
-    String examId;
-    String doneBy;
-    Double score;
-    LocalDateTime startAt;
-    LocalDateTime endAt;
+    private String id;
+    private String examId;
+    private String doneBy;
+    private Double score;
+    private LocalDateTime startAt;
+    private LocalDateTime endAt;
+
+    private Integer rating;
 
 }

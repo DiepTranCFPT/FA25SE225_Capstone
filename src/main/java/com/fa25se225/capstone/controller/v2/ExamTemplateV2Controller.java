@@ -10,6 +10,7 @@ import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.service.v2.ExamTemplateV2Service;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -65,6 +66,30 @@ public class ExamTemplateV2Controller {
     public ApiResponse<String> deleteRule(@PathVariable String ruleId) {
         templateService.deleteRule(ruleId);
         return ApiResponse.success("Delete successfully");
+    }
+
+    @GetMapping("/browse")
+    public ApiResponse<PageResponse<List<ExamTemplateV2Response>>> browseTemplates(
+            @RequestParam(required = false) String subject,
+            @RequestParam(required = false) String teacherId,
+            @RequestParam(defaultValue = "0", required = false) double minRating,
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts
+    ) {
+        return ApiResponse.success(templateService.browseActiveTemplates(
+                subject, teacherId, minRating, pageNo, pageSize, sorts
+        ));
+    }
+
+    @GetMapping("/my-templates")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ApiResponse<PageResponse<List<ExamTemplateV2Response>>> getMyTemplates(
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts
+    ) {
+        return ApiResponse.success(templateService.getTemplatesByCurrentUser(pageNo, pageSize, sorts));
     }
 }
 

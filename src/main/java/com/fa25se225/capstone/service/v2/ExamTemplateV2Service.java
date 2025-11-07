@@ -19,5 +19,14 @@ public interface ExamTemplateV2Service {
     ExamRuleV2Response addRule(String templateId, ExamRuleV2Request request);
     ExamRuleV2Response updateRule(String ruleId, ExamRuleV2Request request);
     void deleteRule(String ruleId);
+
+    PageResponse<List<ExamTemplateV2Response>> browseActiveTemplates(
+            String subject, String teacherId, double minRating,
+            int pageNo, int pageSize, String... sorts
+    );
+
+    PageResponse<List<ExamTemplateV2Response>> getTemplatesByCurrentUser(
+            int pageNo, int pageSize, String... sorts
+    );
 }
 

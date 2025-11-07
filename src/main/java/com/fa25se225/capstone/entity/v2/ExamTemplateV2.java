@@ -48,6 +48,18 @@ public class ExamTemplateV2 {
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamRuleV2> rules = new ArrayList<>();
 
+    @Column(name = "average_rating", columnDefinition = "DECIMAL(3,2) default 0.0")
+    @Builder.Default
+    private Double averageRating = 0.0;
+
+    @Column(name = "total_ratings")
+    @Builder.Default
+    private Integer totalRatings = 0;
+
+    @Column(name = "total_takers")
+    @Builder.Default
+    private Integer totalTakers = 0;
+
     @CreationTimestamp
     private LocalDateTime create_at;
     @UpdateTimestamp

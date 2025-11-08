@@ -55,7 +55,9 @@ public enum ErrorCode {
 
     EXISTED_QUESTION_TOPIC(1045, "Question topic name is existed", HttpStatus.BAD_REQUEST ),
 
-    QUESTION_DIFFICULTY_EXISTED(1046, "Question difficulty name is existed", HttpStatus.BAD_REQUEST)
+    QUESTION_DIFFICULTY_EXISTED(1046, "Question difficulty name is existed", HttpStatus.BAD_REQUEST),
+    INSUFFICIENT_QUESTIONS_IN_BANK(1047, "Insufficient questions in bank for the selected rule", HttpStatus.BAD_REQUEST);
+
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

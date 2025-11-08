@@ -1,6 +1,7 @@
 
 package com.fa25se225.capstone.repository.v2;
 
+import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.entity.v2.QuestionV2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,4 +41,16 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
     List<QuestionV2> findRandomQuestionsByCriteria(@Param("topicId") String topicId,@Param("questionType") String questionType,
                                                    @Param("difficultyId") String difficultyId, @Param("creatorId") String creatorId, @Param("count") int count);
 
+
+    @Query("SELECT COUNT(q) FROM QuestionV2 q WHERE " +
+            "q.topic.id = :topicId AND " +
+            "q.difficulty.id = :difficultyId AND " +
+            "q.type = :questionType AND " +
+            "q.createdBy.id = :creatorId")
+    long countQuestionsByCriteria(
+            @Param("topicId") String topicId,
+            @Param("difficultyId") String difficultyId,
+            @Param("questionType") QuestionType questionType,
+            @Param("creatorId") String creatorId
+    );
 }

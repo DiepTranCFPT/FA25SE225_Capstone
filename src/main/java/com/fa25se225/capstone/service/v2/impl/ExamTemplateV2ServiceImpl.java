@@ -51,6 +51,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     private final ExamTemplateV2Mapper templateMapper;
     private final ExamRuleV2Mapper ruleMapper;
     private final PageHelper pageHelper;
+    private final QuestionV2Repository questionV2Repository;
 
     @Override
     @Transactional
@@ -64,7 +65,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
             template.setIsActive(true);
         }
         if (request.getRules() != null && !request.getRules().isEmpty()) {
-            List<ExamRuleV2> rules = createRulesFromRequest(request.getRules(), template);
+            List<ExamRuleV2> rules = createRulesFromRequest(request.getRules(), template, currentUser);
             template.setRules(rules);
         }
         ExamTemplateV2 saved = templateRepository.save(template);
@@ -78,12 +79,15 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         log.info("Updating ExamTemplateV2 id={}", id);
         ExamTemplateV2 existing = templateRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
+
+        User teacher = existing.getCreatedBy();
+
         templateMapper.updateEntity(existing, request);
         if (StringUtils.hasText(request.getSubjectId())) {
             existing.setSubject(getSubjectById(request.getSubjectId()));
         }
         if (request.getRules() != null) {
-            updateRulesCollection(existing, request.getRules());
+            updateRulesCollection(existing, request.getRules(), teacher);
         }
         ExamTemplateV2 saved = templateRepository.save(existing);
         return templateMapper.toResponse(saved);
@@ -125,6 +129,13 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public ExamRuleV2Response addRule(String templateId, ExamRuleV2Request request) {
         ExamTemplateV2 template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
+
+        QuestionTopicV2 topic = getQuestionTopic(request.getTopicName());
+        QuestionDifficultyV2 difficulty = getQuestionDifficulty(request.getDifficultyName());
+        QuestionType questionType = getQuestionType(request.getQuestionType());
+        User teacher = template.getCreatedBy();
+
+        validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(), request.getNumberOfQuestions());
         ExamRuleV2 rule = ExamRuleV2.builder()
                 .template(template)
                 .topic(getQuestionTopic(request.getTopicName()))
@@ -145,18 +156,34 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public ExamRuleV2Response updateRule(String ruleId, ExamRuleV2Request request) {
         ExamRuleV2 rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
-        if (StringUtils.hasText(request.getTopicName())) {
-            rule.setTopic(getQuestionTopic(request.getTopicName()));
-        }
-        if (StringUtils.hasText(request.getDifficultyName())) {
-            rule.setDifficulty(getQuestionDifficulty(request.getDifficultyName()));
-        }
-        if (StringUtils.hasText(request.getQuestionType())) {
-            rule.setQuestionType(getQuestionType(request.getQuestionType()));
-        }
-        if (Objects.nonNull(request.getNumberOfQuestions())) {
-            rule.setNumberOfQuestions(request.getNumberOfQuestions());
-        }
+
+        User teacher = rule.getTemplate().getCreatedBy();
+
+        QuestionTopicV2 topic = StringUtils.hasText(request.getTopicName()) ?
+                getQuestionTopic(request.getTopicName()) : rule.getTopic();
+
+        QuestionDifficultyV2 difficulty = StringUtils.hasText(request.getDifficultyName()) ?
+                getQuestionDifficulty(request.getDifficultyName()) : rule.getDifficulty();
+
+        QuestionType questionType = StringUtils.hasText(request.getQuestionType()) ?
+                getQuestionType(request.getQuestionType()) : rule.getQuestionType();
+
+        Integer numberOfQuestions = Objects.nonNull(request.getNumberOfQuestions()) ?
+                request.getNumberOfQuestions() : rule.getNumberOfQuestions();
+
+        validateQuestionAvailability(
+                topic.getId(),
+                difficulty.getId(),
+                questionType,
+                teacher.getId(),
+                numberOfQuestions
+        );
+
+        rule.setTopic(topic);
+        rule.setDifficulty(difficulty);
+        rule.setQuestionType(questionType);
+        rule.setNumberOfQuestions(numberOfQuestions);
+
         if (Objects.nonNull(request.getPoints())) {
             rule.setPoints(request.getPoints());
         }
@@ -219,23 +246,42 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
                 .build();
     }
 
-    private List<ExamRuleV2> createRulesFromRequest(List<ExamRuleV2Request> ruleRequests, ExamTemplateV2 template) {
-        return ruleRequests.stream().map(r -> {
-            ExamRuleV2 rule = ruleMapper.toEntity(r);
+    private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedCount) {
+        log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requested={}",
+                topicId, difficultyId, type, creatorId, requestedCount);
 
-            rule.setTemplate(template);
-            rule.setTopic(getQuestionTopic(r.getTopicName()));
-            rule.setDifficulty(getQuestionDifficulty(r.getDifficultyName()));
-            rule.setQuestionType(getQuestionType(r.getQuestionType()));
-            return rule;
-        }).collect(Collectors.toList());
+        long availableCount = questionV2Repository.countQuestionsByCriteria(topicId, difficultyId, type, creatorId);
+
+        if (availableCount < requestedCount) {
+            log.warn("Insufficient questions. Available: {}, Requested: {}", availableCount, requestedCount);
+            throw new AppException(ErrorCode.INSUFFICIENT_QUESTIONS_IN_BANK);
+        }
     }
 
-    private void updateRulesCollection(ExamTemplateV2 template, List<ExamRuleV2Request> newRuleRequests) {
+    private List<ExamRuleV2> createRulesFromRequest(List<ExamRuleV2Request> ruleRequests, ExamTemplateV2 template, User teacher) {
+        return ruleRequests.stream().map(r -> {
+
+            QuestionTopicV2 topic = getQuestionTopic(r.getTopicName());
+            QuestionDifficultyV2 difficulty = getQuestionDifficulty(r.getDifficultyName());
+            QuestionType questionType = getQuestionType(r.getQuestionType());
+
+            validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(), r.getNumberOfQuestions());
+
+            ExamRuleV2 rule = ruleMapper.toEntity(r);
+            rule.setTemplate(template);
+            rule.setTopic(topic);
+            rule.setDifficulty(difficulty);
+            rule.setQuestionType(questionType);
+            return rule;
+        }).toList();
+    }
+
+    private void updateRulesCollection(ExamTemplateV2 template, List<ExamRuleV2Request> newRuleRequests, User teacher) {
         List<ExamRuleV2> currentRules = template.getRules();
         currentRules.clear();
         templateRepository.flush();
-        List<ExamRuleV2> newRules = createRulesFromRequest(newRuleRequests, template);
+
+        List<ExamRuleV2> newRules = createRulesFromRequest(newRuleRequests, template, teacher);
         currentRules.addAll(newRules);
     }
 

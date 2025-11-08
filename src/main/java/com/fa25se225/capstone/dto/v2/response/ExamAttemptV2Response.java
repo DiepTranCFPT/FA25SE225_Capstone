@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class ExamAttemptV2Response {
-    private String id;
+    private String attemptId;
     private String examId;
     private String doneBy;
     private Double score;

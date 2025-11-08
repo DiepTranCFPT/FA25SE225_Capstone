@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service.v2.impl;
 
 import com.fa25se225.capstone.constant.QuestionType;
+import com.fa25se225.capstone.dto.kafka.FrqGradingEvent;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.*;
 import com.fa25se225.capstone.dto.v2.response.*;
@@ -44,7 +45,6 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final StudentAnswerV2Repository studentAnswerRepository;
     private final ExamQuestionV2Repository examQuestionRepository;
     private final AnswerV2Repository answerRepository;
-    private final SubjectRepository subjectRepository;
 
     private final ExamV2Mapper examV2Mapper;
     private final ExamAttemptV2Mapper examAttemptV2Mapper;
@@ -54,10 +54,9 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final SubjectV2Mapper subjectV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
 
-    // Utils
     private final AccountUtil accountUtil;
     private final PageHelper pageHelper;
-    private final ChatClient chatClient;
+    private final FrqGradingProducerService gradingProducer;
 
 
     @Override
@@ -204,7 +203,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     @Override
     @Transactional
     public ExamAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
-        log.info("Bắt đầu chấm điểm cho Lượt thi (Attempt): {}", attemptId);
+        log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
         ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
@@ -222,82 +221,94 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         attempt.setStatus(AttemptStatusV2.PENDING_GRADING);
 
         List<StudentAnswerV2> studentAnswers = new ArrayList<>();
-        double totalScore = 0.0;
+        List<FrqGradingEvent> gradingTasks = new ArrayList<>();
+        double mcqTotalScore = 0.0;
+        int frqCount = 0;
 
         for (StudentAnswerV2Request dto : request.getAnswers()) {
             ExamQuestionV2 examQuestion = examQuestionRepository.findById(dto.getExamQuestionId())
                     .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
 
+            QuestionV2 question = examQuestion.getQuestion();
+            double maxPoints = examQuestion.getPoints();
+
             StudentAnswerV2 studentAnswer = StudentAnswerV2.builder()
                     .examAttempt(attempt)
                     .examQuestion(examQuestion)
                     .frqAnswerText(dto.getFrqAnswerText())
-                    .score(0.0)
                     .build();
 
             if (dto.getSelectedAnswerId() != null) {
                 AnswerV2 selectedAnswer = answerRepository.findById(dto.getSelectedAnswerId()).orElse(null);
                 studentAnswer.setSelectedAnswer(selectedAnswer);
             }
-            studentAnswers.add(studentAnswer);
-        }
-        studentAnswerRepository.saveAll(studentAnswers);
-        log.info("Đã lưu {} câu trả lời của sinh viên.", studentAnswers.size());
-
-        for (StudentAnswerV2 sa : studentAnswers) {
-            double score = 0.0;
-            QuestionV2 question = sa.getExamQuestion().getQuestion();
-            double maxPoints = sa.getExamQuestion().getPoints();
 
             if (question.getType() == QuestionType.MCQ) {
-                if (sa.getSelectedAnswer() != null && sa.getSelectedAnswer().getIsCorrect()) {
-                    score = maxPoints;
+                if (studentAnswer.getSelectedAnswer() != null && studentAnswer.getSelectedAnswer().getIsCorrect()) {
+                    studentAnswer.setScore(maxPoints);
+                    mcqTotalScore += maxPoints;
+                } else {
+                    studentAnswer.setScore(0.0);
                 }
             } else if (question.getType() == QuestionType.FRQ) {
-                score = gradeFrqWithAI(question, sa.getFrqAnswerText(), maxPoints, sa);
-            }
+                studentAnswer.setScore(null);
+                frqCount++;
 
-            sa.setScore(score);
-            totalScore += score;
+                AnswerV2 modelAnswer = question.getAnswers().stream()
+                        .filter(AnswerV2::getIsCorrect)
+                        .findFirst()
+                        .orElse(null);
+
+                if (modelAnswer != null) {
+                    gradingTasks.add(FrqGradingEvent.builder()
+                            .studentAnswerId(studentAnswer.getId())
+                            .attemptId(attemptId)
+                            .modelAnswer(modelAnswer.getContent())
+                            .studentAnswerText(studentAnswer.getFrqAnswerText())
+                            .maxPoints(maxPoints)
+                            .build());
+                } else {
+                    log.error("Không tìm thấy đáp án mẫu (model answer) cho câu hỏi FRQ ID: {}", question.getId());
+                    studentAnswer.setScore(0.0);
+                    studentAnswer.setFeedback("Error: No model answer found for grading.");
+                }
+            }
+            studentAnswers.add(studentAnswer);
         }
 
-        attempt.setScore(totalScore);
-        attempt.setStatus(AttemptStatusV2.COMPLETED);
+        attempt.setScore(mcqTotalScore);
+
+        if (frqCount == 0) {
+            attempt.setStatus(AttemptStatusV2.COMPLETED);
+        }
 
         studentAnswerRepository.saveAll(studentAnswers);
+
+        List<FrqGradingEvent> finalGradingTasks = new ArrayList<>();
+        int taskIndex = 0;
+        for (StudentAnswerV2 sa : studentAnswers) {
+            if(sa.getExamQuestion().getQuestion().getType() == QuestionType.FRQ && sa.getScore() == null) {
+                if(taskIndex < gradingTasks.size()) {
+                    FrqGradingEvent task = gradingTasks.get(taskIndex++);
+                    finalGradingTasks.add(FrqGradingEvent.builder()
+                            .studentAnswerId(sa.getId()) // Lấy ID thật
+                            .attemptId(task.attemptId())
+                            .modelAnswer(task.modelAnswer())
+                            .studentAnswerText(task.studentAnswerText())
+                            .maxPoints(task.maxPoints())
+                            .build());
+                }
+            }
+        }
+
         var savedAttempt = attemptRepository.save(attempt);
+
+        if (!finalGradingTasks.isEmpty()) {
+            log.info("Push {} grading event into Kafka for Attempt: {}", finalGradingTasks.size(), attemptId);
+            finalGradingTasks.forEach(gradingProducer::sendGradingTask);
+        }
+
         return examAttemptV2Mapper.toResponse(savedAttempt);
-    }
-
-    private double gradeFrqWithAI(QuestionV2 question, String studentAnswerText, double maxPoints, StudentAnswerV2 answerEntity) {
-        if (!StringUtils.hasText(studentAnswerText)) {
-            return 0.0;
-        }
-
-        AnswerV2 modelAnswer = question.getAnswers().stream()
-                .filter(AnswerV2::getIsCorrect)
-                .findFirst()
-                .orElse(null);
-
-        if (modelAnswer == null) {
-            log.error("Không tìm thấy đáp án mẫu (model answer) cho câu hỏi FRQ ID: {}", question.getId());
-            return 0.0;
-        }
-
-        String systemPrompt = String.format(
-                "You are an AI grading assistant. Grade the student's answer based on the model answer and the maximum points. " +
-                        "The score must be a number between 0 and %.1f.\n\n" +
-                        "--- MODEL ANSWER ---\n%s\n\n" +
-                        "--- MAXIMUM POINTS: %.1f ---",
-                maxPoints, modelAnswer.getContent(), maxPoints
-        );
-
-        var aiResponse = chatClient.prompt().system(systemPrompt)
-                .user(studentAnswerText)
-                .call().entity(GradingUserAnswerAIResponse.class);
-
-        answerEntity.setFeedback(aiResponse.getFeedback());
-        return Math.min(aiResponse.getPoint(), maxPoints);
     }
 
     @Override

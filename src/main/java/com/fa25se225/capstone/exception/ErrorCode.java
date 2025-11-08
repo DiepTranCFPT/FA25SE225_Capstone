@@ -53,7 +53,10 @@ public enum ErrorCode {
     MULTIPLE_CORRECT_ANSWERS_V2(1043, "Single choice question can only have one correct answer", HttpStatus.BAD_REQUEST),
     EXAM_RULE_NOT_FOUND(1044,"Exam rule not found" , HttpStatus.BAD_REQUEST ),
 
-    EXISTED_QUESTION_TOPIC(1045, "Question topic name is existed", HttpStatus.BAD_REQUEST );
+    EXISTED_QUESTION_TOPIC(1045, "Question topic name is existed", HttpStatus.BAD_REQUEST ),
+
+    QUESTION_DIFFICULTY_EXISTED(1046, "Question difficulty name is existed", HttpStatus.BAD_REQUEST)
+    ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

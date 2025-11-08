@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface QuestionDifficultyV2Repository extends JpaRepository<QuestionDifficultyV2, String> {
     Optional<QuestionDifficultyV2> findByNameIgnoreCase(String name);
+    Boolean existsByNameIgnoreCase(String name);
 }

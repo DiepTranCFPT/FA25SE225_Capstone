@@ -8,6 +8,7 @@ import com.fa25se225.capstone.dto.v2.request.SubmitAttemptV2Request;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptDetailResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamV2Response;
+import com.fa25se225.capstone.dto.v2.response.SubmitAttemptV2Response;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 public interface ExamV2Service {
 
     ExamV2Response startExamFromTemplate(StartSingleExamRequest request);
-    ExamAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request);
+    SubmitAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request);
     ExamV2Response startExamFromComboTemplates(StartComboExamRequest request);
     ExamV2Response startRandomExamCombo(List<String> subjectIds);
     PageResponse<List<ExamAttemptV2Response>> getMyExamHistory(int pageNo, int pageSize, String... sorts);

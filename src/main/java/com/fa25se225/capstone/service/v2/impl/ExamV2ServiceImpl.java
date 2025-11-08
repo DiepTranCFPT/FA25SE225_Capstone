@@ -202,7 +202,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
-    public ExamAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
+    public SubmitAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
         log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
         ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
@@ -218,7 +218,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         }
 
         attempt.setEndTime(LocalDateTime.now());
-        attempt.setStatus(AttemptStatusV2.PENDING_GRADING);
+        attempt.setStatus(AttemptStatusV2.PENDING_GRADING);//
 
         List<StudentAnswerV2> studentAnswers = new ArrayList<>();
         List<FrqGradingEvent> gradingTasks = new ArrayList<>();
@@ -291,7 +291,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 if(taskIndex < gradingTasks.size()) {
                     FrqGradingEvent task = gradingTasks.get(taskIndex++);
                     finalGradingTasks.add(FrqGradingEvent.builder()
-                            .studentAnswerId(sa.getId()) // Lấy ID thật
+                            .studentAnswerId(sa.getId())
                             .attemptId(task.attemptId())
                             .modelAnswer(task.modelAnswer())
                             .studentAnswerText(task.studentAnswerText())
@@ -308,7 +308,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             finalGradingTasks.forEach(gradingProducer::sendGradingTask);
         }
 
-        return examAttemptV2Mapper.toResponse(savedAttempt);
+        return SubmitAttemptV2Response.builder()
+                .attemptId(savedAttempt.getId())
+                .status(savedAttempt.getStatus())
+                .build();
     }
 
     @Override

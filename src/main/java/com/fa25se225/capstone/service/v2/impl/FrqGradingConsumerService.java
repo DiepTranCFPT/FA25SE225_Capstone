@@ -1,10 +1,12 @@
 package com.fa25se225.capstone.service.v2.impl;
 
 import com.fa25se225.capstone.dto.kafka.FrqGradingEvent;
+import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.GradingUserAnswerAIResponse;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import com.fa25se225.capstone.entity.v2.StudentAnswerV2;
+import com.fa25se225.capstone.mapper.v2.ExamAttemptV2Mapper;
 import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
 import com.fa25se225.capstone.repository.v2.StudentAnswerV2Repository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,9 @@ public class FrqGradingConsumerService {
     private final StudentAnswerV2Repository studentAnswerRepository;
     private final ExamAttemptV2Repository attemptRepository;
     private final ChatClient chatClient;
+
+    private final SseNotificationService sseService;
+    private final ExamAttemptV2Mapper attemptMapper;
 
     @KafkaListener(topics = "frq_grading_tasks", groupId = "frq-grading-group")
     @Transactional
@@ -99,7 +104,10 @@ public class FrqGradingConsumerService {
 
             attempt.setScore(totalScore);
             attempt.setStatus(AttemptStatusV2.COMPLETED);
-            attemptRepository.save(attempt);
+            ExamAttemptV2 savedAttempt = attemptRepository.save(attempt);
+
+            ExamAttemptV2Response responseDTO = attemptMapper.toResponse(savedAttempt);
+            sseService.sendGradingCompleteNotification(attemptId, responseDTO);
 
         } else {
             log.info("Attempt {} still has questions pending grading.", attemptId);

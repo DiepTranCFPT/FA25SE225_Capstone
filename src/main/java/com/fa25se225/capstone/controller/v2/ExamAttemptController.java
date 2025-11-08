@@ -6,11 +6,15 @@ import com.fa25se225.capstone.dto.v2.response.ExamAttemptDetailResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamV2Response;
 import com.fa25se225.capstone.dto.response.ApiResponse;
+import com.fa25se225.capstone.dto.v2.response.SubmitAttemptV2Response;
 import com.fa25se225.capstone.service.v2.ExamV2Service;
+import com.fa25se225.capstone.service.v2.impl.SseNotificationService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -21,6 +25,7 @@ import java.util.List;
 public class ExamAttemptController {
 
     private final ExamV2Service examV2Service;
+    private final SseNotificationService sseService;
 
 
     @PostMapping("/start-single")
@@ -39,7 +44,7 @@ public class ExamAttemptController {
     }
 
     @PostMapping("/{attemptId}/submit")
-    public ApiResponse<ExamAttemptV2Response> submitExam(
+    public ApiResponse<SubmitAttemptV2Response> submitExam(
             @PathVariable String attemptId,
             @Valid @RequestBody SubmitAttemptV2Request request) {
         return ApiResponse.success(examV2Service.gradeExamAttempt(attemptId, request));
@@ -66,5 +71,12 @@ public class ExamAttemptController {
     ) {
         examV2Service.rateAttempt(attemptId, request);
         return ApiResponse.success("Rating submitted successfully");
+    }
+
+    @GetMapping("/{attemptId}/subscribe")
+    @Operation(summary = "Subscribe to grading status updates (SSE)",
+            description = "Opens a Server-Sent Event stream to receive notification when grading is complete.")
+    public SseEmitter subscribeToAttemptStatus(@PathVariable String attemptId) {
+        return sseService.subscribe(attemptId);
     }
 }

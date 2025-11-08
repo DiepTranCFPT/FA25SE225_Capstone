@@ -2,7 +2,10 @@ package com.fa25se225.capstone.entity.v2;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Nationalized;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -38,4 +41,7 @@ public class StudentAnswerV2 {
     @Nationalized
     @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback;
+
+    @CreationTimestamp
+    private LocalDateTime createAt;
 }

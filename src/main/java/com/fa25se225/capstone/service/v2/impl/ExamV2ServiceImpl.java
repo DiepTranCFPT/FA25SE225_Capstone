@@ -172,11 +172,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .collect(Collectors.toMap(ExamTemplateV2::getId, Function.identity(), (o1, o2) -> o1));
 
         for(ExamTemplateV2 tpl : templateMap.values()){
-            if(Objects.isNull(tpl.getTotalTakers())){
-                tpl.setTotalTakers(1);
-            }else {
-                tpl.setTotalTakers(tpl.getTotalTakers() + 1);
-            }
+            tpl.setTotalTakers(tpl.getTotalTakers() + 1);
         }
         templateRepository.saveAll(templateMap.values());
 

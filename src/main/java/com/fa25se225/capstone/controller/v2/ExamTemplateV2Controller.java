@@ -8,6 +8,7 @@ import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.service.v2.ExamTemplateV2Service;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/exam-templates")
 @RequiredArgsConstructor
+@Tag(name = "Exam Template Management")
 public class ExamTemplateV2Controller {
 
     private final ExamTemplateV2Service templateService;

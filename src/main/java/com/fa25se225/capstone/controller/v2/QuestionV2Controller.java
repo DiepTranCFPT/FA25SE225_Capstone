@@ -6,6 +6,7 @@ import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/questions-v2")
 @RequiredArgsConstructor
+@Tag(name = "Question Management")
 public class QuestionV2Controller {
 
     private final QuestionV2Service questionV2Service;

@@ -7,6 +7,7 @@ import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamV2Response;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.service.v2.ExamV2Service;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/exam-attempts")
 @RequiredArgsConstructor
+@Tag(name = "Exam Attempt Management")
 public class ExamAttemptController {
 
     private final ExamV2Service examV2Service;

@@ -51,7 +51,9 @@ public enum ErrorCode {
     INSUFFICIENT_ANSWERS_V2(1041, "Question must have at least one answer", HttpStatus.BAD_REQUEST),
     NO_CORRECT_ANSWER_V2(1042, "Question must have at least one correct answer", HttpStatus.BAD_REQUEST),
     MULTIPLE_CORRECT_ANSWERS_V2(1043, "Single choice question can only have one correct answer", HttpStatus.BAD_REQUEST),
-    EXAM_RULE_NOT_FOUND(1044,"Exam rule not found" , HttpStatus.BAD_REQUEST );
+    EXAM_RULE_NOT_FOUND(1044,"Exam rule not found" , HttpStatus.BAD_REQUEST ),
+
+    EXISTED_QUESTION_TOPIC(1045, "Question topic name is existed", HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

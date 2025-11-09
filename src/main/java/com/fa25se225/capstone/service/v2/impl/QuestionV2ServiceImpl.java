@@ -108,8 +108,6 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     public QuestionV2Response updateQuestion(String id, QuestionUpdateV2Request request) {
         log.info("Updating question V2 with ID: {}", id);
 
-        // Validate request
-        validateQuestionAnswersRequest(request.getAnswers(), request.getType());
 
         QuestionV2 existingQuestion = questionV2Repository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.QUESTION_V2_NOT_FOUND));
@@ -125,23 +123,32 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         if(StringUtils.hasText(request.getContent())) {
             existingQuestion.setContent(request.getContent());
         }
-        if(StringUtils.hasText(request.getType())) {
-            existingQuestion.setType(QuestionType.fromValue(request.getType().toUpperCase()));
+        try{
+            if(StringUtils.hasText(request.getType())) {
+                existingQuestion.setType(QuestionType.fromValue(request.getType().toUpperCase()));
+            }
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
         }
+
+
         existingQuestion.setDifficulty(difficulty);
         existingQuestion.setTopic(topic);
 
-        // Update answers
-        existingQuestion.getAnswers().clear();
-        if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
-            List<AnswerV2> answers = request.getAnswers().stream()
-                    .map(answerRequest -> {
-                        AnswerV2 answer = answerV2Mapper.toEntity(answerRequest);
-                        answer.setQuestion(existingQuestion);
-                        return answer;
-                    })
-                    .collect(Collectors.toList());
-            existingQuestion.getAnswers().addAll(answers);
+        if(Objects.nonNull(request.getAnswers())) {
+            validateQuestionAnswersRequest(request.getAnswers(), request.getType());
+
+            existingQuestion.getAnswers().clear();
+            if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
+                List<AnswerV2> answers = request.getAnswers().stream()
+                        .map(answerRequest -> {
+                            AnswerV2 answer = answerV2Mapper.toEntity(answerRequest);
+                            answer.setQuestion(existingQuestion);
+                            return answer;
+                        })
+                        .toList();
+                existingQuestion.getAnswers().addAll(answers);
+            }
         }
 
         QuestionV2 updatedQuestion = questionV2Repository.save(existingQuestion);

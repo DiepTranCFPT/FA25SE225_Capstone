@@ -1,5 +1,7 @@
 package com.fa25se225.capstone.dto.v2.request;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +26,8 @@ public class ExamTemplateCreationV2Request {
     @NotNull
     private Integer passingScore;
     private boolean isActive = false;
+    @NotEmpty
+    @Valid
     private List<ExamRuleV2Request> rules;
 }
 

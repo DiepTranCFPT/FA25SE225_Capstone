@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.dto.v2.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,7 @@ public class QuestionUpdateV2Request {
 
     private String topicName;
 
+    @Valid
     private List<AnswerV2Request> answers;
 
 

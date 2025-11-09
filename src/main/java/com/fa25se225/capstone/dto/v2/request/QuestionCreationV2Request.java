@@ -1,6 +1,8 @@
 package com.fa25se225.capstone.dto.v2.request;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,6 +32,8 @@ public class QuestionCreationV2Request {
     @NotBlank(message = "Topic name is required")
     private String topicName;
 
+    @NotEmpty
+    @Valid
     private List<AnswerV2Request> answers;
 
 

@@ -399,11 +399,11 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         }
 
         if (attempt.getRating() != null) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR); // Cần mã lỗi "Already Rated"
+            throw new AppException(ErrorCode.ALREADY_RATE);
         }
 
         if (attempt.getStatus() != AttemptStatusV2.COMPLETED) {
-            throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE); // Phải hoàn thành mới đc rate
+            throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE);
         }
 
         attempt.setRating(request.getRating());

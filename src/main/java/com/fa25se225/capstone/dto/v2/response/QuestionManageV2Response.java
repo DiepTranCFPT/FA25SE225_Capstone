@@ -18,5 +18,5 @@ public class QuestionManageV2Response {
     private QuestionDifficultyV2Response difficulty;
     private String createdBy;
     private String topic;
-    private List<ExamAnswerV2Response> answers;
+    private List<AnswerV2Response> answers;
 }

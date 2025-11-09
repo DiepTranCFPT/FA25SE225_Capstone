@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.AnswerV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
@@ -53,7 +54,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
-    public QuestionV2Response createQuestion(QuestionCreationV2Request request) {
+    public QuestionManageV2Response createQuestion(QuestionCreationV2Request request) {
         log.info("Creating new question V2");
 
         validateQuestionAnswersRequest(request.getAnswers(), request.getType());
@@ -89,7 +90,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         QuestionV2 savedQuestion = questionV2Repository.save(questionV2);
         log.info("Question V2 created successfully with ID: {}", savedQuestion.getId());
 
-        return questionV2Mapper.toResponse(savedQuestion);
+        return questionV2Mapper.toManageResponse(savedQuestion);
     }
 
 //    private Subject getSubjectByNameOrElseCreateTheNewOne(String name){
@@ -105,7 +106,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
-    public QuestionV2Response updateQuestion(String id, QuestionUpdateV2Request request) {
+    public QuestionManageV2Response updateQuestion(String id, QuestionUpdateV2Request request) {
         log.info("Updating question V2 with ID: {}", id);
 
 
@@ -154,30 +155,30 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         QuestionV2 updatedQuestion = questionV2Repository.save(existingQuestion);
         log.info("Question V2 updated successfully with ID: {}", updatedQuestion.getId());
 
-        return questionV2Mapper.toResponse(updatedQuestion);
+        return questionV2Mapper.toManageResponse(updatedQuestion);
     }
 
     @Override
-    public QuestionV2Response getQuestionById(String id) {
+    public QuestionManageV2Response getQuestionById(String id) {
         log.info("Getting question V2 by ID: {}", id);
 
         QuestionV2 questionV2 = questionV2Repository.findByIdWithDetails(id)
                 .orElseThrow(() -> new AppException(ErrorCode.QUESTION_V2_NOT_FOUND));
 
-        return questionV2Mapper.toResponse(questionV2);
+        return questionV2Mapper.toManageResponse(questionV2);
     }
 
     @Override
-    public PageResponse<List<QuestionV2Response>> getAllQuestions(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getAllQuestions(int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findAll(pageable);
 
-        List<QuestionV2Response> responses = questionPage.getContent().stream()
-                .map(questionV2Mapper::toResponse)
-                .collect(Collectors.toList());
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
 
 
-        return PageResponse.<List<QuestionV2Response>>builder()
+        return PageResponse.<List<QuestionManageV2Response>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .sortBy(sorts)
@@ -188,7 +189,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
-    public PageResponse<List<QuestionV2Response>> getQuestionsBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
         if (!subjectRepository.existsById(subjectId)) {
             throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
         }
@@ -196,11 +197,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findBySubjectId(subjectId, pageable);
 
-        List<QuestionV2Response> responses = questionPage.getContent().stream()
-                .map(questionV2Mapper::toResponse)
-                .collect(Collectors.toList());
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
 
-        return PageResponse.<List<QuestionV2Response>>builder()
+        return PageResponse.<List<QuestionManageV2Response>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .sortBy(sorts)
@@ -213,7 +214,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
 
     @Override
-    public PageResponse<List<QuestionV2Response>> getQuestionsByTopic(String topicId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsByTopic(String topicId, int pageNo, int pageSize, String... sorts) {
         if (!questionTopicV2Repository.existsById(topicId)) {
             throw new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND);
         }
@@ -221,11 +222,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findByTopicId(topicId, pageable);
 
-        List<QuestionV2Response> responses = questionPage.getContent().stream()
-                .map(questionV2Mapper::toResponse)
-                .collect(Collectors.toList());
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
 
-        return PageResponse.<List<QuestionV2Response>>builder()
+        return PageResponse.<List<QuestionManageV2Response>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .sortBy(sorts)
@@ -236,7 +237,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
-    public PageResponse<List<QuestionV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting questions V2 by created by user ID: {}", userId);
 
         if (!userRepository.existsById(userId)) {
@@ -246,11 +247,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findByCreatedById(userId, pageable);
 
-        List<QuestionV2Response> responses = questionPage.getContent().stream()
-                .map(questionV2Mapper::toResponse)
-                .collect(Collectors.toList());
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
 
-        return PageResponse.<List<QuestionV2Response>>builder()
+        return PageResponse.<List<QuestionManageV2Response>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .sortBy(sorts)
@@ -261,16 +262,16 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
-    public PageResponse<List<QuestionV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String... sorts) {
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findByContentContaining(keyword, pageable);
 
-        List<QuestionV2Response> responses = questionPage.getContent().stream()
-                .map(questionV2Mapper::toResponse)
-                .collect(Collectors.toList());
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
 
-        return PageResponse.<List<QuestionV2Response>>builder()
+        return PageResponse.<List<QuestionManageV2Response>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .sortBy(sorts)

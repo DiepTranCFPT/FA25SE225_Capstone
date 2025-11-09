@@ -45,6 +45,14 @@ public interface QuestionV2Mapper {
     @Mapping(target = "answers", source = "answers")
     QuestionV2 toEntity(QuestionCreationV2Request request);
 
+    @Mapping(target = "type", source = "type.value")
+    @Mapping(target = "subject", source = "subject")
+    @Mapping(target = "difficulty", source = "difficulty")
+    @Mapping(target = "createdBy", source = "createdBy.id")
+    @Mapping(target = "topic", source = "topic.name")
+    @Mapping(target = "answers", source = "answers")
+    QuestionManageV2Response toManageResponse(QuestionV2 questionV2);
+
 
 
 }

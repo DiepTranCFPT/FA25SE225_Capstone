@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,22 +24,22 @@ public class QuestionV2Controller {
     private final QuestionV2Service questionV2Service;
 
     @PostMapping
-    public ApiResponse<QuestionV2Response> createQuestion(@Valid @RequestBody QuestionCreationV2Request request) {
+    public ApiResponse<QuestionManageV2Response> createQuestion(@Valid @RequestBody QuestionCreationV2Request request) {
         return ApiResponse.success(questionV2Service.createQuestion(request));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<QuestionV2Response> updateQuestion(@PathVariable String id, @Valid @RequestBody QuestionUpdateV2Request request) {
+    public ApiResponse<QuestionManageV2Response> updateQuestion(@PathVariable String id, @Valid @RequestBody QuestionUpdateV2Request request) {
         return ApiResponse.success(questionV2Service.updateQuestion(id, request));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<QuestionV2Response> getQuestionById(@PathVariable String id) {
+    public ApiResponse<QuestionManageV2Response> getQuestionById(@PathVariable String id) {
         return ApiResponse.success(questionV2Service.getQuestionById(id));
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<List<QuestionV2Response>>> getAllQuestions(
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getAllQuestions(
             @RequestParam(defaultValue = "0", required = false) int pageNo,
             @RequestParam(defaultValue = "10", required = false) int pageSize,
             @RequestParam(required = false) String... sorts) {
@@ -46,7 +47,7 @@ public class QuestionV2Controller {
     }
 
     @GetMapping("/subject/{subjectId}")
-    public ApiResponse<PageResponse<List<QuestionV2Response>>> getQuestionsBySubject(
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsBySubject(
             @PathVariable String subjectId,
             @RequestParam(defaultValue = "0", required = false) int pageNo,
             @RequestParam(defaultValue = "10", required = false) int pageSize,
@@ -56,7 +57,7 @@ public class QuestionV2Controller {
 
 
     @GetMapping("/topic/{topicId}")
-    public ApiResponse<PageResponse<List<QuestionV2Response>>> getQuestionsByTopic(
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsByTopic(
             @PathVariable String topicId,
             @RequestParam(defaultValue = "0", required = false) int pageNo,
             @RequestParam(defaultValue = "10", required = false) int pageSize,
@@ -65,7 +66,7 @@ public class QuestionV2Controller {
     }
 
     @GetMapping("/created-by/{userId}")
-    public ApiResponse<PageResponse<List<QuestionV2Response>>> getQuestionsByCreatedBy(
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsByCreatedBy(
             @PathVariable String userId,
             @RequestParam(defaultValue = "0", required = false) int pageNo,
             @RequestParam(defaultValue = "10", required = false) int pageSize,
@@ -74,7 +75,7 @@ public class QuestionV2Controller {
     }
 
     @GetMapping("/search")
-    public ApiResponse<PageResponse<List<QuestionV2Response>>> searchQuestions(@RequestParam String keyword, @RequestParam(defaultValue = "0",
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> searchQuestions(@RequestParam String keyword, @RequestParam(defaultValue = "0",
             required = false) int pageNo, @RequestParam(defaultValue = "10", required = false) int pageSize, @RequestParam(required = false) String... sorts) {
         return ApiResponse.success(questionV2Service.searchQuestions(keyword, pageNo, pageSize, sorts));
     }

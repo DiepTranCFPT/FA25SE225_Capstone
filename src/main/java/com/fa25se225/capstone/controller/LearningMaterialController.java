@@ -171,4 +171,30 @@ public class LearningMaterialController {
     public ApiResponse<List<LearningMaterialResponse>> getAllMaterials() {
         return ApiResponse.success(learningMaterialService.getAllMaterials());
     }
+
+    @PostMapping("/register/{learningMaterialId}")
+    @Operation(summary = "Register for a learning material",
+            description = "Student registers for a learning material. Creates a permission with the material's title and grants it to the student.")
+    public ApiResponse<LearningMaterialResponse> registerLearningMaterial(
+            @PathVariable String learningMaterialId
+    ) {
+        return ApiResponse.success(learningMaterialService.registerLearningMaterial(learningMaterialId));
+    }
+
+    @GetMapping("/registered")
+    @Operation(summary = "Get registered learning materials for current student",
+            description = "Retrieves a paginated list of learning materials that the current authenticated student has registered for based on granted permissions.")
+    public ApiResponse<PageResponse<List<LearningMaterialResponse>>> getRegisteredMaterials(
+            @Parameter(description = "Page number to retrieve (starts from 0)", example = "0")
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+
+            @Parameter(description = "Number of materials per page", example = "10")
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+
+            @Parameter(description = "Sorting criteria. Format: `fieldName:direction`. Multiple criteria can be provided.",
+                    example = "title:asc,createdAt:desc")
+            @RequestParam(required = false) String... sorts
+    ) {
+        return ApiResponse.success(learningMaterialService.getRegisteredMaterials(pageNo, pageSize, sorts));
+    }
 }

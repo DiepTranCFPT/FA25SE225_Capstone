@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -13,39 +11,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "learning_materials")
-public class LearningMaterial {
+@Table(name = "lessons")
+public class Lesson {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
     private String id;
 
-    @Column(name = "title", nullable = false)
-    private String title;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "file")
+    private String file;
 
-    @Column(name = "content_url", nullable = false)
-    private String contentUrl;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_id", nullable = false)
-    private MaterialType type;
+    @Column(name = "url")
+    private String url;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
+    @JoinColumn(name = "question_id", nullable = true)
+    private Question question;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private User author;
-
-    @OneToMany(mappedBy = "learningMaterial", fetch = FetchType.LAZY)
-    private List<Lesson> lessons = new ArrayList<>();
-
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
+    @JoinColumn(name = "learning_material_id", nullable = true)
+    private LearningMaterial learningMaterial;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -61,7 +49,6 @@ public class LearningMaterial {
     protected void onCreate() {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
-        if (isPublic == null) isPublic = false;
         if (deleted == null) deleted = false;
     }
 

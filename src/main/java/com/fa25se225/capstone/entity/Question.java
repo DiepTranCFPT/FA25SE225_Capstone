@@ -47,6 +47,9 @@ public class Question {
     @JoinColumn(name = "difficulty_id", nullable = false)
     private QuestionDifficulty difficulty;
 
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY)
+    private List<Lesson> lessons = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private User createdBy;

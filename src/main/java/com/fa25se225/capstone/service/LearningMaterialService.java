@@ -22,7 +22,7 @@ public interface LearningMaterialService {
     PageResponse<List<LearningMaterialResponse>> getBySubject(String subjectId, int pageNo, int pageSize, String... sorts);
     
     PageResponse<List<LearningMaterialResponse>> getByType(String typeId, int pageNo, int pageSize, String... sorts);
-    
+
     PageResponse<List<LearningMaterialResponse>> searchByKeyword(String keyword, int pageNo, int pageSize, String... sorts);
     
     LearningMaterialResponse update(String id, LearningMaterialUpdateRequest request);
@@ -30,4 +30,8 @@ public interface LearningMaterialService {
     void delete(String id);
 
     List<LearningMaterialResponse> getAllMaterials();
+
+    LearningMaterialResponse registerLearningMaterial(String learningMaterialId);
+
+    PageResponse<List<LearningMaterialResponse>> getRegisteredMaterials(int pageNo, int pageSize, String... sorts);
 }

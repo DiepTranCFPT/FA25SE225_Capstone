@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.entity.v2;
 
 import com.fa25se225.capstone.constant.QuestionType;
+import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.QuestionDifficulty;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
@@ -52,6 +53,14 @@ public class QuestionV2 {
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnswerV2> answers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY)
+    private List<Lesson> lessons = new ArrayList<>();
+
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
 
     @CreationTimestamp
     private LocalDateTime createAt;

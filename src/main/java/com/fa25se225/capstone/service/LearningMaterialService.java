@@ -30,4 +30,8 @@ public interface LearningMaterialService {
     void delete(String id);
 
     List<LearningMaterialResponse> getAllMaterials();
+
+    LearningMaterialResponse registerLearningMaterial(String learningMaterialId);
+
+    PageResponse<List<LearningMaterialResponse>> getRegisteredMaterials(int pageNo, int pageSize, String... sorts);
 }

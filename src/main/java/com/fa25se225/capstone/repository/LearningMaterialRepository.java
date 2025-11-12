@@ -18,42 +18,42 @@ public interface LearningMaterialRepository extends JpaRepository<LearningMateri
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.deleted = false")
     Page<LearningMaterial> findAllNotDeleted(Pageable pageable);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.id = :id AND lm.deleted = false")
     Optional<LearningMaterial> findByIdNotDeleted(@Param("id") String id);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.author.id = :authorId AND lm.deleted = false")
     Page<LearningMaterial> findByAuthorIdNotDeleted(@Param("authorId") String authorId, Pageable pageable);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.isPublic = true AND lm.deleted = false")
     Page<LearningMaterial> findAllPublicNotDeleted(Pageable pageable);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.subject.id = :subjectId AND lm.deleted = false")
     Page<LearningMaterial> findBySubjectIdNotDeleted(@Param("subjectId") String subjectId, Pageable pageable);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.type.id = :typeId AND lm.deleted = false")
     Page<LearningMaterial> findByTypeIdNotDeleted(@Param("typeId") String typeId, Pageable pageable);
-    
+
     @Query("SELECT lm FROM LearningMaterial lm " +
            "LEFT JOIN FETCH lm.type " +
            "LEFT JOIN FETCH lm.subject " +
@@ -69,4 +69,11 @@ public interface LearningMaterialRepository extends JpaRepository<LearningMateri
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.deleted = false")
     List<LearningMaterial> findAllNotDeleted();
+
+    @Query("SELECT lm FROM LearningMaterial lm " +
+           "LEFT JOIN FETCH lm.type " +
+           "LEFT JOIN FETCH lm.subject " +
+           "LEFT JOIN FETCH lm.author " +
+           "WHERE lm.title IN :titles AND lm.deleted = false")
+    Page<LearningMaterial> findByTitlesNotDeleted(@Param("titles") List<String> titles, Pageable pageable);
 }

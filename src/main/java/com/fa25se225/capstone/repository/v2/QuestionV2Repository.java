@@ -53,4 +53,5 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
             @Param("questionType") QuestionType questionType,
             @Param("creatorId") String creatorId
     );
+
 }

@@ -12,14 +12,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -91,9 +89,17 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
-                .toList();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
+        roles.forEach(role ->
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()))
+        );
+
+        grantedPermissions.forEach(permission ->
+                authorities.add(new SimpleGrantedAuthority(permission.getName()))
+        );
+
+        return authorities;
     }
 
     @Override

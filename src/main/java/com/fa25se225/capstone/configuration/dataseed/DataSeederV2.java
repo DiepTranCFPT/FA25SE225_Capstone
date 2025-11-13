@@ -7,9 +7,10 @@ import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.v2.*;
+import com.fa25se225.capstone.entity.MaterialType;
+import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class DataSeederV2 {
     private final QuestionTopicV2Repository topicRepository;
     private final QuestionV2Repository questionRepository;
     private final ExamTemplateV2Repository templateRepository;
+    private final MaterialTypeRepository materialTypeRepository;
 
     @Transactional
     public void createExamDataSeed() {
@@ -70,6 +72,10 @@ public class DataSeederV2 {
 
                 // 6. Create Exam Template
                 createExamTemplate(teacher, mathSubject, topicAlgebra, topicGeometry, diffEasy, diffMedium, diffHard);
+
+
+                //7.create learning material type
+                createMaterialTypeSeed();
 
                 log.info("V2 data seeding complete.");
             } else {
@@ -295,4 +301,34 @@ public class DataSeederV2 {
         templateRepository.save(template);
         log.info("Successfully created ExamTemplate: {}", template.getTitle());
     }
+
+    @Transactional
+    public void createMaterialTypeSeed() {
+        log.info("Starting MaterialType data seeding...");
+        List<MaterialType> materialTypes = Arrays.asList(
+                MaterialType.builder()
+                        .name("FREE")
+                        .description("Public learning materials that users can access for free")
+                        .deleted(false)
+                        .build(),
+
+                MaterialType.builder()
+                        .name("TOKEN")
+                        .description("Premium learning materials that require tokens to unlock")
+                        .deleted(false)
+                        .build(),
+
+                MaterialType.builder()
+                        .name("PRIVATE")
+                        .description("Private learning materials visible only to the author or permitted users")
+                        .deleted(false)
+                        .build()
+        );
+
+        for (MaterialType mt : materialTypes) {
+            materialTypeRepository.save(mt);
+            log.info("Successfully created MaterialType: {}", mt.getName());
+        }
+    }
+
 }

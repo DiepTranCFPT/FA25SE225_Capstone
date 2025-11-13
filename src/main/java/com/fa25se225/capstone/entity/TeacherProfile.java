@@ -39,6 +39,9 @@ public class TeacherProfile {
     @Column(name = "biography", columnDefinition = "TEXT")
     private String biography;
 
+    @Column(name = "rating")
+    private Integer rating;
+
     @ElementCollection
     @CollectionTable(
         name = "teacher_certificates",

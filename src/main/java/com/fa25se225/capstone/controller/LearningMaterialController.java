@@ -38,9 +38,10 @@ public class LearningMaterialController {
     }
     
     @GetMapping
-    @Operation(summary = "Get all learning materials with pagination and sorting (Admin)",
-            description = "Retrieves a paginated list of all learning materials. This endpoint is typically for admin use. " +
-                    "Example: /learning-materials?pageNo=0&pageSize=10&sorts=title:asc&sorts=createdAt:desc")
+    @Operation(summary = "Get all learning materials with filters, pagination and sorting",
+            description = "Retrieves a paginated list of all learning materials with optional filters. " +
+                    "Filters: year, month, day, subjectId, typeId, authorId, minRating (teacher rating). " +
+                    "Example: /learning-materials?year=2024&month=11&subjectId=sub-123&minRating=4&pageNo=0&pageSize=10&sorts=title:asc")
     public ApiResponse<PageResponse<List<LearningMaterialResponse>>> getAll(
             @Parameter(description = "Page number to retrieve (starts from 0)", example = "0")
             @RequestParam(defaultValue = "0", required = false) int pageNo,
@@ -48,11 +49,33 @@ public class LearningMaterialController {
             @Parameter(description = "Number of materials per page", example = "10")
             @RequestParam(defaultValue = "10", required = false) int pageSize,
             
+            @Parameter(description = "Filter by year of creation", example = "2024")
+            @RequestParam(required = false) Integer year,
+            
+            @Parameter(description = "Filter by month of creation (1-12)", example = "11")
+            @RequestParam(required = false) Integer month,
+            
+            @Parameter(description = "Filter by day of creation (1-31)", example = "14")
+            @RequestParam(required = false) Integer day,
+            
+            @Parameter(description = "Filter by subject ID")
+            @RequestParam(required = false) String subjectId,
+            
+            @Parameter(description = "Filter by material type ID")
+            @RequestParam(required = false) String typeId,
+            
+            @Parameter(description = "Filter by author ID")
+            @RequestParam(required = false) String authorId,
+            
+            @Parameter(description = "Filter by minimum teacher rating (0-5)", example = "4")
+            @RequestParam(required = false) Integer minRating,
+            
             @Parameter(description = "Sorting criteria. Format: `fieldName:direction`. Multiple criteria can be provided.",
                     example = "title:asc,createdAt:desc")
             @RequestParam(required = false) String... sorts
     ) {
-        return ApiResponse.success(learningMaterialService.getAll(pageNo, pageSize, sorts));
+        return ApiResponse.success(learningMaterialService.getAll(
+                pageNo, pageSize, year, month, day, subjectId, typeId, authorId, minRating, sorts));
     }
     
     @GetMapping("/my-materials")

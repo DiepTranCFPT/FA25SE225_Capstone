@@ -19,6 +19,7 @@ import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.repository.specification.LearningMaterialSpecification;
 import com.fa25se225.capstone.service.LearningMaterialService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -114,16 +116,35 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     }
     
     @Override
-    public PageResponse<List<LearningMaterialResponse>> getAll(int pageNo, int pageSize, String... sorts) {
-        log.info("Getting all learning materials with pagination - page: {}, size: {}", pageNo, pageSize);
+    public PageResponse<List<LearningMaterialResponse>> getAll(
+            int pageNo, 
+            int pageSize, 
+            Integer year,
+            Integer month,
+            Integer day,
+            String subjectId,
+            String typeId,
+            String authorId,
+            Integer minRating,
+            String... sorts) {
+        log.info("Getting all learning materials with filters - page: {}, size: {}, year: {}, month: {}, day: {}, " +
+                "subjectId: {}, typeId: {}, authorId: {}, minRating: {}", 
+                pageNo, pageSize, year, month, day, subjectId, typeId, authorId, minRating);
         
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
-        Page<LearningMaterial> page = learningMaterialRepository.findAllNotDeleted(pageable);
+        
+        Specification<LearningMaterial> spec = LearningMaterialSpecification.withFilters(
+                year, month, day, subjectId, typeId, authorId, minRating
+        );
+        
+        Page<LearningMaterial> page = learningMaterialRepository.findAll(spec, pageable);
         
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
+        
+        log.info("Found {} learning materials matching filters", page.getTotalElements());
         
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)

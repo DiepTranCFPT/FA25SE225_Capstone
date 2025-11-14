@@ -85,14 +85,12 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         String permissionTitle = "LEARNING_"+savedMaterial.getTitle();
 
         Permission permission = new Permission(permissionName,permissionTitle,false);
+        permissionRepository.saveAndFlush(permission);
 
         User account = accountUtil.getCurrentUser();
         account.setGrantedPermissions(Set.of(permission));
-
-
         userRepository.saveAndFlush(account);
-        permissionRepository.saveAndFlush(permission);
-        
+
         return learningMaterialMapper.toResponse(savedMaterial);
     }
     

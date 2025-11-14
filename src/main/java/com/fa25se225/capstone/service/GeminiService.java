@@ -79,7 +79,8 @@ public class GeminiService {
 
     public String chat(String message){
         User user = accountUtil.getCurrentUser();
-        String system = String.format("%sKhi đầu là Chào %s", promt, user.getLastName());
+        String start = "Bắt buộc khi bắt đầu chat là Xin Chào"+ user.getLastName();
+        String system = start + promt ;
 
         SystemMessage systemMessage = new SystemMessage(system);
         UserMessage userMessage = new UserMessage(message);

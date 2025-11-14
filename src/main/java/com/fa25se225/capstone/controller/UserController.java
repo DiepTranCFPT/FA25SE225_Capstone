@@ -48,7 +48,7 @@ public class UserController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all users with pagination and sorting (Admin) http://localhost:8080/users?pageNo=1&pageSize=10&sorts=id:desc&sorts=email:asc",
+    @Operation(summary = "Get all users with pagination and sorting (Admin)",
             description = "Retrieves a paginated list of all users. This endpoint is typically for admin use.")
     public ApiResponse<PageResponse<List<UserResponse>>> getAllUser(
             @Parameter(description = "Page number to retrieve (starts from 0)", example = "0")
@@ -110,17 +110,20 @@ public class UserController {
     @PostMapping("/{userId}/permissions/grant")
     @Operation(summary = "Grant permissions for the user",
             description = "Grant permissions for the user by user id.")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> grantPermissionsToUser(@PathVariable String userId, @RequestBody Set<String> permissions) {
         userService.grantPermissions(userId, permissions);
         return ApiResponse.success("Permissions granted successfully.");
     }
 
     @GetMapping("/{userId}/permissions")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<List<PermissionResponse>> getUsersPermissions(@PathVariable String userId) {
         return ApiResponse.success(permissionService.getPermissionByUserId(userId));
     }
 
     @PostMapping("/{userId}/permissions/revoke")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Revoke permissions for the user",
             description = "Revoke permissions for the user by user id.")
     public ApiResponse<String> revokePermissionsFromUser(@PathVariable String userId, @RequestBody Set<String> permissions) {

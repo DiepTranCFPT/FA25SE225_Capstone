@@ -20,6 +20,7 @@ import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +41,11 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final LearningMaterialRepository learningMaterialRepository;
     private final MaterialTypeRepository materialTypeRepository;
     private final SubjectRepository subjectRepository;
-    private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
     private final LearningMaterialMapper learningMaterialMapper;
     private final PageHelper pageHelper;
+    private final AccountUtil accountUtil;
     
     @Override
     @Transactional
@@ -76,10 +77,20 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         if (learningMaterial.getIsPublic() == null) {
             learningMaterial.setIsPublic(false);
         }
-        
-        LearningMaterial savedMaterial = learningMaterialRepository.save(learningMaterial);
+
+        LearningMaterial savedMaterial = learningMaterialRepository.saveAndFlush(learningMaterial);
         log.info("Successfully created learning material with id: {}", savedMaterial.getId());
-        
+
+        String permissionName = "LEARNING_"+ savedMaterial.getId().trim();
+        String permissionTitle = "LEARNING_"+savedMaterial.getTitle();
+
+        Permission permission = new Permission(permissionName,permissionTitle,false);
+        permissionRepository.saveAndFlush(permission);
+
+        User account = accountUtil.getCurrentUser();
+        account.getGrantedPermissions().add(permission);
+        userRepository.saveAndFlush(account);
+
         return learningMaterialMapper.toResponse(savedMaterial);
     }
     
@@ -337,7 +348,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
 
         // Create permission name from learning material title
-        String permissionName = "ACCESS_" + learningMaterial.getTitle().toUpperCase().replaceAll("\\s+", "_");
+        String permissionName = "LEARNING_"+learningMaterialId;
         log.debug("Creating/Getting permission with name: {}", permissionName);
 
         // Check if user already has this permission
@@ -349,17 +360,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             throw new AppException(ErrorCode.ALREADY_REGISTERED);
         }
 
-        // Create permission if not exists
-        Permission permission = permissionRepository.findById(permissionName)
-                .orElseGet(() -> {
-                    log.debug("Permission not found, creating new permission: {}", permissionName);
-                    Permission newPermission = Permission.builder()
-                            .name(permissionName)
-                            .description("Access to learning material: " + learningMaterial.getTitle())
-                            .deleted(false)
-                            .build();
-                    return permissionRepository.save(newPermission);
-                });
+        Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
 
         // Add permission to user's granted permissions
         student.getGrantedPermissions().add(permission);

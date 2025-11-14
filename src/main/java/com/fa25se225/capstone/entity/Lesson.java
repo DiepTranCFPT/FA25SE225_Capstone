@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.entity.v2.QuestionV2;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,9 +28,12 @@ public class Lesson {
     @Column(name = "url")
     private String url;
 
+    @Column(name = "description")
+    private String description;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = true)
-    private Question question;
+    private QuestionV2 question;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "learning_material_id", nullable = true)

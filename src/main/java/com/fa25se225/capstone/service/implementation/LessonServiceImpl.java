@@ -1,24 +1,34 @@
 package com.fa25se225.capstone.service.implementation;
 
+import com.cloudinary.provisioning.Account;
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
-import com.fa25se225.capstone.entity.Question;
+import com.fa25se225.capstone.entity.Permission;
+import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.entity.v2.QuestionV2;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.LessonMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.LessonRepository;
-import com.fa25se225.capstone.repository.QuestionRepository;
+import com.fa25se225.capstone.repository.PermissionRepository;
+import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.LessonService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,21 +40,29 @@ import java.util.List;
 public class LessonServiceImpl implements LessonService {
 
     private final LessonRepository lessonRepository;
-    private final QuestionRepository questionRepository;
+    private final QuestionV2Repository questionRepository;
     private final LearningMaterialRepository learningMaterialRepository;
     private final LessonMapper lessonMapper;
     private final PageHelper pageHelper;
+    private final AccountUtil accountUtil;
+    private final PermissionRepository permissionRepository;
+
+
+    private String permissionLearn = null;
 
     @Override
     @Transactional
     public LessonResponse create(LessonCreationRequest request) {
         log.info("Creating lesson with name: {}", request.name());
 
-        Question question = null;
+        QuestionV2 question = null;
         if (request.questionId() != null && !request.questionId().trim().isEmpty()) {
             log.debug("Validating and getting question with id: {}", request.questionId());
-            question = questionRepository.findByIdNotDeleted(request.questionId())
+            question = questionRepository.findById(request.questionId())
                     .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
+            if(question.getDeleted() == true){
+                throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
+            }
         }
 
         LearningMaterial learningMaterial = null;
@@ -64,14 +82,21 @@ public class LessonServiceImpl implements LessonService {
 
         return lessonMapper.toResponse(savedLesson);
     }
-
     @Override
+    @Transactional
     public LessonResponse getById(String id) {
         log.info("Getting lesson by id: {}", id);
 
         Lesson lesson = lessonRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
+        String permissions = "LEARNING_" + lesson.getLearningMaterial().getId().trim();
+        User account = accountUtil.getCurrentUser();
+        boolean hasPermission = account.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(permissions));
 
+        if (!hasPermission) {
+            throw new AccessDeniedException("You do not have permission: " + permissions);
+        }
         return lessonMapper.toResponse(lesson);
     }
 
@@ -105,13 +130,25 @@ public class LessonServiceImpl implements LessonService {
         Lesson lesson = lessonRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
 
+        String permissions = "LEARNING_" + lesson.getLearningMaterial().getId().trim();
+        User account = accountUtil.getCurrentUser();
+        boolean hasPermission = account.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(permissions));
+
+        if (!hasPermission) {
+            throw new AccessDeniedException("You do not have permission: " + permissions);
+        }
+
         log.debug("Updating question if provided: {}", request.questionId());
         if (request.questionId() != null) {
             if (request.questionId().trim().isEmpty()) {
                 lesson.setQuestion(null);
             } else {
-                Question question = questionRepository.findByIdNotDeleted(request.questionId())
+                QuestionV2 question = questionRepository.findById(request.questionId())
                         .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
+                if(question.getDeleted() == true){
+                    throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
+                }
                 lesson.setQuestion(question);
             }
         }
@@ -143,6 +180,15 @@ public class LessonServiceImpl implements LessonService {
 
         Lesson lesson = lessonRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
+
+        String permissions = "LEARNING_" + lesson.getLearningMaterial().getId().trim();
+        User account = accountUtil.getCurrentUser();
+        boolean hasPermission = account.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(permissions));
+
+        if (!hasPermission) {
+            throw new AccessDeniedException("You do not have permission: " + permissions);
+        }
 
         log.debug("Performing soft delete for lesson with id: {}", id);
         lesson.setDeleted(true);

@@ -30,9 +30,6 @@ public class Subject {
     @Column(name = "description")
     private String description;
 
-    @ManyToMany(mappedBy = "subject")
-    private List<Exam> exams = new ArrayList<>();
-
     @OneToMany(mappedBy = "subject")
     private List<LearningMaterial> learningMaterials = new ArrayList<>();
 

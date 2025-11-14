@@ -11,6 +11,7 @@ public record LessonResponse(
     String file,
     String url,
     String questionId,
+    String description,
     String questionContent,
     String learningMaterialId,
     String learningMaterialTitle,

@@ -12,5 +12,7 @@ public record LessonCreationRequest(
 
     String questionId,
 
+    String description,
+
     String learningMaterialId
 ) {}

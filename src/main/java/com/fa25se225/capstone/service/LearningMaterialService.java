@@ -13,7 +13,17 @@ public interface LearningMaterialService {
     
     LearningMaterialResponse getById(String id);
     
-    PageResponse<List<LearningMaterialResponse>> getAll(int pageNo, int pageSize, String... sorts);
+    PageResponse<List<LearningMaterialResponse>> getAll(
+            int pageNo, 
+            int pageSize, 
+            Integer year,
+            Integer month,
+            Integer day,
+            String subjectId,
+            String typeId,
+            String authorId,
+            Integer minRating,
+            String... sorts);
     
     PageResponse<List<LearningMaterialResponse>> getMyMaterials(int pageNo, int pageSize, String... sorts);
     

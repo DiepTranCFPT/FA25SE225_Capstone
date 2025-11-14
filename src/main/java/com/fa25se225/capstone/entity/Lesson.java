@@ -28,6 +28,9 @@ public class Lesson {
     @Column(name = "url")
     private String url;
 
+    @Column(name = "description")
+    private String description;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = true)
     private QuestionV2 question;

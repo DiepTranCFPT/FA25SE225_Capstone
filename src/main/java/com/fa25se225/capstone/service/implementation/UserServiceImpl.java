@@ -60,9 +60,9 @@ public class UserServiceImpl implements UserService {
         String verificationToken = UUID.randomUUID().toString();
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.password()));
-        HashSet<Role> roles = new HashSet<>();
-        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
-        user.setRoles(roles);
+
+       Role roles =  roleRepository.findById(PredefinedRole.STUDENT_ROLE).orElseThrow(()-> new AppException(ErrorCode.EXISTED_ROLE));
+        user.getRoles().add(roles);
         user.setVerificationToken(verificationToken);
         var savedUser = userRepository.save(user);
 
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
                 .templateName("VERIFY_EMAIL")
                 .params(Map.of(
                         "firstName", request.firstName(),
-                        "verificationLink", "http://localhost:5173/verify-email/?email=" + request.email() + "&token=" + verificationToken
+                        "verificationLink", "https://fa25se225capstone-production.up.railway.app/verify-email/?email=" + request.email() + "&token=" + verificationToken
                 ))
                 .build());
 

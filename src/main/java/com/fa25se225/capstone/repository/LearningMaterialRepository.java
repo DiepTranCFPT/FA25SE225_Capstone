@@ -76,4 +76,13 @@ public interface LearningMaterialRepository extends JpaRepository<LearningMateri
            "LEFT JOIN FETCH lm.author " +
            "WHERE lm.title IN :titles AND lm.deleted = false")
     Page<LearningMaterial> findByTitlesNotDeleted(@Param("titles") List<String> titles, Pageable pageable);
+
+
+
+    @Query("SELECT lm FROM LearningMaterial lm " +
+            "LEFT JOIN FETCH lm.type " +
+            "LEFT JOIN FETCH lm.subject " +
+            "LEFT JOIN FETCH lm.author " +
+            "WHERE lm.author.id = :authorId AND lm.deleted = false")
+    List<LearningMaterial> findByAuthor(@Param("authorId") String authorId);
 }

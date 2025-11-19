@@ -6,8 +6,6 @@ public record LessonCreationRequest(
     @NotBlank(message = "Name is required")
     String name,
 
-    String file,
-
     String url,
 
     String questionId,

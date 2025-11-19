@@ -2,6 +2,7 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.cloudinary.provisioning.Account;
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
+import com.fa25se225.capstone.dto.request.LessonDTO;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
@@ -18,6 +19,7 @@ import com.fa25se225.capstone.repository.LessonRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.LessonService;
+import com.fa25se225.capstone.service.helper.MinioFileService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -46,14 +45,14 @@ public class LessonServiceImpl implements LessonService {
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
     private final PermissionRepository permissionRepository;
-
-
-    private String permissionLearn = null;
+    private final MinioFileService minioFileService;
+    private static final String bucketName = "lesson";
 
     @Override
     @Transactional
-    public LessonResponse create(LessonCreationRequest request) {
+    public LessonResponse create(LessonCreationRequest request,MultipartFile file) {
         log.info("Creating lesson with name: {}", request.name());
+        User user = accountUtil.getCurrentUser();
 
         QuestionV2 question = null;
         if (request.questionId() != null && !request.questionId().trim().isEmpty()) {
@@ -72,16 +71,24 @@ public class LessonServiceImpl implements LessonService {
                     .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         }
 
+
         log.debug("Creating lesson entity from request");
         Lesson lesson = lessonMapper.toEntity(request);
         lesson.setQuestion(question);
         lesson.setLearningMaterial(learningMaterial);
 
-        Lesson savedLesson = lessonRepository.save(lesson);
+        Lesson savedLesson = lessonRepository.saveAndFlush(lesson);
         log.info("Successfully created lesson with id: {}", savedLesson.getId());
+        String nameFile = "LESSON_"+ "_" + savedLesson.getId();
 
+        try {
+            minioFileService.uploadFile(bucketName, nameFile, file);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
         return lessonMapper.toResponse(savedLesson);
     }
+
     @Override
     @Transactional
     public LessonResponse getById(String id) {
@@ -146,7 +153,7 @@ public class LessonServiceImpl implements LessonService {
             } else {
                 QuestionV2 question = questionRepository.findById(request.questionId())
                         .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
-                if(question.getDeleted() == true){
+                if (question.getDeleted() == true) {
                     throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
                 }
                 lesson.setQuestion(question);

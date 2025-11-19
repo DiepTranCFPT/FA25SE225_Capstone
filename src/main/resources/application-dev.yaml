@@ -89,4 +89,12 @@ cloudinary:
 server:
   port : 8080
   forward-headers-strategy : native
+minio:
+  url: ${minio.url}
+  access-key: ${minio.access-key}
+  secret-key: ${minio.secret-key}
+  bucket:
+    avatars: avatars
+    materials: materials
+    lesson : lesson
 

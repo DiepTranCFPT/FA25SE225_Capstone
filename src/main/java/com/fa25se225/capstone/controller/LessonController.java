@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
+import com.fa25se225.capstone.dto.request.LessonDTO;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
@@ -8,10 +9,14 @@ import com.fa25se225.capstone.dto.response.LessonResponse;
 import com.fa25se225.capstone.service.LessonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,11 +28,17 @@ public class LessonController {
 
     private final LessonService lessonService;
 
-    @PostMapping
-    @Operation(summary = "Create a new lesson", description = "Creates a new lesson with the provided information")
-    public ApiResponse<LessonResponse> create(@Valid @RequestBody LessonCreationRequest request) {
-        return ApiResponse.success(lessonService.create(request));
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasRole('TEACHER')")
+    public ApiResponse<?> create(
+            @Valid @ModelAttribute LessonCreationRequest request,
+            @RequestParam MultipartFile file
+    ) {
+        return ApiResponse.success(lessonService.create(request,file));
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Get lesson by ID", description = "Retrieves a lesson by its unique identifier")

@@ -101,12 +101,11 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             int expirySeconds = 365 * 24 * 60 * 60;
             String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
             savedMaterial.setFileImage(presignedUrl);
-            learningMaterialRepository.save(savedMaterial);
+            LearningMaterial updatedMaterial = learningMaterialRepository.saveAndFlush(savedMaterial);
+            return learningMaterialMapper.toResponse(updatedMaterial);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-        return learningMaterialMapper.toResponse(savedMaterial);
     }
     
     @Override

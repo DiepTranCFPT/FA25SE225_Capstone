@@ -85,11 +85,11 @@ public class LessonServiceImpl implements LessonService {
             int expirySeconds = 365 * 24 * 60 * 60;
             String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
             savedLesson.setFile(presignedUrl);
-            lessonRepository.save(savedLesson);
+            Lesson updatedLesson = lessonRepository.saveAndFlush(savedLesson);
+            return lessonMapper.toResponse(updatedLesson);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return lessonMapper.toResponse(savedLesson);
     }
 
     @Override

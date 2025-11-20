@@ -2,11 +2,13 @@ package com.fa25se225.capstone.service.helper;
 
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.StatObjectArgs;
 import io.minio.StatObjectResponse;
+import io.minio.http.Method;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,5 +67,16 @@ public class MinioFileService {
         )) {
             return new FileResponse(is.readAllBytes(), stat.contentType(), nameFile);
         }
+    }
+
+    public String getPresignedUrl(String bucket, String objectName, int expirySeconds) throws Exception {
+        return minioClient.getPresignedObjectUrl(
+            GetPresignedObjectUrlArgs.builder()
+                .method(Method.GET)
+                .bucket(bucket)
+                .object(objectName)
+                .expiry(expirySeconds)
+                .build()
+        );
     }
 }

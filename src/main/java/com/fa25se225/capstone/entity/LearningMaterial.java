@@ -57,6 +57,9 @@ public class LearningMaterial {
     @Builder.Default
     private Boolean deleted = false;
 
+    @Column(name = "file_image", nullable = false)
+    private String fileImage;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();

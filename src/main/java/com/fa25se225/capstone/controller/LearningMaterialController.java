@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,11 +25,11 @@ public class LearningMaterialController {
     
     private final LearningMaterialService learningMaterialService;
     
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create a new learning material",
             description = "Creates a new learning material. The current authenticated user will be set as the author.")
-    public ApiResponse<LearningMaterialResponse> create(@Valid @RequestBody LearningMaterialCreationRequest request) {
-        return ApiResponse.success(learningMaterialService.create(request));
+    public ApiResponse<LearningMaterialResponse> create(@Valid @ModelAttribute LearningMaterialCreationRequest request,@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(learningMaterialService.create(request,file));
     }
     
     @GetMapping("/{id}")

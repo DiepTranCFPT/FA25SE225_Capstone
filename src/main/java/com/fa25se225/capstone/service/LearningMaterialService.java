@@ -4,12 +4,13 @@ import com.fa25se225.capstone.dto.request.LearningMaterialCreationRequest;
 import com.fa25se225.capstone.dto.request.LearningMaterialUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.LearningMaterialResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface LearningMaterialService {
     
-    LearningMaterialResponse create(LearningMaterialCreationRequest request);
+    LearningMaterialResponse create(LearningMaterialCreationRequest request, MultipartFile file);
     
     LearningMaterialResponse getById(String id);
     

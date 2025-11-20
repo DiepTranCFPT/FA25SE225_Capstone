@@ -20,6 +20,7 @@ import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
+import com.fa25se225.capstone.service.helper.MinioFileService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Set;
@@ -46,10 +48,12 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final LearningMaterialMapper learningMaterialMapper;
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
+    private final MinioFileService minioFileService;
+    private final String bucketName = "materials";
     
     @Override
     @Transactional
-    public LearningMaterialResponse create(LearningMaterialCreationRequest request) {
+    public LearningMaterialResponse create(LearningMaterialCreationRequest request, MultipartFile file) {
         log.info("Creating learning material with title: {}", request.title());
         
         log.debug("Getting current user for learning material creation");
@@ -90,6 +94,17 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         User account = accountUtil.getCurrentUser();
         account.getGrantedPermissions().add(permission);
         userRepository.saveAndFlush(account);
+
+        String nameFile = "Materials_" + savedMaterial.getId().trim();
+        try {
+            minioFileService.uploadFile(bucketName, nameFile, file);
+            int expirySeconds = 365 * 24 * 60 * 60;
+            String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
+            savedMaterial.setFileImage(presignedUrl);
+            learningMaterialRepository.save(savedMaterial);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return learningMaterialMapper.toResponse(savedMaterial);
     }
@@ -445,3 +460,4 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
+

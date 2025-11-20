@@ -52,7 +52,6 @@ public class LessonServiceImpl implements LessonService {
     @Transactional
     public LessonResponse create(LessonCreationRequest request,MultipartFile file) {
         log.info("Creating lesson with name: {}", request.name());
-        User user = accountUtil.getCurrentUser();
 
         QuestionV2 question = null;
         if (request.questionId() != null && !request.questionId().trim().isEmpty()) {
@@ -79,11 +78,15 @@ public class LessonServiceImpl implements LessonService {
 
         Lesson savedLesson = lessonRepository.saveAndFlush(lesson);
         log.info("Successfully created lesson with id: {}", savedLesson.getId());
-        String nameFile = "LESSON_"+ "_" + savedLesson.getId();
+        String nameFile = "LESSON_" + "_" + savedLesson.getId();
 
         try {
             minioFileService.uploadFile(bucketName, nameFile, file);
-        }catch (Exception e){
+            int expirySeconds = 365 * 24 * 60 * 60;
+            String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
+            savedLesson.setFile(presignedUrl);
+            lessonRepository.save(savedLesson);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return lessonMapper.toResponse(savedLesson);

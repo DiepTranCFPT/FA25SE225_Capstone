@@ -18,5 +18,6 @@ public record LearningMaterialResponse(
     String authorName,
     Boolean isPublic,
     LocalDate createdAt,
-    LocalDate updatedAt
+    LocalDate updatedAt,
+    String fileImage
 ) {}

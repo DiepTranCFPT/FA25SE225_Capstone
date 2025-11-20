@@ -90,9 +90,9 @@ server:
   port : 8080
   forward-headers-strategy : native
 minio:
-  url: ${minio.url}
-  access-key: ${minio.access-key}
-  secret-key: ${minio.secret-key}
+  url: ${url-minio}
+  access-key: ${access-key}
+  secret-key: ${secret-key}
   bucket:
     avatars: avatars
     materials: materials

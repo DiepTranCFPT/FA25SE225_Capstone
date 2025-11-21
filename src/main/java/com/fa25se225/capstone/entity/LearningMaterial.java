@@ -23,7 +23,7 @@ public class LearningMaterial {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "content_url", nullable = false)

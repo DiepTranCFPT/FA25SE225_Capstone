@@ -28,7 +28,7 @@ public class Lesson {
     @Column(name = "url")
     private String url;
 
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)

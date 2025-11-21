@@ -81,9 +81,12 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         learningMaterial.setAuthor(currentUser);
         learningMaterial.setType(materialType);
         learningMaterial.setSubject(subject);
-        
+
         if (learningMaterial.getIsPublic() == null) {
             learningMaterial.setIsPublic(false);
+        }
+        if(learningMaterial.getFileImage() == null){
+            learningMaterial.setFileImage(file.getOriginalFilename());
         }
 
         LearningMaterial savedMaterial = learningMaterialRepository.saveAndFlush(learningMaterial);

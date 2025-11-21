@@ -1,7 +1,9 @@
 package com.fa25se225.capstone.utils;
 
 import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
 
+@Component
 public class HelperTypeFile {
 
     public MediaType getMediaType(String fileName) {
@@ -13,5 +15,4 @@ public class HelperTypeFile {
             default -> MediaType.APPLICATION_OCTET_STREAM;
         };
     }
-
 }

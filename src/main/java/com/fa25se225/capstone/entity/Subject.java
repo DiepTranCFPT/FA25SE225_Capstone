@@ -27,7 +27,7 @@ public class Subject {
     @Column(name = "code", nullable = false, unique = true)
     private String code = CodeGenerator.generateCodeFromName(name);;
 
-    @Column(name = "description")
+    @Column(name = "description",columnDefinition = "TEXT")
     private String description;
 
     @OneToMany(mappedBy = "subject")

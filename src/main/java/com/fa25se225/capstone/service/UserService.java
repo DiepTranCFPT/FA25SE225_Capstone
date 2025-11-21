@@ -29,5 +29,5 @@ public interface UserService {
 
     UserResponse verifyTeacher(String userId);
 
-    UserResponse getProfileByUserId();
+    UserResponse getProfileByUserId(String userId);
 }

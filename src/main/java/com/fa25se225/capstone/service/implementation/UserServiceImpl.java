@@ -197,8 +197,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getProfileByUserId() {
-        User user = accountUtil.getCurrentUser();
+    public UserResponse getProfileByUserId(String userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         TeacherProfileResponse teacherProfile = null;
         if (user.getRoles().stream().anyMatch(r -> "TEACHER".equals(r.getName()))) {
             teacherProfile = teacherProfileService.getProfileByUserId(user.getId());

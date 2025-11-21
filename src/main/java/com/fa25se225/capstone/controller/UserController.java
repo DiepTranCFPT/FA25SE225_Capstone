@@ -134,8 +134,8 @@ public class UserController {
     @GetMapping("/profile")
     @Operation(summary = "Get user profile by user ID",
             description = "Retrieves the profile information of a user by their ID, including teacher profile if applicable.")
-    public ApiResponse<UserResponse> getProfileByUserId() {
-        return ApiResponse.success(userService.getProfileByUserId());
+    public ApiResponse<UserResponse> getProfileByUserId(@PathVariable String userId) {
+        return ApiResponse.success(userService.getProfileByUserId(userId));
     }
 
 }

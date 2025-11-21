@@ -16,6 +16,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 @Service
 @RequiredArgsConstructor
 public class TeacherProfileServiceImpl implements TeacherProfileService {
@@ -24,10 +27,13 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     private final AccountUtil  accountUtil;
     private final UserRepository userRepository;
 
+
+
     @Override
     @Transactional
     @PreAuthorize("hasRole('TEACHER')")
     public TeacherProfileResponse createProfile(TeacherProfileRequest request) {
+        validateAge(request.getDateOfBirth());
         User user = accountUtil.getCurrentUser();
         TeacherProfile profile = teacherProfileMapper.toEntity(request);
         profile.setUser(user);
@@ -39,6 +45,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     @Transactional
     @PreAuthorize("hasRole('TEACHER')")
     public TeacherProfileResponse updateProfile(String id, TeacherProfileRequest request) {
+        validateAge(request.getDateOfBirth());
         TeacherProfile profile = teacherProfileRepository.findById(id)
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         teacherProfileMapper.updateEntity(profile, request);
@@ -51,5 +58,10 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
         return teacherProfileRepository.findByUserId(userId)
             .map(teacherProfileMapper::toResponse)
             .orElse(null);
+    }
+    private void validateAge(LocalDate dateOfBirth) {
+        if (dateOfBirth == null || ChronoUnit.YEARS.between(dateOfBirth, LocalDate.now()) < 23) {
+            throw new AppException(ErrorCode.INVALID_INPUT);
+        }
     }
 }

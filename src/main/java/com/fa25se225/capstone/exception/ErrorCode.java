@@ -60,7 +60,8 @@ public enum ErrorCode {
     ALREADY_RATE(1048, "You have already rated this test", HttpStatus.BAD_REQUEST ),
     LESSON_NOT_FOUND(1032, "Lesson not found", HttpStatus.BAD_REQUEST),
     ALREADY_REGISTERED(1033, "You have already registered for this learning material", HttpStatus.BAD_REQUEST),
-    NOT_FOUND(1034,"Teacher profile not found" ,HttpStatus.BAD_REQUEST ),;
+    NOT_FOUND(1034,"Teacher profile not found" ,HttpStatus.BAD_REQUEST ),
+    INVALID_INPUT(1035,"Teacher must be at least 23 years old." ,HttpStatus.BAD_REQUEST );
 
 
     ;

@@ -76,10 +76,10 @@ public class MinioController {
     @GetMapping("/{fileName}/materials")
     public ResponseEntity<byte[]> getFileMaterial(@PathVariable String fileName) throws Exception {
         byte[] data = minioService.getFile(fileName,materialsBucket);
-        MediaType mediaType = helperTypeFile.getMediaType(fileName);
+//        MediaType mediaType = helperTypeFile.getMediaType(fileName);
         return ResponseEntity
                 .ok()
-                .contentType(mediaType)
+                .contentType(MediaType.IMAGE_JPEG)
                 .body(data);
     }
 }

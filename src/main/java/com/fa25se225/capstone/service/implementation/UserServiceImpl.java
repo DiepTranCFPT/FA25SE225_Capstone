@@ -66,8 +66,8 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.password()));
 
-       Role roles =  roleRepository.findById(PredefinedRole.STUDENT_ROLE).orElseThrow(()-> new AppException(ErrorCode.EXISTED_ROLE));
-        user.getRoles().add(roles);
+        Role roles =  roleRepository.findById(PredefinedRole.STUDENT_ROLE).orElseThrow(()-> new AppException(ErrorCode.EXISTED_ROLE));
+        user.setRoles(Set.of(roles));
         user.setVerificationToken(verificationToken);
         var savedUser = userRepository.save(user);
 
@@ -91,8 +91,9 @@ public class UserServiceImpl implements UserService {
         TeacherProfileResponse teacherProfile = null;
         if (user.getRoles().stream().anyMatch(r -> "TEACHER".equals(r.getName()))) {
             teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
+            return userMapper.toResponse(user, teacherProfile);
         }
-        return userMapper.toResponse(user, teacherProfile);
+        return userMapper.toResponse(user);
     }
 
     @Override

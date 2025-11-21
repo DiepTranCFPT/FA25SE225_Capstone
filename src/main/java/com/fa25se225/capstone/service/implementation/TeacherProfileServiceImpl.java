@@ -1,0 +1,55 @@
+package com.fa25se225.capstone.service.implementation;
+
+import com.fa25se225.capstone.dto.request.TeacherProfileRequest;
+import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
+import com.fa25se225.capstone.entity.TeacherProfile;
+import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.exception.AppException;
+import com.fa25se225.capstone.exception.ErrorCode;
+import com.fa25se225.capstone.mapper.TeacherProfileMapper;
+import com.fa25se225.capstone.repository.TeacherProfileRepository;
+import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.service.TeacherProfileService;
+import com.fa25se225.capstone.utils.AccountUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class TeacherProfileServiceImpl implements TeacherProfileService {
+    private final TeacherProfileRepository teacherProfileRepository;
+    private final TeacherProfileMapper teacherProfileMapper;
+    private final AccountUtil  accountUtil;
+    private final UserRepository userRepository;
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasRole('TEACHER')")
+    public TeacherProfileResponse createProfile(TeacherProfileRequest request) {
+        User user = accountUtil.getCurrentUser();
+        TeacherProfile profile = teacherProfileMapper.toEntity(request);
+        profile.setUser(user);
+        TeacherProfile saved = teacherProfileRepository.save(profile);
+        return teacherProfileMapper.toResponse(saved);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasRole('TEACHER')")
+    public TeacherProfileResponse updateProfile(String id, TeacherProfileRequest request) {
+        TeacherProfile profile = teacherProfileRepository.findById(id)
+            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        teacherProfileMapper.updateEntity(profile, request);
+        TeacherProfile updated = teacherProfileRepository.save(profile);
+        return teacherProfileMapper.toResponse(updated);
+    }
+
+    @Override
+    public TeacherProfileResponse getProfileByUserId(String userId) {
+        return teacherProfileRepository.findByUserId(userId)
+            .map(teacherProfileMapper::toResponse)
+            .orElse(null);
+    }
+}

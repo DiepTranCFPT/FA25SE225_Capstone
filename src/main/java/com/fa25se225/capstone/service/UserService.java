@@ -25,4 +25,9 @@ public interface UserService {
 
     void revokePermissions(String userId, Set<String> permissions);
 
+    List<UserResponse> getUnverifiedTeachers();
+
+    UserResponse verifyTeacher(String userId);
+
+    UserResponse getProfileByUserId();
 }

@@ -6,6 +6,7 @@ import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.request.UserCreationRequest;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
+import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Role;
@@ -17,7 +18,9 @@ import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.RoleRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.PermissionService;
+import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.service.UserService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +52,8 @@ public class UserServiceImpl implements UserService {
     static String AVATAR_FOLDER = "user_avatars";
     PermissionService permissionService;
     PermissionRepository permissionRepository;
+    TeacherProfileService teacherProfileService;
+    private final AccountUtil accountUtil;
 
     @Override
     public UserResponse register(UserCreationRequest request) {
@@ -82,7 +87,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMyProfile() {
         String email = getCurrentEmail();
-        return userMapper.toResponse(findUserByEmailOrThrowException(email));
+        User user = findUserByEmailOrThrowException(email);
+        TeacherProfileResponse teacherProfile = null;
+        if (user.getRoles().stream().anyMatch(r -> "TEACHER".equals(r.getName()))) {
+            teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
+        }
+        return userMapper.toResponse(user, teacherProfile);
     }
 
     @Override
@@ -160,6 +170,39 @@ public class UserServiceImpl implements UserService {
         user.setImgUrl(null);
         userRepository.save(user);
         return userMapper.toResponse(user);
+    }
+
+    @Override
+    public List<UserResponse> getUnverifiedTeachers() {
+        List<User> teachers = userRepository.findUnverifiedTeachers("TEACHER");
+        List<UserResponse> responses = new ArrayList<>();
+        for (User teacher : teachers) {
+            TeacherProfileResponse teacherProfile = teacherProfileService.getProfileByUserId(teacher.getId());
+            responses.add(userMapper.toResponse(teacher, teacherProfile));
+        }
+        return responses;
+    }
+
+    @Override
+    @Transactional
+    public UserResponse verifyTeacher(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setVerificationToken(null);
+        user.setEmailVerified(true);
+        userRepository.save(user);
+        TeacherProfileResponse teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
+        return userMapper.toResponse(user, teacherProfile);
+    }
+
+    @Override
+    public UserResponse getProfileByUserId() {
+        User user = accountUtil.getCurrentUser();
+        TeacherProfileResponse teacherProfile = null;
+        if (user.getRoles().stream().anyMatch(r -> "TEACHER".equals(r.getName()))) {
+            teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
+        }
+        return userMapper.toResponse(user, teacherProfile);
     }
 
     private User findUserByEmailOrThrowException(String email){

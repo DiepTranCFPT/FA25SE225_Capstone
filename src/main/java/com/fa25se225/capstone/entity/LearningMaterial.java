@@ -57,7 +57,7 @@ public class LearningMaterial {
     @Builder.Default
     private Boolean deleted = false;
 
-    @Column(name = "file_image", nullable = false)
+    @Column(name = "file_image")
     private String fileImage;
 
     @PrePersist

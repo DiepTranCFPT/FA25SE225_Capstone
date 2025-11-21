@@ -19,11 +19,12 @@ import com.fa25se225.capstone.repository.LessonRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.LessonService;
-import com.fa25se225.capstone.service.helper.MinioFileService;
+
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -44,9 +45,10 @@ public class LessonServiceImpl implements LessonService {
     private final LessonMapper lessonMapper;
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
-    private final PermissionRepository permissionRepository;
-    private final MinioFileService minioFileService;
-    private static final String bucketName = "lesson";
+    private final MinioServiceImpl minioClient;
+
+    @Value("${minio.bucket.lesson}")
+    private String bucketName;
 
     @Override
     @Transactional
@@ -78,13 +80,10 @@ public class LessonServiceImpl implements LessonService {
 
         Lesson savedLesson = lessonRepository.saveAndFlush(lesson);
         log.info("Successfully created lesson with id: {}", savedLesson.getId());
-        String nameFile = "LESSON_" + "_" + savedLesson.getId();
-
+        String nameFile = "LESSON_" + "_" + savedLesson.getId().trim();
         try {
-            minioFileService.uploadFile(bucketName, nameFile, file);
-            int expirySeconds = 365 * 24 * 60 * 60;
-            String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
-            savedLesson.setFile(presignedUrl);
+            String fileLesson =   minioClient.uploadFile(file,nameFile,bucketName);
+            savedLesson.setFile(fileLesson);
             Lesson updatedLesson = lessonRepository.saveAndFlush(savedLesson);
             return lessonMapper.toResponse(updatedLesson);
         } catch (Exception e) {

@@ -20,11 +20,13 @@ import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
-import com.fa25se225.capstone.service.helper.MinioFileService;
+import com.fa25se225.capstone.service.MinioService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
+import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,8 +50,10 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final LearningMaterialMapper learningMaterialMapper;
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
-    private final MinioFileService minioFileService;
-    private final String bucketName = "materials";
+    private final MinioService minioClient;
+
+    @Value("${minio.bucket.materials}")
+    private String bucketName ;
     
     @Override
     @Transactional
@@ -97,10 +101,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
         String nameFile = "Materials_" + savedMaterial.getId().trim();
         try {
-            minioFileService.uploadFile(bucketName, nameFile, file);
-            int expirySeconds = 365 * 24 * 60 * 60;
-            String presignedUrl = minioFileService.getPresignedUrl(bucketName, nameFile, expirySeconds);
-            savedMaterial.setFileImage(presignedUrl);
+            String fileName = minioClient.uploadFile(file,nameFile,bucketName);
+            savedMaterial.setFileImage(fileName);
             LearningMaterial updatedMaterial = learningMaterialRepository.saveAndFlush(savedMaterial);
             return learningMaterialMapper.toResponse(updatedMaterial);
         } catch (Exception e) {

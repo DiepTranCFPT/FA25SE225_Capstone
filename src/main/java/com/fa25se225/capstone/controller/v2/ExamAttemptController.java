@@ -40,13 +40,11 @@ public class ExamAttemptController {
 
     @PostMapping("/start-combo-random")
     public ApiResponse<ExamV2Response> startRandomComboExam(@Valid @RequestBody StartRandomComboRequest request) {
-        return ApiResponse.success(examV2Service.startRandomExamCombo(request.getSubjectIds()));
+        return ApiResponse.success(examV2Service.startRandomExamCombo(request));
     }
 
     @PostMapping("/{attemptId}/submit")
-    public ApiResponse<SubmitAttemptV2Response> submitExam(
-            @PathVariable String attemptId,
-            @Valid @RequestBody SubmitAttemptV2Request request) {
+    public ApiResponse<SubmitAttemptV2Response> submitExam(@PathVariable String attemptId, @Valid @RequestBody SubmitAttemptV2Request request) {
         return ApiResponse.success(examV2Service.gradeExamAttempt(attemptId, request));
     }
 
@@ -78,5 +76,11 @@ public class ExamAttemptController {
             description = "Opens a Server-Sent Event stream to receive notification when grading is complete.")
     public SseEmitter subscribeToAttemptStatus(@PathVariable String attemptId) {
         return sseService.subscribe(attemptId);
+    }
+
+    @PostMapping("/{attemptId}/save-progress")
+    public ApiResponse<String> saveProgress(@PathVariable String attemptId, @RequestBody SaveProgressRequest request) {
+        examV2Service.saveExamProgress(attemptId, request);
+        return ApiResponse.success("Progress saved successfully");
     }
 }

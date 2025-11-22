@@ -10,6 +10,7 @@ public interface ExamQuestionV2Mapper {
 
     @Mapping(target = "question", source = "question")
     @Mapping(target = "examQuestionId", source = "id")
+    @Mapping(target = "savedAnswer", ignore = true)
     ExamQuestionV2Response toResponse(ExamQuestionV2 examQuestionV2);
 
 }

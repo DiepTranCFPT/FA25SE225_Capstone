@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.repository.v2;
 
+import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import feign.Param;
 import org.springframework.data.domain.Page;
@@ -21,4 +22,7 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
             "LEFT JOIN FETCH ea.sourceTemplate " +
             "WHERE ea.id = :attemptId")
     Optional<ExamAttemptV2> findByIdWithDetails(@Param("attemptId") String attemptId);
+
+
+    Optional<ExamAttemptV2> findFirstByUserIdAndSourceTemplateIdAndStatus(String userId, String templateId, AttemptStatusV2 status);
 }

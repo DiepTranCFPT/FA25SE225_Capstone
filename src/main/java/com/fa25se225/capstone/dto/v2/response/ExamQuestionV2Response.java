@@ -13,4 +13,6 @@ public class ExamQuestionV2Response {
     private QuestionV2Response question;
     private Integer orderNumber;
     private Double points;
+
+    private StudentAnswerDetailResponse savedAnswer;
 }

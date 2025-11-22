@@ -66,7 +66,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamTemplateV2 template = templateRepository.findById(request.getTemplateId())
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
 
-        return generateExamAndAttempt(List.of(template));
+        return handleExamStart(List.of(template));
     }
 
     @Override
@@ -74,24 +74,20 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     public ExamV2Response startExamFromComboTemplates(StartComboExamRequest request) {
         List<String> templateIds = request.getTemplateIds();
         log.info("Bắt đầu tạo bài thi combo từ {} templates", templateIds.size());
-        if (templateIds == null || templateIds.isEmpty()) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR);
-        }
+
         List<ExamTemplateV2> templates = templateRepository.findAllById(templateIds);
         if (templates.size() != templateIds.size()) {
             throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
         }
 
-        return generateExamAndAttempt(templates);
+        return handleExamStart(templates);
     }
 
     @Override
     @Transactional
-    public ExamV2Response startRandomExamCombo(List<String> subjectIds) {
+    public ExamV2Response startRandomExamCombo(StartRandomComboRequest request) {
+        List<String> subjectIds = request.getSubjectIds();
         log.info("Bắt đầu tạo bài thi combo ĐỀ XUẤT (Recommended) cho các môn: {}", subjectIds);
-        if (subjectIds == null || subjectIds.isEmpty()) {
-            throw new AppException(ErrorCode.VALIDATION_ERROR);
-        }
 
         List<ExamTemplateV2> templates = new ArrayList<>();
         Pageable topOne = PageRequest.of(0, 1);
@@ -104,6 +100,54 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             templates.add(template);
         }
 
+        return handleExamStart(templates);
+    }
+
+    private ExamV2Response resumeExam(ExamAttemptV2 attempt) {
+        ExamV2 exam = attempt.getExam();
+
+        ExamV2Response response = examV2Mapper.toResponse(exam);
+        response.setExamAttemptId(attempt.getId());
+
+        List<StudentAnswerV2> savedAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attempt.getId());
+
+        Map<String, StudentAnswerV2> answerMap = savedAnswers.stream()
+                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+
+        response.getQuestions().forEach(examQuestionV2Response -> {
+            StudentAnswerV2 savedAns = answerMap.get(examQuestionV2Response.getExamQuestionId());
+
+            if (Objects.nonNull(savedAns)) {
+                examQuestionV2Response.setSavedAnswer(studentAnswerDetailMapper.toResponse(savedAns));
+            }
+
+            var examAnswers = examQuestionV2Response.getQuestion().getAnswers();
+            if (Objects.nonNull(examAnswers) && examAnswers.size() == 1) {
+                examQuestionV2Response.getQuestion().setAnswers(null);
+            }
+        });
+
+        return response;
+    }
+
+    private ExamV2Response handleExamStart(List<ExamTemplateV2> templates) {
+        User currentUser = accountUtil.getCurrentUser();
+
+        ExamTemplateV2 primaryTemplate = templates.get(0);
+
+        Optional<ExamAttemptV2> existingAttempt = attemptRepository
+                .findFirstByUserIdAndSourceTemplateIdAndStatus(
+                        currentUser.getId(),
+                        primaryTemplate.getId(),
+                        AttemptStatusV2.IN_PROGRESS
+                );
+
+        if (existingAttempt.isPresent()) {
+            log.info("Found an unfinished test (AttemptID: {}). Restoring...", existingAttempt.get().getId());
+            return resumeExam(existingAttempt.get());
+        }
+
+        log.info("Unfinished test not found. Creating the new one...");
         return generateExamAndAttempt(templates);
     }
 
@@ -205,20 +249,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     public SubmitAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
         log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
-        ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
-                .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
-
-        User currentUser = accountUtil.getCurrentUser();
-        if(!attempt.getUser().getId().equals(currentUser.getId())){
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        if (attempt.getStatus() != AttemptStatusV2.IN_PROGRESS) {
-            throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE);
-        }
+        ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         attempt.setEndTime(LocalDateTime.now());
-        attempt.setStatus(AttemptStatusV2.PENDING_GRADING);//
+        attempt.setStatus(AttemptStatusV2.PENDING_GRADING);
 
         List<StudentAnswerV2> studentAnswers = new ArrayList<>();
         List<FrqGradingEvent> gradingTasks = new ArrayList<>();
@@ -425,5 +459,61 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         template.setAverageRating(newAverageRating);
         template.setTotalRatings(newTotalRatings);
         templateRepository.save(template);
+    }
+
+    @Override
+    @Transactional
+    public void saveExamProgress(String attemptId, SaveProgressRequest request) {
+        ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
+
+        List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
+        Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
+                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(),sa -> sa));
+
+        List<StudentAnswerV2> answersToSave = new ArrayList<>();
+
+        for (StudentAnswerV2Request dto : request.getAnswers()) {
+            StudentAnswerV2 studentAnswer = answerMap.get(dto.getExamQuestionId());
+
+            if (studentAnswer == null) {
+                ExamQuestionV2 examQuestion = examQuestionRepository.findById(dto.getExamQuestionId())
+                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
+
+                studentAnswer = StudentAnswerV2.builder()
+                        .examAttempt(attempt)
+                        .examQuestion(examQuestion)
+                        .build();
+            }
+
+            if (dto.getSelectedAnswerId() != null) {
+                AnswerV2 selectedAnswer = answerRepository.findById(dto.getSelectedAnswerId()).orElse(null);
+                studentAnswer.setSelectedAnswer(selectedAnswer);
+            } else {
+                studentAnswer.setSelectedAnswer(null);
+            }
+
+            studentAnswer.setFrqAnswerText(dto.getFrqAnswerText());
+
+            answersToSave.add(studentAnswer);
+        }
+
+        studentAnswerRepository.saveAll(answersToSave);
+
+    }
+
+
+    private ExamAttemptV2 fetchAttemptAndRequireStatus(String attemptId, AttemptStatusV2 requiredStatus) {
+        ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
+                .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
+
+        User currentUser = accountUtil.getCurrentUser();
+        if (!attempt.getUser().getId().equals(currentUser.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (requiredStatus != null && attempt.getStatus() != requiredStatus) {
+            throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE);
+        }
+        return attempt;
     }
 }

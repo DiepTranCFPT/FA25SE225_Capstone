@@ -20,4 +20,6 @@ public interface ExamV2Service {
     ExamAttemptDetailResponse getAttemptResultDetails(String attemptId);
     void rateAttempt(String attemptId, RateAttemptRequest request);
     void saveExamProgress(String attemptId, SaveProgressRequest request);
+
+    ExamAttemptV2Response manualGradeAttempt(String attemptId, ManualGradeRequest request);
 }

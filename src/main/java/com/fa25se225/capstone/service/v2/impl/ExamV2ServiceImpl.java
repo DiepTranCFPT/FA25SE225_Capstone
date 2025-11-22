@@ -111,8 +111,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
         List<StudentAnswerV2> savedAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attempt.getId());
 
-        Map<String, StudentAnswerV2> answerMap = savedAnswers.stream()
-                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+        Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(savedAnswers);
 
         response.getQuestions().forEach(examQuestionV2Response -> {
             StudentAnswerV2 savedAns = answerMap.get(examQuestionV2Response.getExamQuestionId());
@@ -382,8 +381,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         }
 
         List<StudentAnswerV2> studentAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
-        Map<String, StudentAnswerV2> studentAnswerMap = studentAnswers.stream()
-                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+        Map<String, StudentAnswerV2> studentAnswerMap = studentAnswersToMap(studentAnswers);
 
         ExamAttemptDetailResponse response = examAttemptDetailMapper.toResponse(attempt);
 
@@ -467,8 +465,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
-        Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
-                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(),sa -> sa));
+        Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(existingAnswers);
 
         List<StudentAnswerV2> answersToSave = new ArrayList<>();
 
@@ -501,6 +498,14 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     }
 
+    private Map<String, StudentAnswerV2> studentAnswersToMap(List<StudentAnswerV2> answers) {
+        return answers.stream()
+                .collect(Collectors.toMap(
+                        sa -> sa.getExamQuestion().getId(),
+                        Function.identity(),
+                        (existing, replacement) -> replacement
+                ));
+    }
 
     private ExamAttemptV2 fetchAttemptAndRequireStatus(String attemptId, AttemptStatusV2 requiredStatus) {
         ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
@@ -515,5 +520,57 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE);
         }
         return attempt;
+    }
+
+    @Override
+    @Transactional
+    public ExamAttemptV2Response manualGradeAttempt(String attemptId, ManualGradeRequest request) {
+        log.info("Teacher manually grade attempt: {}", attemptId);
+
+        ExamAttemptV2 attempt = attemptRepository.findByIdWithDetails(attemptId)
+                .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
+
+        User currentTeacher = accountUtil.getCurrentUser();
+        ExamTemplateV2 template = attempt.getSourceTemplate();
+
+        // Only teacher who created this exam can grade
+        if (Objects.isNull(template)|| !template.getCreatedBy().getId().equals(currentTeacher.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        List<StudentAnswerV2> studentAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
+        Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(studentAnswers);
+
+        for (ManualGradeRequest.GradeItem item : request.getGrades()) {
+            StudentAnswerV2 answer = answerMap.get(item.getExamQuestionId());
+            if (answer != null) {
+                double maxPoints = answer.getExamQuestion().getPoints();
+                if (item.getScore() > maxPoints || item.getScore() < 0) {
+                    throw new AppException(ErrorCode.INVALID_SCORE);
+                }
+
+                answer.setScore(item.getScore());
+                if (StringUtils.hasText(item.getFeedback())) {
+                    answer.setFeedback(item.getFeedback());
+                }
+            }
+        }
+
+        studentAnswerRepository.saveAll(studentAnswers);
+
+        double newTotalScore = studentAnswers.stream()
+                .map(sa -> sa.getScore() != null ? sa.getScore() : 0.0)
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
+        attempt.setScore(newTotalScore);
+
+        if (attempt.getStatus() == AttemptStatusV2.PENDING_GRADING) {
+            attempt.setStatus(AttemptStatusV2.COMPLETED);
+
+        }
+
+        ExamAttemptV2 savedAttempt = attemptRepository.save(attempt);
+        return examAttemptV2Mapper.toResponse(savedAttempt);
     }
 }

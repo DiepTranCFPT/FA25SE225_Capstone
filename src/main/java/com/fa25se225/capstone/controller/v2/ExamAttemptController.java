@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -82,5 +83,11 @@ public class ExamAttemptController {
     public ApiResponse<String> saveProgress(@PathVariable String attemptId, @RequestBody SaveProgressRequest request) {
         examV2Service.saveExamProgress(attemptId, request);
         return ApiResponse.success("Progress saved successfully");
+    }
+
+    @PutMapping("/{attemptId}/manual-grade")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ApiResponse<ExamAttemptV2Response> manualGradeAttempt(@PathVariable String attemptId, @RequestBody ManualGradeRequest request) {
+        return ApiResponse.success(examV2Service.manualGradeAttempt(attemptId, request));
     }
 }

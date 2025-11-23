@@ -90,4 +90,22 @@ public class ExamAttemptController {
     public ApiResponse<ExamAttemptV2Response> manualGradeAttempt(@PathVariable String attemptId, @RequestBody ManualGradeRequest request) {
         return ApiResponse.success(examV2Service.manualGradeAttempt(attemptId, request));
     }
+
+    @PostMapping("/{attemptId}/request-review")
+    public ApiResponse<String> requestReview(@PathVariable String attemptId, @Valid @RequestBody RequestReviewRequest request) {
+        examV2Service.requestReview(attemptId, request);
+        return ApiResponse.success("Review requested successfully");
+    }
+
+    @GetMapping("/teacher/review-queue")
+    public ApiResponse<PageResponse<List<ExamAttemptV2Response>>> getReviewQueue(
+            @RequestParam(defaultValue = "0") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "true") boolean includePending,
+            @RequestParam(defaultValue = "true") boolean includeReviewRequested,
+            @RequestParam(defaultValue = "createdAt:desc") String... sorts
+    ) {
+        return ApiResponse.success(examV2Service.getAttemptsForTeacherReview(
+                pageNo, pageSize, includePending, includeReviewRequested, sorts));
+    }
 }

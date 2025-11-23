@@ -573,4 +573,57 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 savedAttempt = attemptRepository.save(attempt);
         return examAttemptV2Mapper.toResponse(savedAttempt);
     }
+
+    @Override
+    @Transactional
+    public void requestReview(String attemptId, RequestReviewRequest request) {
+        ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
+                .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
+
+        User currentUser = accountUtil.getCurrentUser();
+        if (!attempt.getUser().getId().equals(currentUser.getId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if (attempt.getStatus() != AttemptStatusV2.COMPLETED) {
+            throw new AppException(ErrorCode.INVALID_EXAM_ATTEMPT_STATE);
+        }
+
+        attempt.setStatus(AttemptStatusV2.REVIEW_REQUESTED);
+        attempt.setReviewReason(request.getReason());
+        attemptRepository.save(attempt);
+    }
+
+    @Override
+    public PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String... sorts) {
+
+        User teacher = accountUtil.getCurrentUser();
+        List<AttemptStatusV2> statuses = new ArrayList<>();
+
+        if (includePending){
+            statuses.add(AttemptStatusV2.PENDING_GRADING);
+        }
+        if (includeReviewRequested){
+            statuses.add(AttemptStatusV2.REVIEW_REQUESTED);
+        }
+
+        if (statuses.isEmpty()){
+            return PageResponse.<List<ExamAttemptV2Response>>builder().items(List.of()).totalElement(0).build();
+        }
+
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<ExamAttemptV2> page = attemptRepository.findByTeacherAndStatusIn(teacher.getId(), statuses, pageable);
+
+        List<ExamAttemptV2Response> items = page.getContent().stream()
+                .map(examAttemptV2Mapper::toResponse)
+                .toList();
+
+        return PageResponse.<List<ExamAttemptV2Response>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(page.getTotalPages())
+                .totalElement(page.getTotalElements())
+                .items(items)
+                .build();
+    }
 }

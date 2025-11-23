@@ -22,4 +22,8 @@ public interface ExamV2Service {
     void saveExamProgress(String attemptId, SaveProgressRequest request);
 
     ExamAttemptV2Response manualGradeAttempt(String attemptId, ManualGradeRequest request);
+
+    void requestReview(String attemptId, RequestReviewRequest request);
+
+    PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String... sorts);
 }

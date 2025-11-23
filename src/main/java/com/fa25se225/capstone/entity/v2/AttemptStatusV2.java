@@ -4,5 +4,6 @@ public enum AttemptStatusV2 {
     IN_PROGRESS,
     PENDING_GRADING,
     COMPLETED,
-    TIME_UP
+    TIME_UP,
+    REVIEW_REQUESTED
 }

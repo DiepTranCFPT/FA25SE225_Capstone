@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -25,4 +26,12 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
 
 
     Optional<ExamAttemptV2> findFirstByUserIdAndSourceTemplateIdAndStatus(String userId, String templateId, AttemptStatusV2 status);
+
+
+
+    @Query("SELECT ea FROM ExamAttemptV2 ea " +
+            "JOIN ea.exam e " +
+            "WHERE e.belongTo.id = :teacherId " +
+            "AND ea.status IN :statuses")
+    Page<ExamAttemptV2> findByTeacherAndStatusIn(@Param("teacherId") String teacherId, @Param("statuses") List<AttemptStatusV2> statuses, Pageable pageable);
 }

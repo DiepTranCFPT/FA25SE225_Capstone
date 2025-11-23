@@ -45,7 +45,7 @@ public class ExamAttemptV2 {
     private List<StudentAnswerV2> studentAnswers = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 50)
     private AttemptStatusV2 status;
 
     @Column(name = "rating")
@@ -70,5 +70,9 @@ public class ExamAttemptV2 {
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private Boolean deleted = false;
+
+    @Nationalized
+    @Column(name = "review_reason", columnDefinition = "TEXT")
+    private String reviewReason;
 
 }

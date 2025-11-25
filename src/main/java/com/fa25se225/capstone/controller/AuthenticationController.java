@@ -91,7 +91,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<UserResponse> registerStudent(@Valid @RequestBody UserCreationRequest request) {
+    public ApiResponse<UserResponse> register(@Valid @RequestBody UserCreationRequest request) {
         return ApiResponse.success(authenticationService.register(request));
     }
 

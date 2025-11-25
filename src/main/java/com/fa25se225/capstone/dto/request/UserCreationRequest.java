@@ -20,7 +20,6 @@ public record UserCreationRequest(
     @NotBlank(message = "Last name must be not empty")
     String lastName,
 
-    @DobConstraint(min = 10, message = "Age must be great than 10")
     LocalDate dob,
 
     @NotBlank(message = "You must choose the role")

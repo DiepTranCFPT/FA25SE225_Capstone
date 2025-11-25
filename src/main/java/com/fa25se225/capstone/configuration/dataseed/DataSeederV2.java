@@ -2,13 +2,17 @@ package com.fa25se225.capstone.configuration.dataseed;
 
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.entity.Subject;
+import com.fa25se225.capstone.entity.TransactionStatus;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.repository.SubjectRepository;
+import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.repository.MaterialTypeRepository;
+import com.fa25se225.capstone.entity.PaymentStatus;
+import com.fa25se225.capstone.repository.PaymentStatusRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -30,12 +34,17 @@ public class DataSeederV2 {
     private final QuestionV2Repository questionRepository;
     private final ExamTemplateV2Repository templateRepository;
     private final MaterialTypeRepository materialTypeRepository;
+    private final PaymentStatusRepository paymentStatusRepository;
+    private final TransactionStatusRepository transactionStatusRepository;
+
 
     @Transactional
     public void createExamDataSeed() {
         log.info("Starting V2 data seeding...");
-
         try {
+            seedPaymentStatuses();
+            createTransactionStatusSeed();
+
             if (questionRepository.findAll().isEmpty()) {
                 User teacher = userRepository.findByEmail("admin123@gmail.com")
                         .orElseThrow(() -> new RuntimeException("User 'admin123@gmail.com' not found. Please ensure this user exists."));
@@ -192,7 +201,7 @@ public class DataSeederV2 {
 
         questions.add(createSingleFrq(
                 "Simplify the expression $(x^2 - 4) / (x - 2)$. Explain any domain restrictions.",
-                "Step 1: Factor the numerator. $x^2 - 4$ is a difference of squares, which factors to $(x - 2)(x + 2)$. \nStep 2: Rewrite the expression: $(x - 2)(x + 2) / (x - 2)$. \nStep 3: Identify domain restrictions. The original denominator $(x - 2)$ cannot be zero, so $x \neq 2$. \nStep 4: Cancel the common factor: The $(x - 2)$ terms cancel out. \nThe simplified expression is $x + 2$, with the restriction that $x \neq 2$.",
+                "Step 1: Factor the numerator. $x^2 - 4$ is a difference of squares, which factors to $(x - 2)(x + 2)`. \nStep 2: Rewrite the expression: `(x - 2)(x + 2) / (x - 2)`. \nStep 3: Identify domain restrictions. The original denominator `(x - 2)` cannot be zero, so $x \neq 2$. \nStep 4: Cancel the common factor: The `(x - 2)` terms cancel out. \nThe simplified expression is $x + 2$, with the restriction that $x \neq 2$.",
                 "The function has a hole (removable discontinuity) at $x = 2$.",
                 teacher, subject, topic, diff
         ));
@@ -328,6 +337,51 @@ public class DataSeederV2 {
         for (MaterialType mt : materialTypes) {
             materialTypeRepository.save(mt);
             log.info("Successfully created MaterialType: {}", mt.getName());
+        }
+    }
+    @Transactional
+    public void createTransactionStatusSeed() {
+        if (transactionStatusRepository.count() == 0) {
+            createTransactionStatusIfNotExists("success", "Success", "Transaction completed successfully.");
+            createTransactionStatusIfNotExists("fail", "Fail", "Transaction failed.");
+            createTransactionStatusIfNotExists("pending", "Pending", "Transaction is pending.");
+            log.info("Seeded TransactionStatus data.");
+        } else {
+            log.info("TransactionStatus table is not empty. Skipping seeding.");
+        }
+    }
+
+    private void createTransactionStatusIfNotExists(String code, String name, String description) {
+        if (transactionStatusRepository.findByCode(code).isEmpty() && transactionStatusRepository.findByName(name).isEmpty()) {
+            TransactionStatus status = TransactionStatus.builder()
+                    .code(code)
+                    .name(name)
+                    .description(description)
+                    .build();
+            transactionStatusRepository.save(status);
+            log.info("Seeded TransactionStatus: {}", name);
+        }
+    }
+
+
+    private void seedPaymentStatuses() {
+        if (paymentStatusRepository.count() == 0) {
+            createPaymentStatusIfNotExists("active", "Active", "Payment is Active.");
+            createPaymentStatusIfNotExists("inactive", "Inactive", "Payment is Inactive.");
+        } else {
+            log.info("PaymentStatus table is not empty. Skipping seeding.");
+        }
+    }
+
+    private void createPaymentStatusIfNotExists(String code, String name, String description) {
+        if (paymentStatusRepository.findByCode(code).isEmpty() && paymentStatusRepository.findByName(name).isEmpty()) {
+            PaymentStatus status = PaymentStatus.builder()
+                .code(code)
+                .name(name)
+                .description(description)
+                .build();
+            paymentStatusRepository.save(status);
+            log.info("Seeded PaymentStatus: {}", name);
         }
     }
 

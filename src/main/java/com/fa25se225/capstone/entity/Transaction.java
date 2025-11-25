@@ -20,9 +20,6 @@ public class Transaction {
     @Column(name = "id")
     private String id;
 
-    @Column(name = "transaction_number", nullable = false, unique = true)
-    private String transactionNumber;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id", nullable = false)
     private Payment payment;
@@ -30,7 +27,10 @@ public class Transaction {
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @Column(name = "balance_after", nullable = false, precision = 10, scale = 2)
+    private BigDecimal balanceAfter;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     private TransactionStatus status;
 

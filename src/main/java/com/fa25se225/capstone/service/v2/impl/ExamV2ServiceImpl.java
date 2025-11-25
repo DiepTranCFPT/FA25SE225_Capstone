@@ -368,6 +368,15 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .build();
     }
 
+    private boolean isDoneByCurrentStudent(ExamAttemptV2 attempt, User user){
+        return  attempt.getUser().getId().equals(user.getId());
+    }
+
+    private boolean isCreateByCurrentTeacher(ExamAttemptV2 attempt, User user){
+        return  attempt.getSourceTemplate().getCreatedBy().getId().equals(user.getId());
+    }
+
+
     @Override
     @Transactional(readOnly = true)
     public ExamAttemptDetailResponse getAttemptResultDetails(String attemptId) {
@@ -376,7 +385,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = attemptRepository.findByIdWithDetails(attemptId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
 
-        if (!attempt.getUser().getId().equals(currentUser.getId())) {
+        if (!isDoneByCurrentStudent(attempt, currentUser) && !isCreateByCurrentTeacher(attempt, currentUser)) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 

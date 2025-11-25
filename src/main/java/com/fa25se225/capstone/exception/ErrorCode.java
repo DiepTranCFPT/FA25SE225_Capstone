@@ -63,7 +63,13 @@ public enum ErrorCode {
     NOT_FOUND(1034,"Teacher profile not found" ,HttpStatus.BAD_REQUEST ),
     INVALID_INPUT(1035,"Teacher must be at least 23 years old." ,HttpStatus.BAD_REQUEST ),
 
-    INVALID_SCORE(1036,"The score is exceed or negative" , HttpStatus.BAD_REQUEST);
+    INVALID_SCORE(1036,"The score is exceed or negative" , HttpStatus.BAD_REQUEST),
+
+    PARENT_PROFILE_NOT_FOUND(1037,"Parent profile not found." , HttpStatus.BAD_REQUEST),
+    STUDENT_PROFILE_NOT_FOUND(1038,"Student profile not found." , HttpStatus.BAD_REQUEST),
+
+    ALREADY_LINKED_STUDENT(1039,"You have already linked this student" , HttpStatus.BAD_REQUEST)
+    ;
 
 
     ;

@@ -2,8 +2,11 @@ package com.fa25se225.capstone.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,51 +19,38 @@ import java.util.List;
 @Table(name = "parent_profiles")
 public class ParentProfile {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
     private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
-
-    @Column(name = "date_of_birth", nullable = false)
-    private LocalDate dateOfBirth;
 
     @Column(name = "occupation")
     private String occupation;
 
-    @Column(name = "phone_number", nullable = false)
-    private String phoneNumber;
-
-    @Column(name = "alternate_phone")
-    private String alternatePhone;
-
     @Column(name = "address")
     private String address;
 
-    @OneToMany(mappedBy = "parentProfile")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "parent_student_links",
+            joinColumns = @JoinColumn(name = "parent_id"),
+            inverseJoinColumns = @JoinColumn(name = "student_id")
+    )
+    @Builder.Default
     private List<StudentProfile> children = new ArrayList<>();
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDate updatedAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private Boolean deleted = false;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDate.now();
-        updatedAt = createdAt;
-        if (deleted == null) deleted = false;
-    }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDate.now();
-    }
 }

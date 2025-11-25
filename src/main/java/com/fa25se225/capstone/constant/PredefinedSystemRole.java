@@ -17,6 +17,10 @@ public enum PredefinedSystemRole {
                        PredefinedSystemPermission.TEST2_PERMISSION.name())
             ),
 
+    PARENT( "Parent description role...",
+            Set.of(PredefinedSystemPermission.TEST_PERMISSION.name(),
+                    PredefinedSystemPermission.TEST2_PERMISSION.name())
+    ),
 
     STUDENT( "Student description role...",
             Set.of(PredefinedSystemPermission.TEST_PERMISSION.name(),

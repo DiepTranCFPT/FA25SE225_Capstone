@@ -2,23 +2,19 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.configuration.properties.JwtProperties;
 import com.fa25se225.capstone.configuration.properties.OAuthProperties;
-import com.fa25se225.capstone.constant.PredefinedRole;
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
-import com.fa25se225.capstone.dto.response.AuthenticationResponse;
-import com.fa25se225.capstone.dto.response.IntrospectResponse;
-import com.fa25se225.capstone.dto.response.OutboundUserResponse;
+import com.fa25se225.capstone.dto.response.*;
 import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
-import com.fa25se225.capstone.repository.InvalidatedTokenRepository;
-import com.fa25se225.capstone.repository.LoginHistoryRepository;
-import com.fa25se225.capstone.repository.OtpRepository;
-import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.mapper.UserMapper;
+import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.repository.httpclient.OutboundIdentityClient;
 import com.fa25se225.capstone.repository.httpclient.OutboundUserClient;
 import com.fa25se225.capstone.service.AuthenticationService;
+import com.fa25se225.capstone.service.UserService;
 import com.fa25se225.capstone.utils.RequestContextUtil;
 import com.fa25se225.capstone.utils.TimeUtils;
 import com.nimbusds.jose.*;
@@ -29,16 +25,12 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 
 import java.text.ParseException;
@@ -46,7 +38,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -66,12 +57,45 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     OutboundUserClient outboundUserClient;
     RedisTemplate<String, Object> redisTemplate;
     RequestContextUtil requestContextUtil;
+    UserService userService;
+    StudentProfileRepository studentProfileRepository;
+    ParentProfileRepository parentProfileRepository;
+    TeacherProfileRepository teacherProfileRepository;
+
+    UserMapper userMapper;
 
     static int MAX_FAILED_ATTEMPTS = 5;
 
     JwtProperties jwtProperties;
 
     OAuthProperties oAuthProperties;
+
+
+    @Transactional
+    public UserResponse register(UserCreationRequest request) {
+        User savedUser = userService.createUser(request);
+
+        String roleName = request.roleName().toUpperCase();
+
+        switch (roleName) {
+            case "STUDENT":
+                StudentProfile studentProfile = StudentProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                studentProfileRepository.save(studentProfile);
+                break;
+            case "PARENT":
+                ParentProfile parentProfile = ParentProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                parentProfileRepository.save(parentProfile);
+                break;
+            case "TEACHER":
+                TeacherProfile teacherProfile = TeacherProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                teacherProfileRepository.save(teacherProfile);
+                break;
+            default:
+                throw new AppException(ErrorCode.INVALID_ROLE_NAME);
+        }
+
+        return userMapper.toResponse(savedUser);
+    }
 
 
 

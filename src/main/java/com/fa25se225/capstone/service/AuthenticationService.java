@@ -3,9 +3,7 @@ package com.fa25se225.capstone.service;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.AuthenticationResponse;
 import com.fa25se225.capstone.dto.response.IntrospectResponse;
-import com.nimbusds.jose.JOSEException;
-
-import java.text.ParseException;
+import com.fa25se225.capstone.dto.response.UserResponse;
 
 public interface AuthenticationService {
     AuthenticationResponse authenticate(AuthenticationRequest request);
@@ -19,4 +17,7 @@ public interface AuthenticationService {
     String verifyEmail(VerifyEmailRequest request);
     String resetPassword(ResetPasswordRequest request);
     String changePassword(ChangePasswordRequest request);
+
+    UserResponse register(UserCreationRequest request);
+
 }

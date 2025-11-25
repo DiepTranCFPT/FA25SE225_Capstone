@@ -3,14 +3,13 @@ package com.fa25se225.capstone.controller;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.AuthenticationResponse;
+import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -90,4 +89,11 @@ public class AuthenticationController {
     public ApiResponse<Void> changePassword(@RequestBody ChangePasswordRequest request) {
         return ApiResponse.successWithMessage(authenticationService.changePassword(request));
     }
+
+    @PostMapping("/register")
+    public ApiResponse<UserResponse> registerStudent(@Valid @RequestBody UserCreationRequest request) {
+        return ApiResponse.success(authenticationService.register(request));
+    }
+
+
 }

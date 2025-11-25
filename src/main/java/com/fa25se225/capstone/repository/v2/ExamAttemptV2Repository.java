@@ -34,4 +34,11 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
             "WHERE e.belongTo.id = :teacherId " +
             "AND ea.status IN :statuses")
     Page<ExamAttemptV2> findByTeacherAndStatusIn(@Param("teacherId") String teacherId, @Param("statuses") List<AttemptStatusV2> statuses, Pageable pageable);
+
+    int countByUserIdAndStatus(String userId, AttemptStatusV2 status);
+
+    @Query("SELECT AVG(ea.score) FROM ExamAttemptV2 ea WHERE ea.user.id = :userId AND ea.status = 'COMPLETED'")
+    Double getAverageScoreByUserId(@Param("userId") String userId);
+
+    Optional<ExamAttemptV2> findFirstByUserIdAndStatusOrderByEndTimeDesc(String userId, AttemptStatusV2 status);
 }

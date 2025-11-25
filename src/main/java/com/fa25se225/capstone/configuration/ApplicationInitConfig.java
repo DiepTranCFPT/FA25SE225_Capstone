@@ -3,12 +3,8 @@ package com.fa25se225.capstone.configuration;
 import com.fa25se225.capstone.configuration.dataseed.DataSeederV2;
 import com.fa25se225.capstone.constant.PredefinedSystemPermission;
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
-import com.fa25se225.capstone.entity.Permission;
-import com.fa25se225.capstone.entity.Role;
-import com.fa25se225.capstone.entity.User;
-import com.fa25se225.capstone.repository.PermissionRepository;
-import com.fa25se225.capstone.repository.RoleRepository;
-import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.entity.*;
+import com.fa25se225.capstone.repository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,6 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,13 +34,20 @@ public class ApplicationInitConfig {
     static String TEACHER_EMAIL = "teacher@gmail.com";
     static String TEACHER_PASSWORD = "teacher123";
 
+    static String PARENT_EMAIL = "parent@gmail.com";
+    static String PARENT_PASSWORD = "parent123";
 
+    static String STUDENT_EMAIL = "student@gmail.com";
+    static String STUDENT_PASSWORD = "student123";
 
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository,
                                         RoleRepository roleRepository,
                                         PermissionRepository permissionRepository,
-                                        DataSeederV2 dataSeederV2) {
+                                        DataSeederV2 dataSeederV2,
+                                        ParentProfileRepository parentProfileRepository,
+                                        StudentProfileRepository studentProfileRepository,
+                                        TeacherProfileRepository teacherProfileRepository) {
         return args -> {
 
             log.info("Seeding permissions...");
@@ -56,7 +60,7 @@ public class ApplicationInitConfig {
                 createRoleIfNotFound(roleRepository, permissionRepository, roleEnum);
             }
 
-            createAdminUserIfNotFound(userRepository, roleRepository);
+            createUsersIfNotFound(userRepository, roleRepository, parentProfileRepository, studentProfileRepository, teacherProfileRepository);
 
             dataSeederV2.createExamDataSeed();
             log.info("Application data seeding finished.");
@@ -90,7 +94,12 @@ public class ApplicationInitConfig {
     }
 
 
-    private void createAdminUserIfNotFound(UserRepository userRepository, RoleRepository roleRepository) {
+    @Transactional
+    protected void createUsersIfNotFound(UserRepository userRepository,
+                                         RoleRepository roleRepository,
+                                         ParentProfileRepository parentProfileRepository,
+                                         StudentProfileRepository studentProfileRepository,
+                                         TeacherProfileRepository teacherProfileRepository) {
         if (userRepository.findByEmail(ADMIN_EMAIL).isEmpty()) {
 
             Set<Role> adminRoles = new HashSet<>(roleRepository.findAllById(
@@ -104,17 +113,52 @@ public class ApplicationInitConfig {
                     .emailVerified(true)
                     .roles(adminRoles)
                     .build();
+
             User teacher = User.builder()
                     .email(TEACHER_EMAIL)
                     .password(passwordEncoder.encode(TEACHER_PASSWORD))
                     .firstName("Teacher")
                     .lastName("System")
                     .emailVerified(true)
-                    .roles(Set.of(roleRepository.findByName("TEACHER"), roleRepository.findByName("STUDENT")))
+                    .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.TEACHER.name())))
                     .build();
-            userRepository.saveAll(List.of(adminUser,teacher));
+
+            User parent = User.builder()
+                    .email(PARENT_EMAIL)
+                    .password(passwordEncoder.encode(PARENT_PASSWORD))
+                    .firstName("Parent")
+                    .lastName("System")
+                    .emailVerified(true)
+                    .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.PARENT.name())))
+                    .build();
+
+            User student = User.builder()
+                    .email(STUDENT_EMAIL)
+                    .password(passwordEncoder.encode(STUDENT_PASSWORD))
+                    .firstName("student")
+                    .lastName("System")
+                    .emailVerified(true)
+                    .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.STUDENT.name())))
+                    .build();
+
+            userRepository.saveAll(List.of(adminUser,teacher, parent, student));
+
+            parentProfileRepository.save(ParentProfile.builder().id(adminUser.getId()).user(adminUser).build());
+            studentProfileRepository.save(StudentProfile.builder().id(adminUser.getId()).user(adminUser).build());
+            teacherProfileRepository.save(TeacherProfile.builder().id(adminUser.getId()).user(adminUser).build());
+
+            teacherProfileRepository.save(TeacherProfile.builder().id(teacher.getId()).user(teacher).build());
+
+            parentProfileRepository.save(ParentProfile.builder().id(parent.getId()).user(parent).build());
+
+            studentProfileRepository.save(StudentProfile.builder().id(student.getId()).user(student).build());
+
+
+
             log.warn("Default admin user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", ADMIN_EMAIL, ADMIN_PASSWORD);
             log.warn("Default teacher user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", TEACHER_EMAIL, TEACHER_PASSWORD);
+            log.warn("Default parent user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", PARENT_EMAIL, PARENT_PASSWORD);
+            log.warn("Default student user '{}' created with password '{}'. PLEASE CHANGE THIS PASSWORD IN A PRODUCTION ENVIRONMENT!", STUDENT_EMAIL, STUDENT_PASSWORD);
 
         }
     }

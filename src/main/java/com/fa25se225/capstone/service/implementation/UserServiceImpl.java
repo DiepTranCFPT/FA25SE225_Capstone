@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.service.implementation;
 
-import com.fa25se225.capstone.constant.PredefinedRole;
+import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.request.UserCreationRequest;
@@ -14,9 +14,7 @@ import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.UserMapper;
-import com.fa25se225.capstone.repository.PermissionRepository;
-import com.fa25se225.capstone.repository.RoleRepository;
-import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.service.UserService;
@@ -53,23 +51,31 @@ public class UserServiceImpl implements UserService {
     PermissionService permissionService;
     PermissionRepository permissionRepository;
     TeacherProfileService teacherProfileService;
-    private final AccountUtil accountUtil;
+
+    StudentProfileRepository studentProfileRepository;
+    ParentProfileRepository parentProfileRepository;
+
 
     @Override
-    public UserResponse register(UserCreationRequest request) {
-
-        if(userRepository.existsByEmail(request.email())){
+    @Transactional
+    public User createUser(UserCreationRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new AppException(ErrorCode.EXISTED_EMAIL);
         }
 
         String verificationToken = UUID.randomUUID().toString();
+
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.password()));
-
-        Role roles =  roleRepository.findById(PredefinedRole.STUDENT_ROLE).orElseThrow(()-> new AppException(ErrorCode.EXISTED_ROLE));
-        user.setRoles(Set.of(roles));
         user.setVerificationToken(verificationToken);
-        var savedUser = userRepository.save(user);
+
+        Role role = roleRepository.findById(request.roleName())
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_ROLE_NAME));
+
+        user.setRoles(Set.of(role));
+
+        User savedUser = userRepository.save(user);
+
 
         notificationProducerService.sendNotification(NotificationEvent.builder()
                 .chanel("EMAIL")
@@ -81,8 +87,9 @@ public class UserServiceImpl implements UserService {
                 ))
                 .build());
 
-        return userMapper.toResponse(savedUser);
+        return savedUser;
     }
+
 
     @Override
     public UserResponse getMyProfile() {

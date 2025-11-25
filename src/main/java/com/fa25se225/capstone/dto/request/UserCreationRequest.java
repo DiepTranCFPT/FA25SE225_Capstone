@@ -8,20 +8,23 @@ import java.time.LocalDate;
 
 public record UserCreationRequest(
 
-    @Size(min = 4, message = "EMAIL_INVALID")
+    @Size(min = 4, message = "Invalid Email")
     String email,
 
-    @Size(min = 6, message = "INVALID_PASSWORD")
+    @Size(min = 6, message = "Password must be at least 6 characters")
     String password,
 
-    @NotBlank(message = "INVALID_NAME")
+    @NotBlank(message = "First name must be not empty")
     String firstName,
 
-    @NotBlank(message = "INVALID_NAME")
+    @NotBlank(message = "Last name must be not empty")
     String lastName,
 
-    @DobConstraint(min = 10, message = "INVALID_DOB")
-    LocalDate dob
+    @DobConstraint(min = 10, message = "Age must be great than 10")
+    LocalDate dob,
+
+    @NotBlank(message = "You must choose the role")
+    String roleName
 
 
 ) {}

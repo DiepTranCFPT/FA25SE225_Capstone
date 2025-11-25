@@ -32,12 +32,6 @@ public class UserController {
     private final UserService userService;
     private final PermissionService permissionService;
 
-    @PostMapping
-    @Operation(summary = "Register a new user",
-            description = "Creates a new user account. An email verification link will be sent.")
-    public ApiResponse<UserResponse> register(@Valid @RequestBody UserCreationRequest request){
-        return ApiResponse.success(userService.register(request));
-    }
 
     @GetMapping("/me")
     @Operation(summary = "Get current user's profile",

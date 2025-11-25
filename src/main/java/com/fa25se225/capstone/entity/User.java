@@ -43,6 +43,7 @@ public class User implements UserDetails {
     @Nationalized
     String lastName;
     LocalDate dob;
+    private String phoneNumber;
     String imgUrl;
     @Builder.Default
     boolean deleted = false;

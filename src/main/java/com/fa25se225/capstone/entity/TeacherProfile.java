@@ -2,8 +2,11 @@ package com.fa25se225.capstone.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,16 +19,11 @@ import java.util.List;
 @Table(name = "teacher_profiles")
 public class TeacherProfile {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
     private String id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
-
-    @Column(name = "date_of_birth", nullable = false)
-    private LocalDate dateOfBirth;
 
     @Column(name = "qualification")
     private String qualification;
@@ -51,28 +49,19 @@ public class TeacherProfile {
     private List<String> certificateUrls = new ArrayList<>();
 
     @Column(name = "is_verified")
-    private Boolean isVerified;
+    @Builder.Default
+    private Boolean isVerified = false;
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDate updatedAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private Boolean deleted = false;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDate.now();
-        updatedAt = createdAt;
-        if (isVerified == null) isVerified = false;
-        if (deleted == null) deleted = false;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDate.now();
-    }
 }

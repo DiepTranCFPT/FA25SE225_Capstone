@@ -13,6 +13,8 @@ import com.fa25se225.capstone.repository.TransactionRepository;
 import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.utils.AccountUtil;
+import com.fa25se225.capstone.dto.response.TransactionDTO;
+import com.fa25se225.capstone.mapper.TransactionMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -28,6 +30,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -44,6 +47,7 @@ public class MomoPaymentService {
     private final AccountUtil accountUtil;
     private final TransactionRepository transactionRepository;
     private final PaymentStatusRepository paymentStatusRepository;
+    private final TransactionMapper transactionMapper;
 
 
     @Transactional
@@ -211,5 +215,11 @@ public class MomoPaymentService {
             log.error("Error verifying Momo callback signature: {}", e.getMessage(), e);
             return false;
         }
+    }
+
+    public List<TransactionDTO> getCurrentUserTransactions() {
+        User user = accountUtil.getCurrentUser();
+        List<Transaction> transactions = transactionRepository.findByPayment_User(user);
+        return transactionMapper.toDTOList(transactions);
     }
 }

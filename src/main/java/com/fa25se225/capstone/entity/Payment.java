@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -35,10 +36,6 @@ public class Payment {
     @JoinColumn(name = "status_id", nullable = false)
     private PaymentStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "method_id", nullable = false)
-    private PaymentMethod method;
-
     @Column(name = "description")
     private String description;
 
@@ -60,6 +57,7 @@ public class Payment {
         createdAt = LocalDate.now();
         updatedAt = createdAt;
         if (deleted == null) deleted = false;
+        paymentNumber = UUID.randomUUID().toString();
     }
 
     @PreUpdate

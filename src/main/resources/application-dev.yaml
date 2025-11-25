@@ -102,5 +102,7 @@ momo:
   access-key: ${MOMO_ACCESS_KEY}
   secret-key: ${MOMO_SECRET_KEY}
   endpoint: https://payment.momo.vn/v2/gateway/api/create
-  redirect-url: http://localhost:8080/edcare/api/v1/payment/momo/redirect
-  ipn-url: http://localhost:8080/edcare/api/v1/payment/momo/ipn
+  redirect-url: https://fa25se225capstone-production.up.railway.app/edcare/api/v1/payment/momo/redirect
+  ipn-url: https://fa25se225capstone-production.up.railway.app/edcare/api/v1/payment/momo/ipn
+
+

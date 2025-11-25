@@ -8,9 +8,7 @@ import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
-import com.fa25se225.capstone.entity.Permission;
-import com.fa25se225.capstone.entity.Role;
-import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.UserMapper;
@@ -33,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -54,6 +53,7 @@ public class UserServiceImpl implements UserService {
 
     StudentProfileRepository studentProfileRepository;
     ParentProfileRepository parentProfileRepository;
+    TeacherProfileRepository teacherProfileRepository;
 
 
     @Override
@@ -95,12 +95,11 @@ public class UserServiceImpl implements UserService {
     public UserResponse getMyProfile() {
         String email = getCurrentEmail();
         User user = findUserByEmailOrThrowException(email);
-        TeacherProfileResponse teacherProfile = null;
-        if (user.getRoles().stream().anyMatch(r -> "TEACHER".equals(r.getName()))) {
-            teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
-            return userMapper.toResponse(user, teacherProfile);
-        }
-        return userMapper.toResponse(user);
+        StudentProfile student = studentProfileRepository.findByUserId(user.getId()).orElse(null);
+        ParentProfile parent = parentProfileRepository.findByUserId(user.getId()).orElse(null);
+        TeacherProfile teacher = teacherProfileRepository.findByUserId(user.getId()).orElse(null);
+        return userMapper.toResponse(user, teacher, parent, student);
+
     }
 
     @Override

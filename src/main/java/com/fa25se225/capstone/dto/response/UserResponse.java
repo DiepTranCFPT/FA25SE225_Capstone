@@ -2,6 +2,7 @@ package com.fa25se225.capstone.dto.response;
 
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import lombok.Builder;
+import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -15,5 +16,7 @@ public record UserResponse (
     String imgUrl,
     LocalDate dob,
     Set<String> roles,
-    TeacherProfileResponse teacherProfile
+    TeacherProfileResponse teacherProfile,
+    StudentProfileResponse studentProfile,
+    ParentProfileResponse parentProfile
 ){}

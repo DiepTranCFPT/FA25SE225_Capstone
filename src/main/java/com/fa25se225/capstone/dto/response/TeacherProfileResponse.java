@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class TeacherProfileResponse {
     private String id;
-    private LocalDate dateOfBirth;
     private String qualification;
     private String specialization;
     private String experience;

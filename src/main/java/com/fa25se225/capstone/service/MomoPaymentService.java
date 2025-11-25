@@ -139,8 +139,8 @@ public class MomoPaymentService {
 
         Transaction transaction = transactionRepository.findById(orderId).orElseThrow(()->
                 new RuntimeException("NOT FOUND TRANSACTION"));
-        if(transaction.getStatus().getName().equals("Success")) {
-            new RuntimeException("Transaction have been successful");
+        if(transaction.getStatus().equals(transactionStatus)) {
+           throw new RuntimeException("Transaction have been successful");
         }
         transaction.setStatus(transactionStatus);
         transaction.setExternalReference(description);

@@ -1,10 +1,9 @@
 package com.fa25se225.capstone.controller;
 
-import com.fa25se225.capstone.dto.request.LinkStudentRequest;
-import com.fa25se225.capstone.dto.request.PageResponse;
-import com.fa25se225.capstone.dto.request.UnlinkStudentRequest;
+import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.ChildOverviewResponse;
+import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.service.ParentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +20,12 @@ import java.util.List;
 public class ParentController {
 
     private final ParentService parentService;
+
+    @PutMapping("/me")
+    public ApiResponse<String> updateProfile(@RequestBody ParentProfileUpdateRequest request) {
+        parentService.updateProfile(request);
+        return ApiResponse.success("Update successfully");
+    }
 
     @PostMapping("/link-student")
     public ApiResponse<String> linkStudent(@Valid @RequestBody LinkStudentRequest request) {

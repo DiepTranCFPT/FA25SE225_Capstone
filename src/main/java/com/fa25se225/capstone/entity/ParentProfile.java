@@ -28,9 +28,6 @@ public class ParentProfile {
     @Column(name = "occupation")
     private String occupation;
 
-    @Column(name = "address")
-    private String address;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "parent_student_links",

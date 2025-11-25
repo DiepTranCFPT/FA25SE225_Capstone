@@ -2,6 +2,7 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.dto.request.LinkStudentRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.request.ParentProfileUpdateRequest;
 import com.fa25se225.capstone.dto.request.UnlinkStudentRequest;
 import com.fa25se225.capstone.dto.response.ChildOverviewResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
@@ -12,6 +13,7 @@ import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
+import com.fa25se225.capstone.mapper.ParentProfileMapper;
 import com.fa25se225.capstone.mapper.v2.ExamAttemptV2Mapper;
 import com.fa25se225.capstone.repository.ParentProfileRepository;
 import com.fa25se225.capstone.repository.StudentProfileRepository;
@@ -43,6 +45,7 @@ public class ParentServiceImpl implements ParentService {
     private final AccountUtil accountUtil;
     private final ExamAttemptV2Mapper attemptMapper;
     private final PageHelper pageHelper;
+    private final ParentProfileMapper parentProfileMapper;
 
     @Override
     @Transactional
@@ -157,5 +160,15 @@ public class ParentServiceImpl implements ParentService {
                 .totalElement(page.getTotalElements())
                 .items(items)
                 .build();
+    }
+
+    @Override
+    public void updateProfile(ParentProfileUpdateRequest request) {
+        User parentUser = accountUtil.getCurrentUser();
+        ParentProfile profile = findParentProfileByUserIdOrElseThrowException(parentUser.getId());
+        parentProfileMapper.updateProfile(profile, request);
+
+        parentRepository.save(profile);
+
     }
 }

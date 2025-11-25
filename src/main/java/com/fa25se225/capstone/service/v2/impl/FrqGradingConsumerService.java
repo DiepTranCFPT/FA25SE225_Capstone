@@ -12,9 +12,12 @@ import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
 import com.fa25se225.capstone.repository.v2.ExamQuestionV2Repository;
 import com.fa25se225.capstone.repository.v2.StudentAnswerV2Repository;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +36,11 @@ public class FrqGradingConsumerService {
 
     private final StudentAnswerV2Repository studentAnswerRepository;
     private final ExamAttemptV2Repository attemptRepository;
-    private final ChatClient chatClient;
+
+    @NonFinal
+    @Autowired
+    @Qualifier("chatClientWithoutChatMemory")
+    private ChatClient chatClient;
 
     private final SseNotificationService sseService;
     private final ExamAttemptV2Mapper attemptMapper;

@@ -24,10 +24,10 @@ public class AIModelConfig {
     }
 
     @Bean(name = "chatClientWithChatInMemory")
-    public ChatClient chatClientWithChatInMemory(ChatClient.Builder chatClientBuilder){
+    public ChatClient chatClientWithChatInMemory(ChatClient.Builder chatClientBuilder, InMemoryChatMemoryRepository inMemoryChatMemoryRepository){
         ChatMemory chatMemory = MessageWindowChatMemory.builder()
                 .maxMessages(15)
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
+                .chatMemoryRepository(inMemoryChatMemoryRepository)
                 .build();
 
         return chatClientBuilder
@@ -38,6 +38,11 @@ public class AIModelConfig {
                         .builder(chatMemory)
                         .build())
                 .build();
+    }
+
+    @Bean
+    public InMemoryChatMemoryRepository MyChatInMemoryRepository(){
+        return new InMemoryChatMemoryRepository();
     }
 
 }

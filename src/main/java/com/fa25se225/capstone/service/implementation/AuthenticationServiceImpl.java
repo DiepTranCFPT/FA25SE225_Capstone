@@ -76,25 +76,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User savedUser = userService.createUser(request);
 
         String roleName = request.roleName().toUpperCase();
+        StudentProfile studentProfile = null;
+        ParentProfile parentProfile = null;
+        TeacherProfile teacherProfile = null;
 
         switch (roleName) {
             case "STUDENT":
-                StudentProfile studentProfile = StudentProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                studentProfile = StudentProfile.builder().user(savedUser).id(savedUser.getId()).build();
                 studentProfileRepository.save(studentProfile);
                 break;
             case "PARENT":
-                ParentProfile parentProfile = ParentProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                parentProfile = ParentProfile.builder().user(savedUser).id(savedUser.getId()).build();
                 parentProfileRepository.save(parentProfile);
                 break;
             case "TEACHER":
-                TeacherProfile teacherProfile = TeacherProfile.builder().user(savedUser).id(savedUser.getId()).build();
+                teacherProfile = TeacherProfile.builder().user(savedUser).id(savedUser.getId()).build();
                 teacherProfileRepository.save(teacherProfile);
                 break;
             default:
                 throw new AppException(ErrorCode.INVALID_ROLE_NAME);
         }
 
-        return userMapper.toResponse(savedUser);
+        return userMapper.toResponse(savedUser, teacherProfile, parentProfile, studentProfile);
     }
 
 

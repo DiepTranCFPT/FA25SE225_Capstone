@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 public class AIChatService {
@@ -16,7 +17,7 @@ public class AIChatService {
 
 
 
-    public String examAsk(ExamAskingRequest request){
+    public Flux<String> examAsk(ExamAskingRequest request){
         String conversationId = request.getDoneBy().concat(request.getAttemptId());
         String userAsking = String.format(
                 """
@@ -30,7 +31,7 @@ public class AIChatService {
                 .system("You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)")
                 .user(userAsking)
                 .advisors(advisorSpec -> advisorSpec.param("CONVERSATION_ID", conversationId))
-                .call()
+                .stream()
                 .content();
 
     }

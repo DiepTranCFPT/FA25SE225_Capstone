@@ -1,9 +1,6 @@
 package com.fa25se225.capstone.service;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
-import com.fa25se225.capstone.dto.request.UserCreationRequest;
-import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
-import com.fa25se225.capstone.dto.request.UserUpdateRequest;
+import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.User;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,4 +28,6 @@ public interface UserService {
     UserResponse getProfileByUserId(String userId);
 
     User createUser(UserCreationRequest request);
+
+    PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String... sorts);
 }

@@ -2,10 +2,7 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
-import com.fa25se225.capstone.dto.request.PageResponse;
-import com.fa25se225.capstone.dto.request.UserCreationRequest;
-import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
-import com.fa25se225.capstone.dto.request.UserUpdateRequest;
+import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.*;
@@ -13,6 +10,7 @@ import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.UserMapper;
 import com.fa25se225.capstone.repository.*;
+import com.fa25se225.capstone.repository.specs.UserSpecification;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.service.UserService;
@@ -23,7 +21,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -254,6 +255,26 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         permissionService.clearUserPermissionsCache(user.getEmail());
+    }
+
+    @Override
+    public PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String... sorts) {
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+
+        Specification<User> spec = UserSpecification.getSpec(request);
+        Page<User> page = userRepository.findAll(spec, pageable);
+
+        List<UserResponse> items = page.getContent().stream()
+                .map(userMapper::toResponse)
+                .toList();
+
+        return PageResponse.<List<UserResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(page.getTotalPages())
+                .totalElement(page.getTotalElements())
+                .items(items)
+                .build();
     }
 
 

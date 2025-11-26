@@ -56,8 +56,7 @@ public class FrqGradingConsumerService {
                 .orElse(null);
 
         if (studentAnswer == null) {
-            log.error("Cannot find StudentAnswerV2 with id: {}. Task aborted.", event.studentAnswerId());
-            return;
+            log.warn("StudentAnswerV2 not found id: {}. User might be committing transaction. Retrying...", event.studentAnswerId());
         }
 
         double score = gradeFrqWithAI(

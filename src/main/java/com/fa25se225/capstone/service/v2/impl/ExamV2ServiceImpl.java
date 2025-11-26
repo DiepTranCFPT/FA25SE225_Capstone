@@ -26,6 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -337,8 +340,13 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         var savedAttempt = attemptRepository.save(attempt);
 
         if (!finalGradingTasks.isEmpty()) {
-            log.info("Push {} grading event into Kafka for Attempt: {}", finalGradingTasks.size(), attemptId);
-            finalGradingTasks.forEach(gradingProducer::sendGradingTask);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    log.info("Transaction committed. Sending {} FRQ grading tasks to Kafka.", finalGradingTasks.size());
+                    finalGradingTasks.forEach(gradingProducer::sendGradingTask);
+                }
+            });
         }
 
         return SubmitAttemptV2Response.builder()

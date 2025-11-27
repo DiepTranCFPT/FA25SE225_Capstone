@@ -18,7 +18,12 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.RetryableTopic;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -47,6 +52,11 @@ public class FrqGradingConsumerService {
 
     private final ExamQuestionV2Repository examQuestionRepository;
 
+    @RetryableTopic(
+            attempts = "4",
+            backoff = @Backoff(delay = 2000, multiplier = 2.0),
+            include = {RuntimeException.class}
+    )
     @KafkaListener(topics = "frq_grading_tasks", groupId = "frq-grading-group")
     @Transactional
     public void handleFrqGradingTask(FrqGradingEvent event) {
@@ -57,6 +67,7 @@ public class FrqGradingConsumerService {
 
         if (studentAnswer == null) {
             log.warn("StudentAnswerV2 not found id: {}. User might be committing transaction. Retrying...", event.studentAnswerId());
+            throw new RuntimeException("StudentAnswer not found, retrying...");
         }
 
         double score = gradeFrqWithAI(
@@ -78,15 +89,25 @@ public class FrqGradingConsumerService {
         }
 
         String systemPrompt = String.format(
-                "You are an AI grading assistant. Grade the student's answer based on the model answer and the maximum points. " +
-                        "The score must be a number between 0 and %.1f.\n\n" +
-                        "--- MODEL ANSWER ---\n%s\n\n" +
-                        "--- MAXIMUM POINTS: %.1f ---",
-                maxPoints, modelAnswer, maxPoints
-        );
-
+                """
+             You are a strict and impartial examiner grading an Advanced Placement (AP) exam.
+             Your goal is to grade the STUDENT ANSWER based EXCLUSIVELY on the MODEL ANSWER provided.
+             
+             --- INPUT DATA ---
+             MAXIMUM POINTS: %.1f
+             MODEL ANSWER: %s
+             
+             --- GRADING RULES (READ CAREFULLY) ---
+             1. **Relevance Check**: If the student's answer is irrelevant, off-topic, or is an admission of ignorance (e.g., "I don't know", "I skipped this", "I need to learn more", random characters), the SCORE MUST BE 0.
+             2. **Accuracy Check**: The student must demonstrate understanding of the specific concepts in the MODEL ANSWER. Do not give points for effort, politeness, or correct grammar if the core answer is wrong.
+             3. **Partial Credit**: Give partial credit only if parts of the reasoning match the MODEL ANSWER.
+             4. **Format**: Return the result in JSON format with 'point' (double) and 'feedback' (string).
+             
+             Now, grade the following STUDENT ANSWER:
+             """, maxPoints, modelAnswer);
         try {
-            var aiResponse = chatClient.prompt().system(systemPrompt)
+            var aiResponse = chatClient.prompt()
+                    .system(systemPrompt)
                     .user(studentAnswerText)
                     .call().entity(GradingUserAnswerAIResponse.class);
 
@@ -94,8 +115,20 @@ public class FrqGradingConsumerService {
             return Math.min(aiResponse.getPoint(), maxPoints);
         } catch (Exception e) {
             log.error("Failed to grade FRQ with AI for studentAnswerId: {}. Error: {}", answerEntity.getId(), e.getMessage());
-            answerEntity.setFeedback("Grading Error: Could not contact AI assistant.");
-            return 0.0;
+            throw new RuntimeException("AI Service Unavailable: " + e.getMessage());
+        }
+    }
+
+    @DltHandler
+    @Transactional
+    public void handleDlt(FrqGradingEvent event, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        log.error("Grading failed for studentAnswerId: {} after retries. Moving to Manual Review.", event.studentAnswerId());
+
+        StudentAnswerV2 studentAnswer = studentAnswerRepository.findById(event.studentAnswerId()).orElse(null);
+        if (studentAnswer != null) {
+            studentAnswer.setFeedback("The AI system crashed after several tries. Teachers, please grade manually.");
+            studentAnswerRepository.save(studentAnswer);
+
         }
     }
 

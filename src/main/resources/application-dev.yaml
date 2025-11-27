@@ -7,9 +7,9 @@ spring:
     hikari:
       maximumPoolSize: 20
       minimumIdle: 5
-      maxLifetime: 540000     # 9 phút
-      idleTimeout: 300000     # 5 phút
-      keepaliveTime: 240000   # 4 phút
+      maxLifetime: 540000        # 9 phút = 540s
+      idleTimeout: 300000        # 5 phút
+      keepaliveTime: 120000      # 2 phút
       connectionInitSql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   data:
     redis:

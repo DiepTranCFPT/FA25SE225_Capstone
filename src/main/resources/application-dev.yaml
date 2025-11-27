@@ -16,6 +16,10 @@ spring:
       url: ${REDIS_URL:redis://default:nQZGarDxzUTiLOCawvBOQkNHCjhmzRGh@caboose.proxy.rlwy.net:57131}
   cache:
     type: redis
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
 
   ai:
     openai:

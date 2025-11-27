@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface LessonService {
-    LessonResponse create(LessonCreationRequest request,MultipartFile file);
+    LessonResponse create(LessonCreationRequest request,MultipartFile file, MultipartFile video);
 
     LessonResponse getById(String id);
 

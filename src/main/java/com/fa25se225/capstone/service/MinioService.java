@@ -7,4 +7,6 @@ public interface MinioService {
     FileResponse getFileByName(String bucket, String filename) throws Exception;
     String uploadFile(MultipartFile file,String fileName, String bucket) throws Exception;
     byte[] getFile(String fileName,String bucket) throws Exception;
+    String uploadVideo(MultipartFile file,String objectName);
+    String getVideoUrl(String objectName);
 }

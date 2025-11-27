@@ -82,4 +82,9 @@ public class MinioController {
                 .contentType(MediaType.IMAGE_JPEG)
                 .body(data);
     }
+    @GetMapping("/videos")
+    public ResponseEntity<String> getVideos(@RequestParam String nameFile) {
+        String videoUrl = minioService.getVideoUrl(nameFile);
+        return ResponseEntity.ok(videoUrl);
+    }
 }

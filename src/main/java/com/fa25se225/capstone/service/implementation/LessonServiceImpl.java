@@ -52,7 +52,7 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     @Transactional
-    public LessonResponse create(LessonCreationRequest request,MultipartFile file) {
+    public LessonResponse create(LessonCreationRequest request,MultipartFile file, MultipartFile video) {
         log.info("Creating lesson with name: {}", request.name());
 
         QuestionV2 question = null;
@@ -72,7 +72,6 @@ public class LessonServiceImpl implements LessonService {
                     .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         }
 
-
         log.debug("Creating lesson entity from request");
         Lesson lesson = lessonMapper.toEntity(request);
         lesson.setQuestion(question);
@@ -81,9 +80,12 @@ public class LessonServiceImpl implements LessonService {
         Lesson savedLesson = lessonRepository.saveAndFlush(lesson);
         log.info("Successfully created lesson with id: {}", savedLesson.getId());
         String nameFile = "LESSON_" + "_" + savedLesson.getId().trim();
+        String nameVideo = "VIDEO" + "_" + savedLesson.getId().trim();
         try {
             String fileLesson =   minioClient.uploadFile(file,nameFile,bucketName);
+            String fileVideo = minioClient.uploadVideo(video,nameVideo);
             savedLesson.setFile(fileLesson);
+            savedLesson.setUrl(fileVideo);
             Lesson updatedLesson = lessonRepository.saveAndFlush(savedLesson);
             return lessonMapper.toResponse(updatedLesson);
         } catch (Exception e) {
@@ -102,7 +104,6 @@ public class LessonServiceImpl implements LessonService {
         User account = accountUtil.getCurrentUser();
         boolean hasPermission = account.getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals(permissions));
-
         if (!hasPermission) {
             throw new AccessDeniedException("You do not have permission: " + permissions);
         }

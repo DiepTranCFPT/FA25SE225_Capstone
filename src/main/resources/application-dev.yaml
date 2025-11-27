@@ -97,6 +97,8 @@ minio:
     avatars: avatars
     materials: materials
     lesson : lesson
+  bucket-video: video-lessons
+
 momo:
   partner-code: ${MOMO_PARTNER_CODE}
   access-key: ${MOMO_ACCESS_KEY}

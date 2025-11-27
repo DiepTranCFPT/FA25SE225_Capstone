@@ -34,11 +34,11 @@ public class LessonController {
     @PreAuthorize("hasRole('TEACHER')")
     public ApiResponse<?> create(
             @Valid @ModelAttribute LessonCreationRequest request,
-            @RequestParam MultipartFile file
+            @RequestParam MultipartFile file,
+            @RequestParam MultipartFile video
     ) {
-        return ApiResponse.success(lessonService.create(request,file));
+        return ApiResponse.success(lessonService.create(request,file,video));
     }
-
 
     @GetMapping("/{id}")
     @Operation(summary = "Get lesson by ID", description = "Retrieves a lesson by its unique identifier")

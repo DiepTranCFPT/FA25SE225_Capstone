@@ -84,7 +84,7 @@ public class UserServiceImpl implements UserService {
                 .templateName("VERIFY_EMAIL")
                 .params(Map.of(
                         "firstName", request.firstName(),
-                        "verificationLink", "https://fa25se225capstone-production.up.railway.app/verify-email/?email=" + request.email() + "&token=" + verificationToken
+                        "verificationLink", "https://capstoneproject-production-857f.up.railway.app/verify-email/?email=" + request.email() + "&token=" + verificationToken
                 ))
                 .build());
 

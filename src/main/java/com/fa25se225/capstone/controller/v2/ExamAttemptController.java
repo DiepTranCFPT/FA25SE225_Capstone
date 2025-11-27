@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -73,10 +74,12 @@ public class ExamAttemptController {
     }
 
     @GetMapping("/{attemptId}/subscribe")
-    @Operation(summary = "Subscribe to grading status updates (SSE)",
-            description = "Opens a Server-Sent Event stream to receive notification when grading is complete.")
-    public SseEmitter subscribeToAttemptStatus(@PathVariable String attemptId) {
-        return sseService.subscribe(attemptId);
+    public ResponseEntity<SseEmitter> subscribeToAttemptStatus(@PathVariable String attemptId) {
+        SseEmitter emitter = sseService.subscribe(attemptId);
+        return ResponseEntity.ok()
+                .header("X-Accel-Buffering", "no")
+                .header("Cache-Control", "no-cache")
+                .body(emitter);
     }
 
     @PostMapping("/{attemptId}/save-progress")

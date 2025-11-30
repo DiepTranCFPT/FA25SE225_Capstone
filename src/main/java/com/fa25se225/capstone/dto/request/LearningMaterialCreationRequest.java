@@ -3,6 +3,8 @@ package com.fa25se225.capstone.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
+
 public record LearningMaterialCreationRequest(
     @NotBlank(message = "Title is required")
     String title,
@@ -14,6 +16,8 @@ public record LearningMaterialCreationRequest(
     
     @NotNull(message = "Material type ID is required")
     String typeId,
+
+    BigDecimal price,
     
     String subjectId,
     

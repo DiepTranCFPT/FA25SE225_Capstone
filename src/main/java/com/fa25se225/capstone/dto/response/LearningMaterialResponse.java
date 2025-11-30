@@ -2,6 +2,7 @@ package com.fa25se225.capstone.dto.response;
 
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Builder
@@ -16,6 +17,7 @@ public record LearningMaterialResponse(
     String subjectName,
     String authorId,
     String authorName,
+    BigDecimal price,
     Boolean isPublic,
     LocalDate createdAt,
     LocalDate updatedAt,

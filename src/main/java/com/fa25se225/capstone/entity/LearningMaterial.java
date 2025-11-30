@@ -3,6 +3,7 @@ package com.fa25se225.capstone.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,7 @@ public class LearningMaterial {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "description",columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "content_url", nullable = false)
@@ -60,6 +61,10 @@ public class LearningMaterial {
     @Column(name = "file_image")
     private String fileImage;
 
+    @Column(name = "price", nullable = false)
+    @Builder.Default
+    private BigDecimal price = BigDecimal.ZERO;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
@@ -71,5 +76,15 @@ public class LearningMaterial {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDate.now();
+    }
+
+    public void setPrice(BigDecimal price) {
+        if (price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be greater than or equal to 0");
+        }
+        if (price == null) {
+            this.price = BigDecimal.ZERO;
+        } else
+            this.price = price;
     }
 }

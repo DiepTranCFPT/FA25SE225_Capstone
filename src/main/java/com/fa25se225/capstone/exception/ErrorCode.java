@@ -68,11 +68,10 @@ public enum ErrorCode {
     PARENT_PROFILE_NOT_FOUND(1037,"Parent profile not found." , HttpStatus.BAD_REQUEST),
     STUDENT_PROFILE_NOT_FOUND(1038,"Student profile not found." , HttpStatus.BAD_REQUEST),
 
-    ALREADY_LINKED_STUDENT(1039,"You have already linked this student" , HttpStatus.BAD_REQUEST)
+    ALREADY_LINKED_STUDENT(1039,"You have already linked this student" , HttpStatus.BAD_REQUEST),
+    PAYMENT_AMOUNT_TOO_LOW(1040,"Payment amount is less than the price of the learning material.",HttpStatus.BAD_REQUEST )
     ;
 
-
-    ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -7,6 +7,7 @@ import com.fa25se225.capstone.dto.response.LearningMaterialResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.MaterialType;
+import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
@@ -16,6 +17,7 @@ import com.fa25se225.capstone.mapper.LearningMaterialMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.LessonRepository;
 import com.fa25se225.capstone.repository.MaterialTypeRepository;
+import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
@@ -51,6 +53,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
     private final MinioService minioClient;
+    private final PaymentRepository paymentRepository;
 
     @Value("${minio.bucket.materials}")
     private String bucketName ;
@@ -362,32 +365,68 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         User student = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        Payment payment = paymentRepository.findByUser(student).orElseThrow(
+                ()-> new RuntimeException("Payment not found")
+        );
         // Get learning material
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(learningMaterialId)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
 
-        // Create permission name from learning material title
-        String permissionName = "LEARNING_"+learningMaterialId;
-        log.debug("Creating/Getting permission with name: {}", permissionName);
+        if(payment.getAmount().compareTo(learningMaterial.getPrice()) < 0) {
+            throw new AppException(ErrorCode.PAYMENT_AMOUNT_TOO_LOW);
+        }
+        if (payment.getAmount().compareTo(learningMaterial.getPrice()) == 0) {
+            // Payment is exactly the price, proceed with registration
+            String permissionName = "LEARNING_"+learningMaterialId;
+            log.debug("Creating/Getting permission with name: {}", permissionName);
 
-        // Check if user already has this permission
-        boolean alreadyRegistered = student.getGrantedPermissions().stream()
-                .anyMatch(p -> p.getName().equals(permissionName));
+            // Check if user already has this permission
+            boolean alreadyRegistered = student.getGrantedPermissions().stream()
+                    .anyMatch(p -> p.getName().equals(permissionName));
 
-        if (alreadyRegistered) {
-            log.warn("Student with id: {} already registered for learning material: {}", student.getId(), learningMaterialId);
-            throw new AppException(ErrorCode.ALREADY_REGISTERED);
+            if (alreadyRegistered) {
+                log.warn("Student with id: {} already registered for learning material: {}", student.getId(), learningMaterialId);
+                throw new AppException(ErrorCode.ALREADY_REGISTERED);
+            }
+
+            Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+
+            // Add permission to user's granted permissions
+            student.getGrantedPermissions().add(permission);
+            userRepository.save(student);
+
+            log.info("Successfully registered student {} for learning material: {}", student.getId(), learningMaterialId);
+
+            return learningMaterialMapper.toResponse(learningMaterial);
+        }
+        // Optionally handle overpayment
+        if (payment.getAmount().compareTo(learningMaterial.getPrice()) > 0) {
+            // Payment is more than the price, you may want to log or handle this case
+            log.warn("Payment amount is greater than the price. Consider refunding the excess or notifying the user.");
+            String permissionName = "LEARNING_"+learningMaterialId;
+            log.debug("Creating/Getting permission with name: {}", permissionName);
+
+            // Check if user already has this permission
+            boolean alreadyRegistered = student.getGrantedPermissions().stream()
+                    .anyMatch(p -> p.getName().equals(permissionName));
+
+            if (alreadyRegistered) {
+                log.warn("Student with id: {} already registered for learning material: {}", student.getId(), learningMaterialId);
+                throw new AppException(ErrorCode.ALREADY_REGISTERED);
+            }
+
+            Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
+
+            // Add permission to user's granted permissions
+            student.getGrantedPermissions().add(permission);
+            userRepository.save(student);
+
+            log.info("Successfully registered student {} for learning material: {}", student.getId(), learningMaterialId);
+
+            return learningMaterialMapper.toResponse(learningMaterial);
         }
 
-        Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
-
-        // Add permission to user's granted permissions
-        student.getGrantedPermissions().add(permission);
-        userRepository.save(student);
-
-        log.info("Successfully registered student {} for learning material: {}", student.getId(), learningMaterialId);
-
-        return learningMaterialMapper.toResponse(learningMaterial);
+        throw new RuntimeException("Unexpected payment amount scenario");
     }
 
     @Override

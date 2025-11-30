@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.repository;
 
+import com.fa25se225.capstone.entity.Role;
 import com.fa25se225.capstone.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface UserRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
@@ -17,8 +19,7 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
     Optional<User> findByEmailAndVerificationToken(String email, String token);
 
-    // Find all users with role 'TEACHER' and non-null verificationToken (not verified)
-    @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.verificationToken IS NOT NULL")
+    @Query("SELECT u FROM User u join TeacherProfile tp on u.id = tp.user.id left JOIN u.roles r WHERE r.name = :roleName and tp.isVerified = false")
     List<User> findUnverifiedTeachers(@Param("roleName") String roleName);
 
 
@@ -28,4 +29,5 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
     long countTotalByRole(@Param("roleName") String roleName);
 
+    List<User> findAllByRoles(Set<Role> roles);
 }

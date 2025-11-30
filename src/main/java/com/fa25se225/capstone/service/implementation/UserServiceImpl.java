@@ -186,7 +186,9 @@ public class UserServiceImpl implements UserService {
         List<UserResponse> responses = new ArrayList<>();
         for (User teacher : teachers) {
             TeacherProfileResponse teacherProfile = teacherProfileService.getProfileByUserId(teacher.getId());
-            responses.add(userMapper.toResponse(teacher, teacherProfile));
+            if(teacherProfile.getIsVerified() == false){
+                responses.add(userMapper.toResponse(teacher, teacherProfile));
+            }
         }
         return responses;
     }
@@ -196,9 +198,9 @@ public class UserServiceImpl implements UserService {
     public UserResponse verifyTeacher(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        user.setVerificationToken(null);
-        user.setEmailVerified(true);
-        userRepository.save(user);
+        TeacherProfile teacherProfile1 = teacherProfileRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        teacherProfile1.setIsVerified(true);
+        teacherProfileRepository.save(teacherProfile1);
         TeacherProfileResponse teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
         return userMapper.toResponse(user, teacherProfile);
     }

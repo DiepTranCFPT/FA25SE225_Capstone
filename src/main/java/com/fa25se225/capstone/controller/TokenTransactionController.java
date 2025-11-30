@@ -16,8 +16,8 @@ public class TokenTransactionController {
 
     @PostMapping("/withdraw")
     @PreAuthorize("hasRole('TEACHER')")
-    public TokenTransaction requestWithdrawal(@RequestBody WithdrawalRequestDTO dto, @RequestParam String teacherId) {
-        return tokenTransactionService.requestWithdrawal(teacherId, dto);
+    public TokenTransaction requestWithdrawal(@RequestBody WithdrawalRequestDTO dto) {
+        return tokenTransactionService.requestWithdrawal(dto);
     }
 
     @PostMapping("/confirm-withdrawal")

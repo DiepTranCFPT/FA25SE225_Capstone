@@ -13,6 +13,7 @@ import com.fa25se225.capstone.repository.TokenTransactionRepository;
 import com.fa25se225.capstone.repository.TokenTransactionTypeRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.TokenTransactionService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,12 +28,12 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     private final TokenTransactionRepository tokenTransactionRepository;
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
     private final PaymentRepository paymentRepository;
+    private final AccountUtil accountUtil;
 
     @Override
     @Transactional
-    public TokenTransaction requestWithdrawal(String teacherId, WithdrawalRequestDTO dto) {
-        User teacher = userRepository.findById(teacherId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    public TokenTransaction requestWithdrawal(WithdrawalRequestDTO dto) {
+        User teacher = accountUtil.getCurrentUser();
 
         if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);

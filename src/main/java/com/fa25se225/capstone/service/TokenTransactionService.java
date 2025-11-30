@@ -5,7 +5,7 @@ import com.fa25se225.capstone.dto.request.WithdrawalConfirmDTO;
 import com.fa25se225.capstone.entity.TokenTransaction;
 
 public interface TokenTransactionService {
-    TokenTransaction requestWithdrawal(String teacherId, WithdrawalRequestDTO dto);
+    TokenTransaction requestWithdrawal( WithdrawalRequestDTO dto);
     TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto, String adminId);
 }
 

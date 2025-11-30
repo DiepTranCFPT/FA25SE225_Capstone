@@ -4,6 +4,7 @@ import com.fa25se225.capstone.entity.PaymentMethod;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.repository.PaymentMethodRepository;
 import com.fa25se225.capstone.service.PaymentMethodService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +14,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PaymentMethodServiceImpl implements PaymentMethodService {
     private final PaymentMethodRepository paymentMethodRepository;
+    private final AccountUtil accountUtil;
 
     @Override
-    public PaymentMethod createOrUpdatePaymentMethod(User teacher, String bankingNumber, String nameBanking) {
+    public PaymentMethod createOrUpdatePaymentMethod( String bankingNumber, String nameBanking) {
+        User teacher = accountUtil.getCurrentUser();
         Optional<PaymentMethod> existing = paymentMethodRepository.findByTeacher(teacher);
         PaymentMethod paymentMethod = existing.orElse(PaymentMethod.builder().teacher(teacher).build());
         paymentMethod.setBankingNumber(bankingNumber);
@@ -24,7 +27,8 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
     @Override
-    public Optional<PaymentMethod> getPaymentMethodByTeacher(User teacher) {
+    public Optional<PaymentMethod> getPaymentMethodByTeacher() {
+        User teacher = accountUtil.getCurrentUser();
         return paymentMethodRepository.findByTeacher(teacher);
     }
 }

@@ -10,6 +10,7 @@ import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Subject;
+import com.fa25se225.capstone.entity.Transaction;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
@@ -20,6 +21,8 @@ import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
+import com.fa25se225.capstone.repository.TransactionRepository;
+import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
 import com.fa25se225.capstone.service.MinioService;
@@ -54,6 +57,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final AccountUtil accountUtil;
     private final MinioService minioClient;
     private final PaymentRepository paymentRepository;
+    private final TransactionRepository transactionRepository;
+    private final TransactionStatusRepository transactionStatusRepository;
 
     @Value("${minio.bucket.materials}")
     private String bucketName ;
@@ -414,6 +419,13 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 log.warn("Student with id: {} already registered for learning material: {}", student.getId(), learningMaterialId);
                 throw new AppException(ErrorCode.ALREADY_REGISTERED);
             }
+            Transaction transaction = new Transaction();
+            transaction.setAmount(learningMaterial.getPrice());
+            transaction.setPayment(payment);
+            transaction.setBalanceAfter(payment.getAmount());
+            transaction.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
+            transaction.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
+            transactionRepository.saveAndFlush(transaction);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
 

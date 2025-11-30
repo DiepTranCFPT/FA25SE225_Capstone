@@ -46,6 +46,13 @@ public class TokenTransaction {
     @Builder.Default
     private Boolean deleted = false;
 
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_method_id")
+    private PaymentMethod paymentMethod;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();

@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 public interface ExamAttemptV2Mapper {
     @Mapping(target = "attemptId", source = "id")
     @Mapping(target = "examId", source = "exam.id")
+    @Mapping(target = "title", source = "exam.title")
     @Mapping(target = "doneBy", source = "user.email")
     @Mapping(target = "status", expression = "java(attempt.getStatus() != null ? attempt.getStatus().name() : null)")
     ExamAttemptV2Response toResponse(ExamAttemptV2 attempt);

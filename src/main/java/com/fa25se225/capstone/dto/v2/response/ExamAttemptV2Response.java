@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ExamAttemptV2Response {
     private String attemptId;
+    private String title;
     private String examId;
     private String doneBy;
     private Double score;

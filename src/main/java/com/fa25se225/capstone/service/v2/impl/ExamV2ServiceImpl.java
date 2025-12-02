@@ -13,6 +13,7 @@ import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.*;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.v2.*;
+import com.fa25se225.capstone.service.TokenTransactionService;
 import com.fa25se225.capstone.service.v2.ExamV2Service;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
@@ -29,6 +30,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,6 +62,8 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final AccountUtil accountUtil;
     private final PageHelper pageHelper;
     private final FrqGradingProducerService gradingProducer;
+
+    private final TokenTransactionService tokenTransactionService;
 
 
     @Override
@@ -160,6 +164,21 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         String examDescription = templates.stream().map(ExamTemplateV2::getTitle).collect(Collectors.joining(", "));
         int totalDuration = templates.stream().mapToInt(ExamTemplateV2::getDuration).sum();
         int totalPassingScore = templates.stream().mapToInt(ExamTemplateV2::getPassingScore).sum();
+
+
+
+        for (ExamTemplateV2 template : templates) {
+            BigDecimal templateCost = template.getTokenCost();
+            User teacher = template.getCreatedBy();
+                if (templateCost != null && templateCost.compareTo(BigDecimal.ZERO) > 0) {
+                    if (!currentUser.getId().equals(teacher.getId())) {
+                        log.info("Processing exam payment for template '{}': user={}, teacher={}, amount={}",
+                                template.getTitle(), currentUser.getId(), teacher.getId(), templateCost);
+                        tokenTransactionService.processExamPayment(
+                                currentUser.getId(), teacher.getId(), templateCost, "Exam: " + template.getTitle());
+                    }
+                }
+                }
 
         User teacher = templates.get(0).getCreatedBy();
         Subject subject = templates.get(0).getSubject();

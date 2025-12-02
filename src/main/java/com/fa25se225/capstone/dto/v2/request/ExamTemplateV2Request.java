@@ -2,13 +2,12 @@ package com.fa25se225.capstone.dto.v2.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -27,6 +26,9 @@ public class ExamTemplateV2Request {
     @NotNull
     private Integer passingScore;
     private Boolean isActive = true;
+
+    @NonNull
+    private BigDecimal tokenCost;
 
     @NotEmpty
     @Valid

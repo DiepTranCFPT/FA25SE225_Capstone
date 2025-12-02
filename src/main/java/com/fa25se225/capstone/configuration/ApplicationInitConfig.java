@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +49,9 @@ public class ApplicationInitConfig {
                                         DataSeederV2 dataSeederV2,
                                         ParentProfileRepository parentProfileRepository,
                                         StudentProfileRepository studentProfileRepository,
-                                        TeacherProfileRepository teacherProfileRepository) {
+                                        TeacherProfileRepository teacherProfileRepository,
+                                        PaymentRepository paymentRepository,
+                                        PaymentStatusRepository paymentStatusRepository) {
         return args -> {
 
             log.info("Seeding permissions...");
@@ -60,7 +64,7 @@ public class ApplicationInitConfig {
                 createRoleIfNotFound(roleRepository, permissionRepository, roleEnum);
             }
 
-            createUsersIfNotFound(userRepository, roleRepository, parentProfileRepository, studentProfileRepository, teacherProfileRepository);
+            createUsersIfNotFound(userRepository, roleRepository, parentProfileRepository, studentProfileRepository, teacherProfileRepository, paymentRepository, paymentStatusRepository);
 
             dataSeederV2.createExamDataSeed();
             log.info("Application data seeding finished.");
@@ -99,12 +103,22 @@ public class ApplicationInitConfig {
                                          RoleRepository roleRepository,
                                          ParentProfileRepository parentProfileRepository,
                                          StudentProfileRepository studentProfileRepository,
-                                         TeacherProfileRepository teacherProfileRepository) {
+                                         TeacherProfileRepository teacherProfileRepository,
+                                         PaymentRepository paymentRepository,
+                                         PaymentStatusRepository paymentStatusRepository) {
         if (userRepository.findByEmail(ADMIN_EMAIL).isEmpty()) {
 
             Set<Role> adminRoles = new HashSet<>(roleRepository.findAllById(
                     Stream.of(PredefinedSystemRole.values()).map(Enum::name).collect(Collectors.toSet())
             ));
+
+            PaymentStatus paymentStatus = paymentStatusRepository.findByCode("active").orElse(
+            paymentStatusRepository.save(PaymentStatus.builder()
+                    .code("active")
+                    .name("Active")
+                    .description("Payment is Active.")
+                    .build()));
+
             User adminUser = User.builder()
                     .email(ADMIN_EMAIL)
                     .password(passwordEncoder.encode(ADMIN_PASSWORD))
@@ -113,6 +127,13 @@ public class ApplicationInitConfig {
                     .emailVerified(true)
                     .roles(adminRoles)
                     .build();
+
+            Payment adminPayment = Payment.builder()
+                    .user(adminUser)
+                    .amount(BigDecimal.valueOf(10000))
+                    .createdAt(LocalDate.now())
+                    .status(paymentStatus)
+                    .updatedAt(LocalDate.now()).build();
 
             User teacher = User.builder()
                     .email(TEACHER_EMAIL)
@@ -123,6 +144,13 @@ public class ApplicationInitConfig {
                     .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.TEACHER.name())))
                     .build();
 
+            Payment teacherPayment = Payment.builder()
+                    .user(teacher)
+                    .amount(BigDecimal.ZERO)
+                    .createdAt(LocalDate.now())
+                    .status(paymentStatus)
+                    .updatedAt(LocalDate.now()).build();
+
             User parent = User.builder()
                     .email(PARENT_EMAIL)
                     .password(passwordEncoder.encode(PARENT_PASSWORD))
@@ -131,6 +159,13 @@ public class ApplicationInitConfig {
                     .emailVerified(true)
                     .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.PARENT.name())))
                     .build();
+
+            Payment parentPayment = Payment.builder()
+                    .user(parent)
+                    .amount(BigDecimal.ZERO)
+                    .createdAt(LocalDate.now())
+                    .status(paymentStatus)
+                    .updatedAt(LocalDate.now()).build();
 
             User student = User.builder()
                     .email(STUDENT_EMAIL)
@@ -141,7 +176,18 @@ public class ApplicationInitConfig {
                     .roles(Set.of(roleRepository.findByName(PredefinedSystemRole.STUDENT.name())))
                     .build();
 
+            Payment studenPayment = Payment.builder()
+                    .user(student)
+                    .amount(BigDecimal.ZERO)
+                    .createdAt(LocalDate.now())
+                    .status(paymentStatus)
+                    .updatedAt(LocalDate.now()).build();
+
+
             userRepository.saveAll(List.of(adminUser,teacher, parent, student));
+
+            paymentRepository.saveAllAndFlush(List.of(adminPayment, teacherPayment, parentPayment, studenPayment));
+
 
             parentProfileRepository.save(ParentProfile.builder().id(adminUser.getId()).user(adminUser).build());
             studentProfileRepository.save(StudentProfile.builder().id(adminUser.getId()).user(adminUser).build());

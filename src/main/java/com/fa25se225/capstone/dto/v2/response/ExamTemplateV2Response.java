@@ -3,6 +3,7 @@ package com.fa25se225.capstone.dto.v2.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -17,6 +18,7 @@ public class ExamTemplateV2Response {
     private Boolean isActive;
     private String createdBy;
     private List<ExamRuleV2Response> rules;
+    private BigDecimal tokenCost;
 
     private Double averageRating;
     private Integer totalRatings;

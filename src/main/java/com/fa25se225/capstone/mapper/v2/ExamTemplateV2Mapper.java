@@ -15,6 +15,7 @@ public interface ExamTemplateV2Mapper {
     @Mapping(target = "subject", source = "subject")
     @Mapping(target = "createdBy", source = "createdBy.email")
     @Mapping(target = "rules", source = "rules")
+
     ExamTemplateV2Response toResponse(ExamTemplateV2 template);
 
     @Mapping(target = "subject", ignore = true)

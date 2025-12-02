@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -19,6 +20,7 @@ public class ExamTemplateUpdateV2Request {
     private String subjectId;
     private Integer duration;
     private Integer passingScore;
+    private BigDecimal tokenCost;
     private Boolean isActive = false;
     private List<ExamRuleV2Request> rules;
 }

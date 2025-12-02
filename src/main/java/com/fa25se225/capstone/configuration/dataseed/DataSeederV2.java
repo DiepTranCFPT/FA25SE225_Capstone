@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -295,6 +296,7 @@ public class DataSeederV2 {
                 .duration(90)
                 .passingScore(15)
                 .isActive(true)
+                .tokenCost(BigDecimal.ZERO)
                 .build();
 
         List<ExamRuleV2> rules = Arrays.asList(
@@ -392,16 +394,44 @@ public class DataSeederV2 {
     private void seedTokenTransactionTypes() {
         if (tokenTransactionTypeRepository.findByName("WITHDRAWAL").isEmpty()) {
             TokenTransactionType withdrawalType = TokenTransactionType.builder()
-                .name("WITHDRAWAL")
-                .description("Withdrawal transaction type")
-                .affectsBalance(true)
-                .multiplier(1)
-                .createdAt(java.time.LocalDate.now())
-                .updatedAt(java.time.LocalDate.now())
-                .deleted(false)
-                .build();
+                    .name("WITHDRAWAL")
+                    .description("Withdrawal transaction type")
+                    .affectsBalance(true)
+                    .multiplier(1)
+                    .createdAt(java.time.LocalDate.now())
+                    .updatedAt(java.time.LocalDate.now())
+                    .deleted(false)
+                    .build();
             tokenTransactionTypeRepository.save(withdrawalType);
             log.info("Seeded TokenTransactionType: WITHDRAWAL");
+
+            if (tokenTransactionTypeRepository.findByName("EXAM_PAYMENT").isEmpty()) {
+                TokenTransactionType examPayment = TokenTransactionType.builder()
+                        .name("EXAM_PAYMENT")
+                        .description("Describe the action of students having their tokens deducted when taking the exam")
+                        .affectsBalance(true)
+                        .multiplier(1)
+                        .createdAt(java.time.LocalDate.now())
+                        .updatedAt(java.time.LocalDate.now())
+                        .deleted(false)
+                        .build();
+                tokenTransactionTypeRepository.save(examPayment);
+                log.info("Seeded TokenTransactionType: EXAM_PAYMENT");
+            }
+        }
+
+        if (tokenTransactionTypeRepository.findByName("INCOME_SHARE").isEmpty()) {
+            TokenTransactionType incomeShare = TokenTransactionType.builder()
+                    .name("INCOME_SHARE")
+                    .description("Describe the action of the teacher receiving the token when the student takes the exam.")
+                    .affectsBalance(true)
+                    .multiplier(1)
+                    .createdAt(java.time.LocalDate.now())
+                    .updatedAt(java.time.LocalDate.now())
+                    .deleted(false)
+                    .build();
+            tokenTransactionTypeRepository.save(incomeShare);
+            log.info("Seeded TokenTransactionType: INCOME_SHARE");
         }
     }
 

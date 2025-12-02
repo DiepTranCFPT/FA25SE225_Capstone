@@ -71,8 +71,10 @@ public enum ErrorCode {
     ALREADY_LINKED_STUDENT(1039,"You have already linked this student" , HttpStatus.BAD_REQUEST),
     PAYMENT_AMOUNT_TOO_LOW(1040,"Payment amount is less than the price of the learning material.",HttpStatus.BAD_REQUEST ),
     INVALID_AMOUNT(1041, "Withdrawal amount must be greater than 0." ,HttpStatus.BAD_REQUEST ),
-    INSUFFICIENT_BALANCE(1042,"Insufficient balance.",HttpStatus.BAD_REQUEST ), TRANSACTION_TYPE_NOT_FOUND(1043,"Transaction type not found" , HttpStatus.BAD_REQUEST ), TRANSACTION_NOT_FOUND(1044,"Transaction not found" , HttpStatus.BAD_REQUEST ), INVALID_STATUS(1045,"Status is not pending" ,HttpStatus.BAD_REQUEST );
-
+    INSUFFICIENT_BALANCE(1042,"Insufficient balance.",HttpStatus.BAD_REQUEST ), TRANSACTION_TYPE_NOT_FOUND(1043,"Transaction type not found" , HttpStatus.BAD_REQUEST ),
+    TRANSACTION_NOT_FOUND(1044,"Transaction not found" , HttpStatus.BAD_REQUEST ),
+    INVALID_STATUS(1045,"Status is not pending" ,HttpStatus.BAD_REQUEST ),
+    PAYMENT_NOT_FOUND(1046,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

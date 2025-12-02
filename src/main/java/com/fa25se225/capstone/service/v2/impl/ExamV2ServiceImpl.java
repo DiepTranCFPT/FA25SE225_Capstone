@@ -275,28 +275,43 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         attempt.setEndTime(LocalDateTime.now());
         attempt.setStatus(AttemptStatusV2.PENDING_GRADING);
 
-        List<StudentAnswerV2> studentAnswers = new ArrayList<>();
+        List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
+
+        Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
+                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+
+        List<StudentAnswerV2> finalAnswersToSave = new ArrayList<>();
         List<FrqGradingEvent> gradingTasks = new ArrayList<>();
         double mcqTotalScore = 0.0;
         int frqCount = 0;
 
         for (StudentAnswerV2Request dto : request.getAnswers()) {
-            ExamQuestionV2 examQuestion = examQuestionRepository.findById(dto.getExamQuestionId())
-                    .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
 
-            QuestionV2 question = examQuestion.getQuestion();
-            double maxPoints = examQuestion.getPoints();
+            StudentAnswerV2 studentAnswer = answerMap.get(dto.getExamQuestionId());
+            ExamQuestionV2 examQuestion;
 
-            StudentAnswerV2 studentAnswer = StudentAnswerV2.builder()
-                    .examAttempt(attempt)
-                    .examQuestion(examQuestion)
-                    .frqAnswerText(dto.getFrqAnswerText())
-                    .build();
+            if (studentAnswer == null) {
+                examQuestion = examQuestionRepository.findById(dto.getExamQuestionId())
+                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
+
+                studentAnswer = StudentAnswerV2.builder()
+                        .examAttempt(attempt)
+                        .examQuestion(examQuestion)
+                        .build();
+            } else {
+                examQuestion = studentAnswer.getExamQuestion();
+            }
 
             if (dto.getSelectedAnswerId() != null) {
                 AnswerV2 selectedAnswer = answerRepository.findById(dto.getSelectedAnswerId()).orElse(null);
                 studentAnswer.setSelectedAnswer(selectedAnswer);
+            } else {
+                studentAnswer.setSelectedAnswer(null);
             }
+            studentAnswer.setFrqAnswerText(dto.getFrqAnswerText());
+
+            QuestionV2 question = examQuestion.getQuestion();
+            double maxPoints = examQuestion.getPoints();
 
             if (question.getType() == QuestionType.MCQ) {
                 if (studentAnswer.getSelectedAnswer() != null && studentAnswer.getSelectedAnswer().getIsCorrect()) {
@@ -315,55 +330,43 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                         .orElse(null);
 
                 if (modelAnswer != null) {
+                }
+            }
+
+            finalAnswersToSave.add(studentAnswer);
+        }
+
+        List<StudentAnswerV2> savedAnswers = studentAnswerRepository.saveAll(finalAnswersToSave);
+
+
+        for (StudentAnswerV2 sa : savedAnswers) {
+            if (sa.getExamQuestion().getQuestion().getType() == QuestionType.FRQ) {
+                AnswerV2 modelAnswer = sa.getExamQuestion().getQuestion().getAnswers().stream()
+                        .filter(AnswerV2::getIsCorrect).findFirst().orElse(null);
+
+                if (modelAnswer != null) {
                     gradingTasks.add(FrqGradingEvent.builder()
-                            .studentAnswerId(studentAnswer.getId())
+                            .studentAnswerId(sa.getId())
                             .attemptId(attemptId)
                             .modelAnswer(modelAnswer.getContent())
-                            .studentAnswerText(studentAnswer.getFrqAnswerText())
-                            .maxPoints(maxPoints)
+                            .studentAnswerText(sa.getFrqAnswerText())
+                            .maxPoints(sa.getExamQuestion().getPoints())
                             .build());
-                } else {
-                    log.error("Không tìm thấy đáp án mẫu (model answer) cho câu hỏi FRQ ID: {}", question.getId());
-                    studentAnswer.setScore(0.0);
-                    studentAnswer.setFeedback("Error: No model answer found for grading.");
                 }
             }
-            studentAnswers.add(studentAnswer);
         }
+
 
         attempt.setScore(mcqTotalScore);
-
-        if (frqCount == 0) {
-            attempt.setStatus(AttemptStatusV2.COMPLETED);
-        }
-
-        studentAnswerRepository.saveAll(studentAnswers);
-
-        List<FrqGradingEvent> finalGradingTasks = new ArrayList<>();
-        int taskIndex = 0;
-        for (StudentAnswerV2 sa : studentAnswers) {
-            if(sa.getExamQuestion().getQuestion().getType() == QuestionType.FRQ && sa.getScore() == null) {
-                if(taskIndex < gradingTasks.size()) {
-                    FrqGradingEvent task = gradingTasks.get(taskIndex++);
-                    finalGradingTasks.add(FrqGradingEvent.builder()
-                            .studentAnswerId(sa.getId())
-                            .attemptId(task.attemptId())
-                            .modelAnswer(task.modelAnswer())
-                            .studentAnswerText(task.studentAnswerText())
-                            .maxPoints(task.maxPoints())
-                            .build());
-                }
-            }
-        }
+        if (frqCount == 0) attempt.setStatus(AttemptStatusV2.COMPLETED);
 
         var savedAttempt = attemptRepository.save(attempt);
 
-        if (!finalGradingTasks.isEmpty()) {
+        if (!gradingTasks.isEmpty()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    log.info("Transaction committed. Sending {} FRQ grading tasks to Kafka.", finalGradingTasks.size());
-                    finalGradingTasks.forEach(gradingProducer::sendGradingTask);
+                    gradingTasks.forEach(gradingProducer::sendGradingTask);
                 }
             });
         }
@@ -373,7 +376,6 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .status(savedAttempt.getStatus())
                 .build();
     }
-
     @Override
     public PageResponse<List<ExamAttemptV2Response>> getMyExamHistory(int pageNo, int pageSize, String... sorts) {
         User currentUser = accountUtil.getCurrentUser();

@@ -18,11 +18,14 @@ import java.util.stream.Collectors;
 public class WithdrawRequestService {
     private final TokenTransactionRepository tokenTransactionRepository;
     private final PaymentMethodRepository paymentMethodRepository;
+    private final String status_pending = "pending";
+    private final String WITHDRAWAL = "WITHDRAWAL";
 
     public List<WithdrawRequestDTO> getAllWithdrawRequests() {
         List<TokenTransaction> transactions = tokenTransactionRepository.findAll();
         return transactions.stream()
-                .filter(tx -> tx.getType().getName().equalsIgnoreCase("WITHDRAWAL"))
+                .filter(tx -> tx.getType().getName().equalsIgnoreCase(WITHDRAWAL))
+                .filter(tx -> tx.getStatus().equalsIgnoreCase(status_pending))
                 .map(tx -> {
                     WithdrawRequestDTO dto = new WithdrawRequestDTO();
                     dto.setTransactionId(tx.getId());

@@ -25,7 +25,7 @@ public class Payment {
     @Column(name = "payment_number", nullable = false, unique = true)
     private String paymentNumber;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

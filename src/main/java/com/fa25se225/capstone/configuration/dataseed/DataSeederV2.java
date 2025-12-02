@@ -2,10 +2,12 @@ package com.fa25se225.capstone.configuration.dataseed;
 
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.entity.Subject;
+import com.fa25se225.capstone.entity.TokenTransactionType;
 import com.fa25se225.capstone.entity.TransactionStatus;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.repository.SubjectRepository;
+import com.fa25se225.capstone.repository.TokenTransactionTypeRepository;
 import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.v2.*;
@@ -36,6 +38,7 @@ public class DataSeederV2 {
     private final MaterialTypeRepository materialTypeRepository;
     private final PaymentStatusRepository paymentStatusRepository;
     private final TransactionStatusRepository transactionStatusRepository;
+    private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
 
 
     @Transactional
@@ -44,6 +47,7 @@ public class DataSeederV2 {
         try {
             seedPaymentStatuses();
             createTransactionStatusSeed();
+            seedTokenTransactionTypes();
 
             if (questionRepository.findAll().isEmpty()) {
                 User teacher = userRepository.findByEmail("admin123@gmail.com")
@@ -382,6 +386,22 @@ public class DataSeederV2 {
                 .build();
             paymentStatusRepository.save(status);
             log.info("Seeded PaymentStatus: {}", name);
+        }
+    }
+
+    private void seedTokenTransactionTypes() {
+        if (tokenTransactionTypeRepository.findByName("WITHDRAWAL").isEmpty()) {
+            TokenTransactionType withdrawalType = TokenTransactionType.builder()
+                .name("WITHDRAWAL")
+                .description("Withdrawal transaction type")
+                .affectsBalance(true)
+                .multiplier(1)
+                .createdAt(java.time.LocalDate.now())
+                .updatedAt(java.time.LocalDate.now())
+                .deleted(false)
+                .build();
+            tokenTransactionTypeRepository.save(withdrawalType);
+            log.info("Seeded TokenTransactionType: WITHDRAWAL");
         }
     }
 

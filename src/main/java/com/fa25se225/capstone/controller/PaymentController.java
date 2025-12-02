@@ -15,8 +15,8 @@ public class PaymentController {
     private final IPaymentService paymentService;
 
     @GetMapping("/by-user")
-    public ApiResponse<List<PaymentResponse>> getPaymentsByUser() {
-        List<PaymentResponse> payments = paymentService.getPaymentsByUser();
+    public ApiResponse<PaymentResponse> getPaymentsByUser() {
+        PaymentResponse payments = paymentService.getPaymentsByUser();
         return ApiResponse.success(payments);
     }
 }

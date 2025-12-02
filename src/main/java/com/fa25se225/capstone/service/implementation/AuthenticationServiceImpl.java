@@ -62,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     StudentProfileRepository studentProfileRepository;
     ParentProfileRepository parentProfileRepository;
     TeacherProfileRepository teacherProfileRepository;
-
+    PaymentStatusRepository paymentStatus;
     UserMapper userMapper;
 
     static int MAX_FAILED_ATTEMPTS = 5;
@@ -534,10 +534,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
     }
     private void createWallet(User user) {
+        PaymentStatus status = paymentStatus.findByCode("active").orElse(null);
         Payment payment = new Payment();
         payment.setAmount(BigDecimal.ZERO);
         payment.setDescription("CREATE WALLET");
         payment.setUser(user);
+        payment.setStatus(status);
         paymentRepository.saveAndFlush(payment);
     }
 

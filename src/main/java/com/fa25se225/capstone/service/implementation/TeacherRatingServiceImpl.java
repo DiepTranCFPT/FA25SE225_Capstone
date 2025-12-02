@@ -37,7 +37,6 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('STUDENT')")
     public TeacherRatingResponse rateTeacher(TeacherRatingRequest request) {
         User currentUser = accountUtil.getCurrentUser();
         

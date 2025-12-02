@@ -82,7 +82,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
            payment.setAmount(transaction.getBalanceAfter());
            paymentRepository.saveAndFlush(payment);
         } else {
-            transaction.setStatus(STATUS_FAIL);
+            transaction.setStatus(STATUS_PENDING);
         }
         transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
         tokenTransactionRepository.save(transaction);

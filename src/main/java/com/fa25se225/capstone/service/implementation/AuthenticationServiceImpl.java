@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
@@ -69,12 +70,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     JwtProperties jwtProperties;
 
     OAuthProperties oAuthProperties;
+    private final PaymentRepository paymentRepository;
 
 
     @Transactional
     public UserResponse register(UserCreationRequest request) {
         User savedUser = userService.createUser(request);
-
+        createWallet(savedUser);
         String roleName = request.roleName().toUpperCase();
         StudentProfile studentProfile = null;
         ParentProfile parentProfile = null;
@@ -530,6 +532,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             log.error("Could not get Jwt claims set form JWT", e);
             throw new AppException(ErrorCode.INVALID_TOKEN);
         }
+    }
+    private void createWallet(User user) {
+        Payment payment = new Payment();
+        payment.setAmount(BigDecimal.ZERO);
+        payment.setDescription("CREATE WALLET");
+        payment.setUser(user);
+        paymentRepository.saveAndFlush(payment);
     }
 
 

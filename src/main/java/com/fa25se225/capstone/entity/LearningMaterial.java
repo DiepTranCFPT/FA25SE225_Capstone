@@ -65,6 +65,16 @@ public class LearningMaterial {
     @Builder.Default
     private BigDecimal price = BigDecimal.ZERO;
 
+    @OneToMany(mappedBy = "learningMaterial", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<LearningMaterialRating> ratings = new ArrayList<>();
+
+    @Column(name = "average_rating")
+    private Double averageRating;
+
+    @Column(name = "total_ratings")
+    private Integer totalRatings;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();

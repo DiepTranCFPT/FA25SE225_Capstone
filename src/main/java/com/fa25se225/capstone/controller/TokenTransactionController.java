@@ -2,7 +2,8 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.WithdrawalRequestDTO;
 import com.fa25se225.capstone.dto.request.WithdrawalConfirmDTO;
-import com.fa25se225.capstone.entity.TokenTransaction;
+import com.fa25se225.capstone.dto.response.ApiResponse;
+import com.fa25se225.capstone.dto.TokenTransactionDTO;
 import com.fa25se225.capstone.service.TokenTransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,24 +19,24 @@ public class TokenTransactionController {
 
     @PostMapping("/withdraw")
     @PreAuthorize("hasRole('TEACHER')")
-    public TokenTransaction requestWithdrawal(@RequestBody WithdrawalRequestDTO dto) {
-        return tokenTransactionService.requestWithdrawal(dto);
+    public ApiResponse<TokenTransactionDTO> requestWithdrawal(@RequestBody WithdrawalRequestDTO dto) {
+        return ApiResponse.success(tokenTransactionService.requestWithdrawal(dto));
     }
 
     @PostMapping("/confirm-withdrawal")
     @PreAuthorize("hasRole('ADMIN')")
-    public TokenTransaction confirmWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
-        return tokenTransactionService.confirmWithdrawal(dto);
+    public ApiResponse<TokenTransactionDTO> confirmWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
+        return ApiResponse.success(tokenTransactionService.confirmWithdrawal(dto));
     }
 
     @PostMapping("/reject-withdrawal")
     @PreAuthorize("hasRole('ADMIN')")
-    public TokenTransaction rejectWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
-        return tokenTransactionService.rejectWithdrawal(dto);
+    public ApiResponse<TokenTransactionDTO> rejectWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
+        return ApiResponse.success(tokenTransactionService.rejectWithdrawal(dto));
     }
 
     @GetMapping("/user")
-    public List<TokenTransaction> getAllByUser() {
-        return tokenTransactionService.getAllByUserId();
+    public ApiResponse<List<TokenTransactionDTO>> getAllByUser() {
+        return ApiResponse.success(tokenTransactionService.getAllByUserId());
     }
 }

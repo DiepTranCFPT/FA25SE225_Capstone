@@ -2,6 +2,8 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.dto.request.WithdrawalRequestDTO;
 import com.fa25se225.capstone.dto.request.WithdrawalConfirmDTO;
+import com.fa25se225.capstone.dto.TokenTransactionDTO;
+import com.fa25se225.capstone.dto.TokenTransactionTypeDTO;
 import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
@@ -37,7 +39,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
 
     @Override
     @Transactional
-    public TokenTransaction requestWithdrawal(WithdrawalRequestDTO dto) {
+    public TokenTransactionDTO requestWithdrawal(WithdrawalRequestDTO dto) {
         boolean check =  checkDupTransaction();
         if(!check){
             throw new AppException(ErrorCode.TRANSACTION_IS_VALID);
@@ -62,12 +64,12 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
                 .deleted(false)
                 .build();
         tokenTransactionRepository.save(transaction);
-        return transaction;
+        return toDTO(transaction);
     }
 
     @Override
     @Transactional
-    public TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto) {
+    public TokenTransactionDTO confirmWithdrawal(WithdrawalConfirmDTO dto) {
         TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         if (!transaction.getStatus().equals(STATUS_PENDING)) {
@@ -84,10 +86,25 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         }
         transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
         tokenTransactionRepository.save(transaction);
-        return transaction;
+        return toDTO(transaction);
     }
 
-
+    @Override
+    public TokenTransactionDTO rejectWithdrawal(WithdrawalConfirmDTO dto) {
+        TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        if (!transaction.getStatus().equals(STATUS_PENDING)) {
+            throw new AppException(ErrorCode.INVALID_STATUS);
+        }
+        if (dto.isApproved()) {
+            transaction.setStatus(STATUS_REJECT);
+        } else {
+            transaction.setStatus(STATUS_PENDING);
+        }
+        transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
+        tokenTransactionRepository.save(transaction);
+        return toDTO(transaction);
+    }
 
     @Override
     @Transactional
@@ -152,26 +169,30 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     }
 
     @Override
-    public TokenTransaction rejectWithdrawal(WithdrawalConfirmDTO dto) {
-        TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
-                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-        if (!transaction.getStatus().equals(STATUS_PENDING)) {
-            throw new AppException(ErrorCode.INVALID_STATUS);
-        }
-        if (dto.isApproved()) {
-            transaction.setStatus(STATUS_REJECT);
-        } else {
-            transaction.setStatus(STATUS_PENDING);
-        }
-        transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
-        tokenTransactionRepository.save(transaction);
-        return transaction;
+    public List<TokenTransactionDTO> getAllByUserId() {
+        User user = accountUtil.getCurrentUser();
+        List<TokenTransaction> transactions = tokenTransactionRepository.findAllByUser(user);
+        return transactions.stream().map(this::toDTO).toList();
     }
 
-    @Override
-    public List<TokenTransaction> getAllByUserId() {
-        User user = accountUtil.getCurrentUser();
-        return tokenTransactionRepository.findAllByUser(user);
+    private TokenTransactionDTO toDTO(TokenTransaction entity) {
+        TokenTransactionDTO dto = new TokenTransactionDTO();
+        dto.setId(entity.getId());
+        dto.setAmount(entity.getAmount());
+        dto.setStatus(entity.getStatus());
+        dto.setDescription(entity.getDescription());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setBalanceAfter(entity.getBalanceAfter());
+        dto.setUserId(entity.getUser() != null ? entity.getUser().getId() : null);
+        if (entity.getType() != null) {
+            TokenTransactionTypeDTO typeDTO = new TokenTransactionTypeDTO();
+            typeDTO.setId(entity.getType().getId());
+            typeDTO.setName(entity.getType().getName());
+            typeDTO.setDescription(entity.getType().getDescription());
+            dto.setType(typeDTO);
+        }
+        return dto;
     }
 
     private void createTransaction(User user, BigDecimal amount, TokenTransactionType type, String description) {

@@ -5,13 +5,13 @@ import com.fa25se225.capstone.dto.request.WithdrawalConfirmDTO;
 import com.fa25se225.capstone.entity.TokenTransaction;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.util.List;
 
 public interface TokenTransactionService {
     TokenTransaction requestWithdrawal( WithdrawalRequestDTO dto);
     TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto);
     void processExamPayment(String studentId, String teacherId, BigDecimal amount, String examTitle);
     TokenTransaction rejectWithdrawal(WithdrawalConfirmDTO dto);
+    List<TokenTransaction> getAllByUserId();
 
 }
-

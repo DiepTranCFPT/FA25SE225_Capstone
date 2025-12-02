@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -59,6 +60,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final PaymentRepository paymentRepository;
     private final TransactionRepository transactionRepository;
     private final TransactionStatusRepository transactionStatusRepository;
+
+    private final BigDecimal percentTeacher = BigDecimal.valueOf(0.8);
 
     @Value("${minio.bucket.materials}")
     private String bucketName ;
@@ -410,6 +413,15 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             log.warn("Payment amount is greater than the price. Consider refunding the excess or notifying the user.");
             String permissionName = "LEARNING_"+learningMaterialId;
             log.debug("Creating/Getting permission with name: {}", permissionName);
+            payment.setAmount(payment.getAmount().subtract(learningMaterial.getPrice()));
+
+            User teacher = learningMaterial.getAuthor();
+            Payment teacherPayment = paymentRepository.findByUser(teacher).orElseThrow(
+                    ()-> new AppException(ErrorCode.PAYMENT_NOT_FOUND)
+            );
+            teacherPayment.setAmount(teacherPayment.getAmount().add(learningMaterial.getPrice().multiply(percentTeacher)));
+            paymentRepository.saveAndFlush(payment);
+            paymentRepository.saveAndFlush(teacherPayment);
 
             // Check if user already has this permission
             boolean alreadyRegistered = student.getGrantedPermissions().stream()
@@ -426,6 +438,16 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transaction.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
             transaction.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
             transactionRepository.saveAndFlush(transaction);
+
+            Transaction transactionTeacher = new Transaction();
+            transaction.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
+            transaction.setPayment(teacherPayment);
+            transaction.setBalanceAfter(teacherPayment.getAmount());
+            transaction.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
+            transaction.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
+
+            transactionRepository.saveAndFlush(transaction);
+            transactionRepository.saveAndFlush(transactionTeacher);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
 

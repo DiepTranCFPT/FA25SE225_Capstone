@@ -68,7 +68,6 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     @Override
     @Transactional
     public TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto) {
-        User admin = accountUtil.getCurrentUser();
         TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
         if (!transaction.getStatus().equals(STATUS_PENDING)) {
@@ -169,6 +168,12 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         return transaction;
     }
 
+    @Override
+    public List<TokenTransaction> getAllByUserId() {
+        User user = accountUtil.getCurrentUser();
+        return tokenTransactionRepository.findAllByUser(user);
+    }
+
     private void createTransaction(User user, BigDecimal amount, TokenTransactionType type, String description) {
         TokenTransaction tx = TokenTransaction.builder()
                 .user(user)
@@ -190,4 +195,3 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
 
     }
 }
-

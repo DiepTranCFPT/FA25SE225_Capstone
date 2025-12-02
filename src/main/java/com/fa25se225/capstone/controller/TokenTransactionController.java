@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/token-transaction")
 @RequiredArgsConstructor
@@ -31,5 +33,9 @@ public class TokenTransactionController {
     public TokenTransaction rejectWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
         return tokenTransactionService.rejectWithdrawal(dto);
     }
-}
 
+    @GetMapping("/user")
+    public List<TokenTransaction> getAllByUser() {
+        return tokenTransactionService.getAllByUserId();
+    }
+}

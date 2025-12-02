@@ -22,8 +22,14 @@ public class TokenTransactionController {
 
     @PostMapping("/confirm-withdrawal")
     @PreAuthorize("hasRole('ADMIN')")
-    public TokenTransaction confirmWithdrawal(@RequestBody WithdrawalConfirmDTO dto, @RequestParam String adminId) {
-        return tokenTransactionService.confirmWithdrawal(dto, adminId);
+    public TokenTransaction confirmWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
+        return tokenTransactionService.confirmWithdrawal(dto);
+    }
+
+    @PostMapping("/reject-withdrawal")
+    @PreAuthorize("hasRole('ADMIN')")
+    public TokenTransaction rejectWithdrawal(@RequestBody WithdrawalConfirmDTO dto) {
+        return tokenTransactionService.rejectWithdrawal(dto);
     }
 }
 

@@ -9,7 +9,9 @@ import java.math.BigInteger;
 
 public interface TokenTransactionService {
     TokenTransaction requestWithdrawal( WithdrawalRequestDTO dto);
-    TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto, String adminId);
+    TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto);
     void processExamPayment(String studentId, String teacherId, BigDecimal amount, String examTitle);
+    TokenTransaction rejectWithdrawal(WithdrawalConfirmDTO dto);
+
 }
 

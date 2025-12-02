@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +28,21 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     private final AccountUtil accountUtil;
     private static final BigDecimal TEACHER_SHARE_PERCENTAGE = BigDecimal.valueOf(0.8);
 
+    private static final String STATUS_SUCCESS = "success";
+    private static final String STATUS_PENDING = "pending";
+    private static final String STATUS_FAIL = "fail";
+    private static final String STATUS_REJECT = "reject";
+
+
 
     @Override
     @Transactional
     public TokenTransaction requestWithdrawal(WithdrawalRequestDTO dto) {
+        boolean check =  checkDupTransaction();
+        if(!check){
+            throw new AppException(ErrorCode.TRANSACTION_IS_VALID);
+        }
         User teacher = accountUtil.getCurrentUser();
-
         if (dto.getAmount() == null || dto.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new AppException(ErrorCode.INVALID_AMOUNT);
         }
@@ -48,7 +58,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
                 .description(dto.getDescription())
                 .balanceAfter(paymentRepository.findByUser(teacher).get().getAmount().subtract(dto.getAmount()))
                 .createdAt(LocalDate.now())
-                .status("pending")
+                .status(STATUS_PENDING)
                 .deleted(false)
                 .build();
         tokenTransactionRepository.save(transaction);
@@ -57,20 +67,21 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
 
     @Override
     @Transactional
-    public TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto, String adminId) {
+    public TokenTransaction confirmWithdrawal(WithdrawalConfirmDTO dto) {
+        User admin = accountUtil.getCurrentUser();
         TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-        if (!transaction.getStatus().equals("pending")) {
+        if (!transaction.getStatus().equals(STATUS_PENDING)) {
             throw new AppException(ErrorCode.INVALID_STATUS);
         }
         if (dto.isApproved()) {
-            transaction.setStatus("success");
+            transaction.setStatus(STATUS_SUCCESS);
             User teacher = transaction.getUser();
            Payment payment =  paymentRepository.findByUser(teacher).get();
            payment.setAmount(transaction.getBalanceAfter());
            paymentRepository.saveAndFlush(payment);
         } else {
-            transaction.setStatus("fail");
+            transaction.setStatus(STATUS_FAIL);
         }
         transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
         tokenTransactionRepository.save(transaction);
@@ -141,6 +152,23 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
 
     }
 
+    @Override
+    public TokenTransaction rejectWithdrawal(WithdrawalConfirmDTO dto) {
+        TokenTransaction transaction = tokenTransactionRepository.findById(dto.getTransactionId())
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+        if (!transaction.getStatus().equals(STATUS_PENDING)) {
+            throw new AppException(ErrorCode.INVALID_STATUS);
+        }
+        if (dto.isApproved()) {
+            transaction.setStatus(STATUS_REJECT);
+        } else {
+            transaction.setStatus(STATUS_PENDING);
+        }
+        transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
+        tokenTransactionRepository.save(transaction);
+        return transaction;
+    }
+
     private void createTransaction(User user, BigDecimal amount, TokenTransactionType type, String description) {
         TokenTransaction tx = TokenTransaction.builder()
                 .user(user)
@@ -148,9 +176,18 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
                 .type(type)
                 .description(description)
                 .createdAt(LocalDate.now())
-                .status("success")
+                .status(STATUS_SUCCESS)
                 .build();
         tokenTransactionRepository.save(tx);
+    }
+    private Boolean checkDupTransaction(){
+        long count = 0;
+        User teacher = accountUtil.getCurrentUser();
+        List<TokenTransaction> list = tokenTransactionRepository.findAllByUser(teacher);
+        count =  list.stream()
+                .filter(t -> t.getStatus().equals(STATUS_PENDING)).count();
+        return count == 0;
+
     }
 }
 

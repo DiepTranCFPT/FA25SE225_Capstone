@@ -74,7 +74,9 @@ public enum ErrorCode {
     INSUFFICIENT_BALANCE(1042,"Insufficient balance.",HttpStatus.BAD_REQUEST ), TRANSACTION_TYPE_NOT_FOUND(1043,"Transaction type not found" , HttpStatus.BAD_REQUEST ),
     TRANSACTION_NOT_FOUND(1044,"Transaction not found" , HttpStatus.BAD_REQUEST ),
     INVALID_STATUS(1045,"Status is not pending" ,HttpStatus.BAD_REQUEST ),
-    PAYMENT_NOT_FOUND(1046,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST );
+    PAYMENT_NOT_FOUND(1046,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST ),
+    TRANSACTION_IS_VALID(1047, "Transaction is valid" , HttpStatus.BAD_REQUEST ),;
+
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

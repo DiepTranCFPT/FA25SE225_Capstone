@@ -38,7 +38,15 @@ public class TeacherProfile {
     private String biography;
 
     @Column(name = "rating")
-    private Integer rating;
+    private Double rating; // Average rating (1.0 - 5.0)
+
+    @Column(name = "total_ratings")
+    @Builder.Default
+    private Integer totalRatings = 0; // Number of ratings received
+
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<TeacherRating> ratings = new ArrayList<>();
 
     @ElementCollection
     @CollectionTable(
@@ -46,6 +54,7 @@ public class TeacherProfile {
         joinColumns = @JoinColumn(name = "teacher_id")
     )
     @Column(name = "certificate_url")
+    @Builder.Default
     private List<String> certificateUrls = new ArrayList<>();
 
     @Column(name = "is_verified")

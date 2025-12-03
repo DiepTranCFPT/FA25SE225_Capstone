@@ -46,14 +46,14 @@ public class LearningMaterialRatingController {
         return ApiResponse.success(ratings);
     }
 
-    @GetMapping("/student/{studentId}")
-    public ApiResponse<Page<LearningMaterialRatingResponse>> getRatingsByStudent(
-            @PathVariable String studentId,
+    @GetMapping("/user/{userId}")
+    public ApiResponse<Page<LearningMaterialRatingResponse>> getRatingsByUser(
+            @PathVariable String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<LearningMaterialRatingResponse> ratings = ratingService.getRatingsByStudentId(studentId, pageable);
+        Page<LearningMaterialRatingResponse> ratings = ratingService.getRatingsByUserId(userId, pageable);
         return ApiResponse.success(ratings);
     }
 
@@ -64,12 +64,12 @@ public class LearningMaterialRatingController {
         return ApiResponse.success(statistics);
     }
 
-    @GetMapping("/material/{materialId}/student/{studentId}")
-    public ApiResponse<LearningMaterialRatingResponse> getStudentRatingForMaterial(
+    @GetMapping("/material/{materialId}/user/{userId}")
+    public ApiResponse<LearningMaterialRatingResponse> getUserRatingForMaterial(
             @PathVariable String materialId,
-            @PathVariable String studentId) {
+            @PathVariable String userId) {
         
-        LearningMaterialRatingResponse rating = ratingService.getStudentRatingForMaterial(materialId, studentId);
+        LearningMaterialRatingResponse rating = ratingService.getUserRatingForMaterial(materialId, userId);
         return ApiResponse.success(rating);
     }
 }

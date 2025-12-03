@@ -19,14 +19,10 @@ public interface TeacherRatingService {
     
    
     Page<TeacherRatingResponse> getRatingsByTeacherId(String teacherId, Pageable pageable);
-    
-   
-    Page<TeacherRatingResponse> getRatingsByStudentId(String studentId, Pageable pageable);
  
     TeacherRatingStatisticsResponse getTeacherRatingStatistics(String teacherId);
     
-   
-    TeacherRatingResponse getStudentRatingForTeacher(String teacherId, String studentId);
+    TeacherRatingResponse getUserRatingForTeacher(String teacherId, String userId);
     
    
     TeacherRatingResponse verifyRating(String ratingId);

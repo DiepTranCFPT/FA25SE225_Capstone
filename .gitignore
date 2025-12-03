@@ -33,3 +33,5 @@ build/
 .vscode/launch.json
 .vscode/tasks.json
 !.vscode/extensions.json
+fix_teacher_ratings.sql
+migrate_learning_material_ratings.sql

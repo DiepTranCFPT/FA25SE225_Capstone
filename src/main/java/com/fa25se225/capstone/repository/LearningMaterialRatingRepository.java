@@ -13,11 +13,11 @@ import java.util.Optional;
 @Repository
 public interface LearningMaterialRatingRepository extends JpaRepository<LearningMaterialRating, String> {
 
-    Optional<LearningMaterialRating> findByLearningMaterialIdAndStudentId(String learningMaterialId, String studentId);
+    Optional<LearningMaterialRating> findByLearningMaterialIdAndUserId(String learningMaterialId, String userId);
 
     Page<LearningMaterialRating> findByLearningMaterialIdAndDeletedFalse(String learningMaterialId, Pageable pageable);
 
-    Page<LearningMaterialRating> findByStudentIdAndDeletedFalse(String studentId, Pageable pageable);
+    Page<LearningMaterialRating> findByUserIdAndDeletedFalse(String userId, Pageable pageable);
 
     Long countByLearningMaterialIdAndDeletedFalse(String learningMaterialId);
 

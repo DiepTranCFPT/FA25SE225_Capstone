@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "learning_material_ratings", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"learning_material_id", "student_id"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"learning_material_id", "user_id"}))
 public class LearningMaterialRating {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,8 +27,8 @@ public class LearningMaterialRating {
     private LearningMaterial learningMaterial;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    private StudentProfile student;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "rating", nullable = false)
     private Integer rating;

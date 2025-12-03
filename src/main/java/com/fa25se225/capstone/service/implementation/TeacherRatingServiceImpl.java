@@ -44,8 +44,8 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
         StudentProfile student = studentProfileRepository.findByUserId(currentUser.getId())
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         
-        // Get teacher profile
-        TeacherProfile teacher = teacherProfileRepository.findById(request.getTeacherId())
+        // Get teacher profile (only active, not deleted)
+        TeacherProfile teacher = teacherProfileRepository.findByIdAndDeletedFalse(request.getTeacherId())
             .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
         
         // Check if student already rated this teacher

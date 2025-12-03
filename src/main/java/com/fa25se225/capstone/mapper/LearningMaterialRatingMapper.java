@@ -10,14 +10,13 @@ public interface LearningMaterialRatingMapper {
     
     @Mapping(target = "learningMaterialId", source = "learningMaterial.id")
     @Mapping(target = "learningMaterialTitle", source = "learningMaterial.title")
-    @Mapping(target = "studentId", source = "student.id")
-    @Mapping(target = "studentName", expression = "java(getStudentFullName(entity))")
-    @Mapping(target = "userId", source = "student.user.id")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "userFullName", expression = "java(getUserFullName(entity))")
     LearningMaterialRatingResponse toResponse(LearningMaterialRating entity);
     
-    default String getStudentFullName(LearningMaterialRating rating) {
-        if (rating.getStudent() != null && rating.getStudent().getUser() != null) {
-            var user = rating.getStudent().getUser();
+    default String getUserFullName(LearningMaterialRating rating) {
+        if (rating.getUser() != null) {
+            var user = rating.getUser();
             return (user.getFirstName() != null ? user.getFirstName() : "") + " " + 
                    (user.getLastName() != null ? user.getLastName() : "");
         }

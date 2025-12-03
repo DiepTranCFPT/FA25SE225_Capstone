@@ -30,7 +30,6 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     
     private final TeacherRatingRepository teacherRatingRepository;
     private final TeacherProfileRepository teacherProfileRepository;
-    private final StudentProfileRepository studentProfileRepository;
     private final LearningMaterialRepository learningMaterialRepository;
     private final TeacherRatingMapper teacherRatingMapper;
     private final AccountUtil accountUtil;
@@ -40,8 +39,6 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     @PreAuthorize("hasRole('STUDENT')")
     public TeacherRatingResponse rateTeacher(TeacherRatingRequest request) {
         User currentUser = accountUtil.getCurrentUser();
-        
-        StudentProfile student = studentProfileRepository.findByUserId(currentUser.getId()).orElse(null);
         
         TeacherProfile teacher = teacherProfileRepository.findByIdAndDeletedFalse(request.getTeacherId())
             .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
@@ -53,7 +50,6 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
         
         TeacherRating rating = TeacherRating.builder()
             .teacher(teacher)
-            .student(student)
             .user(currentUser)
             .rating(request.getRating())
             .comment(request.getComment())
@@ -132,14 +128,6 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     }
 
     @Override
-    @PreAuthorize("hasRole('STUDENT')")
-    public Page<TeacherRatingResponse> getRatingsByStudentId(String studentId, Pageable pageable) {
-        Page<TeacherRating> ratings = teacherRatingRepository
-            .findByStudentIdAndDeletedFalse(studentId, pageable);
-        return ratings.map(teacherRatingMapper::toResponse);
-    }
-
-    @Override
     public TeacherRatingStatisticsResponse getTeacherRatingStatistics(String teacherId) {
         TeacherProfile teacher = teacherProfileRepository.findById(teacherId)
             .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
@@ -176,9 +164,9 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     }
 
     @Override
-    public TeacherRatingResponse getStudentRatingForTeacher(String teacherId, String studentId) {
+    public TeacherRatingResponse getUserRatingForTeacher(String teacherId, String userId) {
         TeacherRating rating = teacherRatingRepository
-            .findByTeacherIdAndStudentIdAndDeletedFalse(teacherId, studentId)
+            .findByTeacherIdAndUserIdAndDeletedFalse(teacherId, userId)
             .orElse(null);
         
         return rating != null ? teacherRatingMapper.toResponse(rating) : null;

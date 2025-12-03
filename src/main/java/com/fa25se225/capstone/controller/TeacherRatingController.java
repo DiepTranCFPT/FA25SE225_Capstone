@@ -46,17 +46,6 @@ public class TeacherRatingController {
         return ApiResponse.success(ratings);
     }
 
-    @GetMapping("/student/{studentId}")
-    public ApiResponse<Page<TeacherRatingResponse>> getRatingsByStudent(
-            @PathVariable String studentId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<TeacherRatingResponse> ratings = teacherRatingService.getRatingsByStudentId(studentId, pageable);
-        return ApiResponse.success(ratings);
-    }
-
     @GetMapping("/teacher/{teacherId}/statistics")
     public ApiResponse<TeacherRatingStatisticsResponse> getTeacherStatistics(@PathVariable String teacherId) {
         log.info("Getting rating statistics for teacher: {}", teacherId);
@@ -64,12 +53,12 @@ public class TeacherRatingController {
         return ApiResponse.success(statistics);
     }
 
-    @GetMapping("/teacher/{teacherId}/student/{studentId}")
-    public ApiResponse<TeacherRatingResponse> getStudentRatingForTeacher(
+    @GetMapping("/teacher/{teacherId}/user/{userId}")
+    public ApiResponse<TeacherRatingResponse> getUserRatingForTeacher(
             @PathVariable String teacherId,
-            @PathVariable String studentId) {
+            @PathVariable String userId) {
         
-        TeacherRatingResponse rating = teacherRatingService.getStudentRatingForTeacher(teacherId, studentId);
+        TeacherRatingResponse rating = teacherRatingService.getUserRatingForTeacher(teacherId, userId);
         return ApiResponse.success(rating);
     }
 }

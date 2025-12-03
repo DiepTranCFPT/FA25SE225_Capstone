@@ -12,9 +12,8 @@ public class TeacherRatingResponse {
     private String id;
     private String teacherId;
     private String teacherName;
-    private String studentId;
-    private String studentName;
     private String userId;
+    private String userFullName;
     private Integer rating;
     private String comment;
     private String learningMaterialId;

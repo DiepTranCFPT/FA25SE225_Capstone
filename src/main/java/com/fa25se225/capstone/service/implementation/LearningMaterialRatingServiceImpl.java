@@ -40,7 +40,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
             .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
         Optional<LearningMaterialRating> existingRating = ratingRepository
-            .findByLearningMaterialIdAndStudentId(request.getLearningMaterialId(), currentUser.getId());
+            .findByLearningMaterialIdAndUserId(request.getLearningMaterialId(), currentUser.getId());
         
         if (existingRating.isPresent()) {
             throw new AppException(ErrorCode.LEARNING_MATERIAL_RATING_ALREADY_EXISTS);
@@ -48,7 +48,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         
         LearningMaterialRating rating = LearningMaterialRating.builder()
             .learningMaterial(material)
-            .student(null)
+            .user(currentUser)
             .rating(request.getRating())
             .comment(request.getComment())
             .build();
@@ -69,8 +69,8 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LearningMaterialRatingResponse> getRatingsByStudentId(String studentId, Pageable pageable) {
-        Page<LearningMaterialRating> ratings = ratingRepository.findByStudentIdAndDeletedFalse(studentId, pageable);
+    public Page<LearningMaterialRatingResponse> getRatingsByUserId(String userId, Pageable pageable) {
+        Page<LearningMaterialRating> ratings = ratingRepository.findByUserIdAndDeletedFalse(userId, pageable);
         return ratings.map(ratingMapper::toResponse);
     }
 
@@ -100,8 +100,8 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
 
     @Override
     @Transactional(readOnly = true)
-    public LearningMaterialRatingResponse getStudentRatingForMaterial(String materialId, String studentId) {
-        LearningMaterialRating rating = ratingRepository.findByLearningMaterialIdAndStudentId(materialId, studentId)
+    public LearningMaterialRatingResponse getUserRatingForMaterial(String materialId, String userId) {
+        LearningMaterialRating rating = ratingRepository.findByLearningMaterialIdAndUserId(materialId, userId)
             .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_RATING_NOT_FOUND));
         
         return ratingMapper.toResponse(rating);

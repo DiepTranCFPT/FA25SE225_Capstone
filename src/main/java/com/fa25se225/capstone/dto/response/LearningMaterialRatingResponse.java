@@ -12,9 +12,8 @@ public class LearningMaterialRatingResponse {
     private String id;
     private String learningMaterialId;
     private String learningMaterialTitle;
-    private String studentId;
-    private String studentName;
     private String userId;
+    private String userFullName;
     private Integer rating;
     private String comment;
     private LocalDateTime createdAt;

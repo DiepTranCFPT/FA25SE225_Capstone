@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 public interface LearningMaterialRatingService {
     LearningMaterialRatingResponse rateLearningMaterial(LearningMaterialRatingRequest request);
     Page<LearningMaterialRatingResponse> getRatingsByMaterialId(String materialId, Pageable pageable);
-    Page<LearningMaterialRatingResponse> getRatingsByStudentId(String studentId, Pageable pageable);
+    Page<LearningMaterialRatingResponse> getRatingsByUserId(String userId, Pageable pageable);
     LearningMaterialRatingStatisticsResponse getMaterialRatingStatistics(String materialId);
-    LearningMaterialRatingResponse getStudentRatingForMaterial(String materialId, String studentId);
+    LearningMaterialRatingResponse getUserRatingForMaterial(String materialId, String userId);
 }

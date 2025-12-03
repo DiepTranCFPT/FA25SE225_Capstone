@@ -21,13 +21,7 @@ public interface TeacherRatingRepository extends JpaRepository<TeacherRating, St
     
     boolean existsByTeacherIdAndStudentIdAndDeletedFalse(String teacherId, String studentId);
     
-    boolean existsByTeacherIdAndUserIdAndDeletedFalse(String teacherId, String userId);
-    
     Optional<TeacherRating> findByTeacherIdAndStudentIdAndDeletedFalse(String teacherId, String studentId);
-    
-    Optional<TeacherRating> findByTeacherIdAndUserIdAndDeletedFalse(String teacherId, String userId);
-    
-    Page<TeacherRating> findByUserIdAndDeletedFalse(String userId, Pageable pageable);
     
     Page<TeacherRating> findByLearningMaterialIdAndDeletedFalse(String materialId, Pageable pageable);
     

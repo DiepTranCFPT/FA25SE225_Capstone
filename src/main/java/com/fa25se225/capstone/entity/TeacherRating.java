@@ -26,8 +26,12 @@ public class TeacherRating {
     private TeacherProfile teacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = true)
     private StudentProfile student;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "rating", nullable = false)
     private Integer rating; // 1-5 stars

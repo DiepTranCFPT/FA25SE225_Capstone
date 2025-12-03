@@ -37,47 +37,41 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('STUDENT')")
     public TeacherRatingResponse rateTeacher(TeacherRatingRequest request) {
         User currentUser = accountUtil.getCurrentUser();
         
-        // Get student profile
-        StudentProfile student = studentProfileRepository.findByUserId(currentUser.getId())
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+        StudentProfile student = studentProfileRepository.findByUserId(currentUser.getId()).orElse(null);
         
-        // Get teacher profile (only active, not deleted)
         TeacherProfile teacher = teacherProfileRepository.findByIdAndDeletedFalse(request.getTeacherId())
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
         
-        // Check if student already rated this teacher
-        if (teacherRatingRepository.existsByTeacherIdAndStudentIdAndDeletedFalse(
-                request.getTeacherId(), student.getId())) {
-            throw new AppException(ErrorCode.ALREADY_EXISTS);
+        if (teacherRatingRepository.existsByTeacherIdAndUserIdAndDeletedFalse(
+                request.getTeacherId(), currentUser.getId())) {
+            throw new AppException(ErrorCode.TEACHER_RATING_ALREADY_EXISTS);
         }
         
-        // Create rating
         TeacherRating rating = TeacherRating.builder()
             .teacher(teacher)
             .student(student)
+            .user(currentUser)
             .rating(request.getRating())
             .comment(request.getComment())
             .isVerified(false)
             .build();
         
-        // Add learning material if provided
         if (request.getLearningMaterialId() != null) {
             LearningMaterial material = learningMaterialRepository
-                .findById(request.getLearningMaterialId())
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+                .findByIdNotDeleted(request.getLearningMaterialId())
+                .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
             rating.setLearningMaterial(material);
         }
         
         TeacherRating savedRating = teacherRatingRepository.save(rating);
-        
-        // Update teacher's average rating
         updateTeacherAverageRating(teacher.getId());
         
-        log.info("Student {} rated teacher {} with {} stars", 
-            student.getId(), teacher.getId(), request.getRating());
+        log.info("User {} rated teacher {} with {} stars", 
+            currentUser.getId(), teacher.getId(), request.getRating());
         
         return teacherRatingMapper.toResponse(savedRating);
     }
@@ -89,23 +83,20 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
         User currentUser = accountUtil.getCurrentUser();
         
         TeacherRating rating = teacherRatingRepository.findById(ratingId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_RATING_NOT_FOUND));
         
-        // Check if the rating belongs to the current student
-        if (!rating.getStudent().getUser().getId().equals(currentUser.getId())) {
+        if (!rating.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
         rating.setRating(request.getRating());
         rating.setComment(request.getComment());
-        rating.setIsVerified(false); // Reset verification on update
+        rating.setIsVerified(false);
         
         TeacherRating updatedRating = teacherRatingRepository.save(rating);
-        
-        // Update teacher's average rating
         updateTeacherAverageRating(rating.getTeacher().getId());
         
-        log.info("Student {} updated rating {} for teacher {}", 
+        log.info("User {} updated rating {} for teacher {}", 
             currentUser.getId(), ratingId, rating.getTeacher().getId());
         
         return teacherRatingMapper.toResponse(updatedRating);
@@ -118,21 +109,18 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
         User currentUser = accountUtil.getCurrentUser();
         
         TeacherRating rating = teacherRatingRepository.findById(ratingId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_RATING_NOT_FOUND));
         
-        // Check if the rating belongs to the current student
-        if (!rating.getStudent().getUser().getId().equals(currentUser.getId())) {
+        if (!rating.getUser().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
         
         String teacherId = rating.getTeacher().getId();
         rating.setDeleted(true);
         teacherRatingRepository.save(rating);
-        
-        // Update teacher's average rating
         updateTeacherAverageRating(teacherId);
         
-        log.info("Student {} deleted rating {} for teacher {}", 
+        log.info("User {} deleted rating {} for teacher {}", 
             currentUser.getId(), ratingId, teacherId);
     }
 
@@ -154,7 +142,7 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     @Override
     public TeacherRatingStatisticsResponse getTeacherRatingStatistics(String teacherId) {
         TeacherProfile teacher = teacherProfileRepository.findById(teacherId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
         
         Double averageRating = teacherRatingRepository.calculateAverageRating(teacherId);
         Long totalRatings = teacherRatingRepository.countRatingsByTeacherId(teacherId);
@@ -201,7 +189,7 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     @PreAuthorize("hasRole('ADMIN')")
     public TeacherRatingResponse verifyRating(String ratingId) {
         TeacherRating rating = teacherRatingRepository.findById(ratingId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_RATING_NOT_FOUND));
         
         rating.setIsVerified(true);
         TeacherRating verifiedRating = teacherRatingRepository.save(rating);
@@ -211,15 +199,12 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
         return teacherRatingMapper.toResponse(verifiedRating);
     }
 
-    /**
-     * Helper method to recalculate and update teacher's average rating
-     */
     private void updateTeacherAverageRating(String teacherId) {
         Double averageRating = teacherRatingRepository.calculateAverageRating(teacherId);
         Long totalRatings = teacherRatingRepository.countRatingsByTeacherId(teacherId);
         
         TeacherProfile teacher = teacherProfileRepository.findById(teacherId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
         
         teacher.setRating(averageRating != null ? Math.round(averageRating * 10.0) / 10.0 : null);
         teacher.setTotalRatings(totalRatings.intValue());

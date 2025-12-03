@@ -60,10 +60,13 @@ public enum ErrorCode {
     ALREADY_RATE(1048, "You have already rated this test", HttpStatus.BAD_REQUEST ),
     ALREADY_EXISTS(1049, "Rating already exists", HttpStatus.BAD_REQUEST),
     LEARNING_MATERIAL_RATING_ALREADY_EXISTS(1050, "You have already rated this learning material", HttpStatus.BAD_REQUEST),
+    LEARNING_MATERIAL_RATING_NOT_FOUND(1051, "Learning material rating not found", HttpStatus.BAD_REQUEST),
     LESSON_NOT_FOUND(1032, "Lesson not found", HttpStatus.BAD_REQUEST),
     ALREADY_REGISTERED(1033, "You have already registered for this learning material", HttpStatus.BAD_REQUEST),
-    NOT_FOUND(1034,"Teacher profile not found" ,HttpStatus.BAD_REQUEST ),
-    INVALID_INPUT(1035,"Teacher must be at least 23 years old." ,HttpStatus.BAD_REQUEST ),
+    TEACHER_PROFILE_NOT_FOUND(1034,"Teacher profile not found" ,HttpStatus.BAD_REQUEST ),
+    TEACHER_INVALID_AGE(1035,"Teacher must be at least 23 years old." ,HttpStatus.BAD_REQUEST ),
+    TEACHER_RATING_NOT_FOUND(1053,"Teacher rating not found" ,HttpStatus.BAD_REQUEST ),
+    TEACHER_RATING_ALREADY_EXISTS(1054,"You have already rated this teacher" ,HttpStatus.BAD_REQUEST ),
 
     INVALID_SCORE(1036,"The score is exceed or negative" , HttpStatus.BAD_REQUEST),
 

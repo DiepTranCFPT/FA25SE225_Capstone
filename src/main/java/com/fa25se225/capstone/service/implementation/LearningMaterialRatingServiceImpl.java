@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,23 +27,20 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
     
     private final LearningMaterialRatingRepository ratingRepository;
     private final LearningMaterialRepository learningMaterialRepository;
-    private final StudentProfileRepository studentProfileRepository;
     private final LearningMaterialRatingMapper ratingMapper;
     private final AccountUtil accountUtil;
 
     @Override
     @Transactional
+    @PreAuthorize("hasRole('STUDENT')")
     public LearningMaterialRatingResponse rateLearningMaterial(LearningMaterialRatingRequest request) {
         User currentUser = accountUtil.getCurrentUser();
         
-        StudentProfile student = studentProfileRepository.findByUserId(currentUser.getId())
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        
         LearningMaterial material = learningMaterialRepository.findById(request.getLearningMaterialId())
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
         Optional<LearningMaterialRating> existingRating = ratingRepository
-            .findByLearningMaterialIdAndStudentId(request.getLearningMaterialId(), student.getId());
+            .findByLearningMaterialIdAndStudentId(request.getLearningMaterialId(), currentUser.getId());
         
         if (existingRating.isPresent()) {
             throw new AppException(ErrorCode.LEARNING_MATERIAL_RATING_ALREADY_EXISTS);
@@ -50,7 +48,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         
         LearningMaterialRating rating = LearningMaterialRating.builder()
             .learningMaterial(material)
-            .student(student)
+            .student(null)
             .rating(request.getRating())
             .comment(request.getComment())
             .build();
@@ -104,7 +102,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
     @Transactional(readOnly = true)
     public LearningMaterialRatingResponse getStudentRatingForMaterial(String materialId, String studentId) {
         LearningMaterialRating rating = ratingRepository.findByLearningMaterialIdAndStudentId(materialId, studentId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_RATING_NOT_FOUND));
         
         return ratingMapper.toResponse(rating);
     }
@@ -114,7 +112,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         Long totalRatings = ratingRepository.countByLearningMaterialIdAndDeletedFalse(materialId);
         
         LearningMaterial material = learningMaterialRepository.findById(materialId)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
         
         material.setAverageRating(averageRating != null ? averageRating : 0.0);
         material.setTotalRatings(totalRatings != null ? totalRatings.intValue() : 0);

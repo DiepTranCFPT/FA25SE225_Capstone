@@ -15,4 +15,16 @@ public interface StudentAnswerV2Repository extends JpaRepository<StudentAnswerV2
             "LEFT JOIN FETCH sa.selectedAnswer " +
             "WHERE sa.examAttempt.id = :attemptId")
     List<StudentAnswerV2> findByExamAttemptIdWithDetails(@Param("attemptId") String attemptId);
+
+    @Query("SELECT t.name, COUNT(sa), " +
+            "SUM(CASE WHEN sa.score >= sa.examQuestion.points THEN 1 ELSE 0 END) " +
+            "FROM StudentAnswerV2 sa " +
+            "JOIN sa.examQuestion eq " +
+            "JOIN eq.question q " +
+            "JOIN q.topic t " +
+            "WHERE sa.examAttempt.user.id = :studentId " +
+            "AND sa.examAttempt.status = 'COMPLETED' " +
+            "GROUP BY t.name")
+    List<Object[]> analyzeTopicPerformance(@Param("studentId") String studentId);
+
 }

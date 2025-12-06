@@ -24,7 +24,6 @@ public class AnalyticsScheduler {
     private final AdminUserDailyStatRepository statRepository;
 
     @Scheduled(cron = "0 1 0 * * ?")
-
     @Transactional
     public void aggregateUserStats() {
         LocalDate yesterday = LocalDate.now().minusDays(1);

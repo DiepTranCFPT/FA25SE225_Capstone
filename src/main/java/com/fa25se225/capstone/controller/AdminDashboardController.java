@@ -4,14 +4,12 @@ import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.request.UserSearchRequest;
 import com.fa25se225.capstone.dto.response.AdminUserDashboardResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
+import com.fa25se225.capstone.dto.response.ExamDashboardResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
-import com.fa25se225.capstone.service.AdminAnalyticsService;
+import com.fa25se225.capstone.service.AdminDashboardService;
 import com.fa25se225.capstone.service.UserService;
 // import com.fa25se225.capstone.service.AdminAnalyticsService; (Service thống kê dashboard nếu bạn đã làm)
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,10 +20,9 @@ import java.util.List;
 public class AdminDashboardController {
 
     private final UserService userService;
-    private final AdminAnalyticsService adminAnalyticsService;
+    private final AdminDashboardService adminAnalyticsService;
 
     @GetMapping("/stats")
-    @Operation(summary = "Get overview statistics (Widgets)")
     public ApiResponse<AdminUserDashboardResponse> getDashboardStats() {
         return ApiResponse.success(adminAnalyticsService.getUserOverview());
     }
@@ -42,5 +39,10 @@ public class AdminDashboardController {
     ) {
         UserSearchRequest searchRequest = new UserSearchRequest(keyword, role, isVerified, isLocked);
         return ApiResponse.success(userService.searchUsers(searchRequest, pageNo, pageSize, sorts));
+    }
+
+    @GetMapping("/exam-stats")
+    public ApiResponse<ExamDashboardResponse> getExamStats() {
+        return ApiResponse.success(adminAnalyticsService.getExamAnalytics());
     }
 }

@@ -54,4 +54,10 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
             @Param("creatorId") String creatorId
     );
 
+    @Query("SELECT s.name, COUNT(q) FROM QuestionV2 q JOIN q.subject s GROUP BY s.name")
+    List<Object[]> countQuestionsBySubject();
+
+    @Query("SELECT d.name, COUNT(q) FROM QuestionV2 q JOIN q.difficulty d GROUP BY d.name")
+    List<Object[]> countQuestionsByDifficulty();
+
 }

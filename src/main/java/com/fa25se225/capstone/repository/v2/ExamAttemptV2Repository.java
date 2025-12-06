@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.repository.v2;
 
+import com.fa25se225.capstone.dto.response.TopExamAdminStat;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import feign.Param;
@@ -37,8 +38,30 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
 
     int countByUserIdAndStatus(String userId, AttemptStatusV2 status);
 
-    @Query("SELECT AVG(ea.score) FROM ExamAttemptV2 ea WHERE ea.user.id = :userId AND ea.status = 'COMPLETED'")
+    @Query("SELECT AVG(ea.score) FROM ExamAttemptV2 ea WHERE ea.user.id = :userId AND ea.status = com.fa25se225.capstone.entity.v2.AttemptStatusV2.COMPLETED")
     Double getAverageScoreByUserId(@Param("userId") String userId);
 
     Optional<ExamAttemptV2> findFirstByUserIdAndStatusOrderByEndTimeDesc(String userId, AttemptStatusV2 status);
+
+    long countByStatus(AttemptStatusV2 status);
+
+
+    @Query("SELECT new com.fa25se225.capstone.dto.response.TopExamAdminStat(" +
+            "t.id, t.title, u.email, COUNT(ea), AVG(ea.score)) " +
+            "FROM ExamAttemptV2 ea " +
+            "JOIN ea.sourceTemplate t " +
+            "JOIN t.createdBy u " +
+            "WHERE ea.status = com.fa25se225.capstone.entity.v2.AttemptStatusV2.COMPLETED " +
+            "GROUP BY t.id, t.title, u.email " +
+            "ORDER BY COUNT(ea) DESC")
+    List<TopExamAdminStat> findTopPopularExams(Pageable pageable);
+
+    @Query("SELECT COUNT(ea) FROM ExamAttemptV2 ea WHERE ea.status = 'REVIEW_REQUESTED'")
+    long countReviewRequested();
+
+    @Query("SELECT COUNT(ea) FROM ExamAttemptV2 ea " +
+            "JOIN ea.sourceTemplate t " +
+            "WHERE t.createdBy.id = :teacherId " +
+            "AND ea.status = 'REVIEW_REQUESTED'")
+    long countPendingReviewsByTeacher(@org.springframework.data.repository.query.Param("teacherId") String teacherId);
 }

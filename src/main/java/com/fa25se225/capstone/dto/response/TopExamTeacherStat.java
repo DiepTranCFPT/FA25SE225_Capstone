@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 public class TopExamTeacherStat {
     private String templateId;
     private String title;
-    private Integer attempts;
+    private Long attempts;
     private Double avgScore;
     private BigDecimal revenue;
 }

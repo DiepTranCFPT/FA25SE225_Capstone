@@ -35,6 +35,13 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
     @Query("SELECT q FROM QuestionV2 q WHERE q.subject.id = :subjectId AND q.difficulty.name = :difficultyName")
     List<QuestionV2> findBySubjectIdAndDifficultyName(@Param("subjectId") String subjectId, @Param("difficultyName") String difficultyName);
 
+    @Query("SELECT COUNT(q) FROM QuestionV2 q WHERE q.createdBy.id = :teacherId")
+    long countByCreatedById(@Param("teacherId") String teacherId);
+
+    @Query("SELECT t.name, COUNT(q) FROM QuestionV2 q JOIN q.topic t WHERE q.createdBy.id = :teacherId GROUP BY t.name")
+    List<Object[]> countQuestionsByTopicForTeacher(@Param("teacherId") String teacherId);
+
+
 
     @Query(value = "SELECT * FROM questions_v2 q WHERE q.topic_id = :topicId AND q.question_type = :questionType " +
             "AND q.difficulty_id = :difficultyId AND q.created_by = :creatorId ORDER BY RAND() LIMIT :count", nativeQuery = true)

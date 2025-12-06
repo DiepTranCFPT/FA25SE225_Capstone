@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -16,7 +17,8 @@ public class TeacherExamDashboardResponse {
     private long pendingManualReviews;
     private double averageRating;
 
+    private long totalQuestions;
+    private Map<String, Long> questionsByTopic;
+
     private List<TopExamTeacherStat> topPerformingExams;
-
-
 }

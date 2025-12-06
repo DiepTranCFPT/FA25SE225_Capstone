@@ -27,6 +27,15 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
     public StudentExamDashboardResponse getStudentExamDashboard() {
         User student = accountUtil.getCurrentUser();
         String studentId = student.getId();
+        return getStudentExamDashboardById(studentId);
+    }
+
+    @Override
+    public StudentExamDashboardResponse getChildrenExamDashboard(String childrenId) {
+        return getStudentExamDashboardById(childrenId);
+    }
+
+    private StudentExamDashboardResponse getStudentExamDashboardById(String studentId) {
 
         long total = attemptRepository.countByUserIdAndStatus(studentId, AttemptStatusV2.COMPLETED);
         Double avgScore = attemptRepository.getAverageScoreByUserId(studentId);

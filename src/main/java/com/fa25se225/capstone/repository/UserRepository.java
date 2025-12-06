@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +25,7 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
 
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName AND u.createdAt BETWEEN :start AND :end")
-    long countNewUsersByRole(@Param("roleName") String roleName, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    long countNewUsersByRole(@Param("roleName") String roleName, @Param("start") Instant start, @Param("end") Instant end);
 
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
     long countTotalByRole(@Param("roleName") String roleName);

@@ -2,9 +2,9 @@ package com.fa25se225.capstone.repository;
 
 import com.fa25se225.capstone.entity.LoginHistory;
 import com.fa25se225.capstone.entity.User;
-import feign.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -10,5 +10,7 @@ import java.util.List;
 
 @Repository
 public interface AdminUserDailyStatRepository extends JpaRepository<AdminUserDailyStat, String> {
+
     List<AdminUserDailyStat>  findAllByDateAfterOrderByDateAsc(LocalDate localDate);
+    boolean existsByDate(LocalDate date);
 }

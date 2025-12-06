@@ -25,6 +25,7 @@ public class AdminUserDailyStat {
     private long totalParents;
 
     private long newStudents;
+    private long newParents;
     private long newTeachers;
 
     private long dailyActiveUsers;

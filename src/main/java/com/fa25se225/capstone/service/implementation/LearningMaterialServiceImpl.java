@@ -440,13 +440,11 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transactionRepository.saveAndFlush(transaction);
 
             Transaction transactionTeacher = new Transaction();
-            transaction.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
-            transaction.setPayment(teacherPayment);
-            transaction.setBalanceAfter(teacherPayment.getAmount());
-            transaction.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
-            transaction.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
-
-            transactionRepository.saveAndFlush(transaction);
+            transactionTeacher.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
+            transactionTeacher.setPayment(teacherPayment);
+            transactionTeacher.setBalanceAfter(teacherPayment.getAmount());
+            transactionTeacher.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
+            transactionTeacher.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
             transactionRepository.saveAndFlush(transactionTeacher);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));

@@ -466,6 +466,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             tokenTransaction.setType(tokenTransactionType);
             tokenTransaction.setUser(teacher);
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
+            tokenTransaction.setStatus("Success");
             tokenTransactionRepository.saveAndFlush(tokenTransaction);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));

@@ -26,6 +26,11 @@ public class MomoPaymentController {
         Map<String, Object> response = momoPaymentService.createPaymentRequest( amount);
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/create/{userId}")
+    public ResponseEntity<?> createPaymentByUser(@RequestParam Long amount, @PathVariable("userId") String userId) {
+        Map<String, Object> response = momoPaymentService.createPaymentRequestByUserId( amount,userId);
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/redirect")
     public ResponseEntity<?> handleRedirect(@RequestParam Map<String, String> params) {

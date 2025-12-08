@@ -121,6 +121,79 @@ public class MomoPaymentService {
         return response.getBody();
     }
 
+
+    @Transactional
+    public Map<String, Object> createPaymentRequestByUserId(Long amount,String userId) {
+        String extraData = "";
+        String requestType = "captureWallet";
+        String oderInfo = "TOP UP WALLET";
+        User user = accountUtil.getCurrentUser();
+        User use = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        PaymentStatus paymemtStatus = paymentStatusRepository.findByCode("active").orElse(null);
+        Payment payment = paymentRepository.findByUser(user).orElseGet(() ->
+                {
+                    Payment newPayment = Payment.builder()
+                            .user(user)
+                            .amount(BigDecimal.ZERO)
+                            .createdAt(LocalDate.now())
+                            .status(paymemtStatus)
+                            .updatedAt(LocalDate.now()).build();
+                    return paymentRepository.save(newPayment);
+                }
+        );
+        TransactionStatus transactionStatus = transactionStatusRepository.findByName("Pending").orElseThrow(() ->
+                new RuntimeException("NOT FOUND"));
+        Transaction transaction = Transaction.builder()
+                .amount(new BigDecimal(amount))
+                .balanceAfter(payment.getAmount())
+                .status(transactionStatus)
+                .payment(payment)
+                .externalReference(oderInfo)
+                .build();
+        transactionRepository.saveAndFlush(transaction);
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("partnerCode", momoConfig.getPartnerCode());
+        payload.put("accessKey", momoConfig.getAccessKey());
+        payload.put("requestId",transaction.getId());
+        payload.put("amount", amount);
+        payload.put("orderId", transaction.getId());
+        payload.put("orderInfo", oderInfo);
+        payload.put("redirectUrl", momoConfig.getRedirectUrl());
+        payload.put("ipnUrl", momoConfig.getIpnUrl());
+        payload.put("lang", "en");
+        payload.put("extraData", extraData);
+        payload.put("requestType", requestType);
+
+        String rawSignature =
+                "accessKey=" + momoConfig.getAccessKey()
+                        + "&amount=" + amount
+                        + "&extraData=" + extraData
+                        + "&ipnUrl=" + momoConfig.getIpnUrl()
+                        + "&orderId=" + transaction.getId()
+                        + "&orderInfo=" + oderInfo
+                        + "&partnerCode=" + momoConfig.getPartnerCode()
+                        + "&redirectUrl=" + momoConfig.getRedirectUrl()
+                        + "&requestId=" + transaction.getId()
+                        + "&requestType=" + requestType;
+
+        log.info("MoMo rawSignature /create = {}", rawSignature);
+
+        String signature = hmacSHA256(rawSignature, momoConfig.getSecretKey());
+        payload.put("signature", signature);
+
+        log.info("MoMo signature /create = {}", signature);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+        ResponseEntity<Map> response =
+                restTemplate.postForEntity(momoConfig.getEndpoint(), request, Map.class);
+
+        return response.getBody();
+    }
+
     @Transactional
     public void handlePaymentSuccess(String userId,
                                      BigDecimal amount,

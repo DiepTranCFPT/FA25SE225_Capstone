@@ -519,7 +519,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
         List<LearningMaterial> registeredMaterials = allMaterials.stream()
                 .filter(material -> {
-                    String expectedPermissionName = "LEARNING_" + material.getTitle().toUpperCase().replaceAll("\\s+", "_");
+                    String expectedPermissionName = "LEARNING_" + material.getId();
                     return permissionNames.contains(expectedPermissionName);
                 })
                 .toList();

@@ -5,5 +5,9 @@ import java.util.List;
 
 public interface IPaymentService {
     PaymentResponse getPaymentsByUser();
-}
 
+    /**
+     * Transfer money from parent to student
+     */
+    void transferFromParentToStudent(String parentId, String studentId, Long amount);
+}

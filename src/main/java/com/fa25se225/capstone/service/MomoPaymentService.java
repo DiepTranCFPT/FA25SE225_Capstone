@@ -127,8 +127,8 @@ public class MomoPaymentService {
         String extraData = "";
         String requestType = "captureWallet";
         String oderInfo = "TOP UP WALLET";
-        User user = accountUtil.getCurrentUser();
-        User use = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         PaymentStatus paymemtStatus = paymentStatusRepository.findByCode("active").orElse(null);
         Payment payment = paymentRepository.findByUser(user).orElseGet(() ->
                 {

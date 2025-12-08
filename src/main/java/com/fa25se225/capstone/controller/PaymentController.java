@@ -19,5 +19,10 @@ public class PaymentController {
         PaymentResponse payments = paymentService.getPaymentsByUser();
         return ApiResponse.success(payments);
     }
-}
 
+    @PostMapping("/transfer-parent-to-student")
+    public ApiResponse<?> transferParentToStudent(@RequestParam String parentId, @RequestParam String studentId, @RequestParam Long amount) {
+        paymentService.transferFromParentToStudent(parentId, studentId, amount);
+        return ApiResponse.success("Transfer successful");
+    }
+}

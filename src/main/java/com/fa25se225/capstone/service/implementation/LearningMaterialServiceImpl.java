@@ -10,6 +10,8 @@ import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Subject;
+import com.fa25se225.capstone.entity.TokenTransaction;
+import com.fa25se225.capstone.entity.TokenTransactionType;
 import com.fa25se225.capstone.entity.Transaction;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
@@ -21,6 +23,8 @@ import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
+import com.fa25se225.capstone.repository.TokenTransactionRepository;
+import com.fa25se225.capstone.repository.TokenTransactionTypeRepository;
 import com.fa25se225.capstone.repository.TransactionRepository;
 import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
@@ -47,7 +51,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class LearningMaterialServiceImpl implements LearningMaterialService {
-    
+
     private final LearningMaterialRepository learningMaterialRepository;
     private final MaterialTypeRepository materialTypeRepository;
     private final SubjectRepository subjectRepository;
@@ -62,24 +66,26 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TransactionStatusRepository transactionStatusRepository;
 
     private final BigDecimal percentTeacher = BigDecimal.valueOf(0.8);
+    private final TokenTransactionRepository tokenTransactionRepository;
+    private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
 
     @Value("${minio.bucket.materials}")
-    private String bucketName ;
-    
+    private String bucketName;
+
     @Override
     @Transactional
     public LearningMaterialResponse create(LearningMaterialCreationRequest request, MultipartFile file) {
         log.info("Creating learning material with title: {}", request.title());
-        
+
         log.debug("Getting current user for learning material creation");
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        
+
         log.debug("Validating and getting material type with id: {}", request.typeId());
         MaterialType materialType = materialTypeRepository.findByIdNotDeleted(request.typeId())
                 .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
-        
+
         log.debug("Validating and getting subject if provided: {}", request.subjectId());
         Subject subject = null;
         if (request.subjectId() != null && !request.subjectId().trim().isEmpty()) {
@@ -96,17 +102,17 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         if (learningMaterial.getIsPublic() == null) {
             learningMaterial.setIsPublic(false);
         }
-        if(learningMaterial.getFileImage() == null){
+        if (learningMaterial.getFileImage() == null) {
             learningMaterial.setFileImage(file.getOriginalFilename());
         }
 
         LearningMaterial savedMaterial = learningMaterialRepository.saveAndFlush(learningMaterial);
         log.info("Successfully created learning material with id: {}", savedMaterial.getId());
 
-        String permissionName = "LEARNING_"+ savedMaterial.getId().trim();
-        String permissionTitle = "LEARNING_"+savedMaterial.getTitle();
+        String permissionName = "LEARNING_" + savedMaterial.getId().trim();
+        String permissionTitle = "LEARNING_" + savedMaterial.getTitle();
 
-        Permission permission = new Permission(permissionName,permissionTitle,false);
+        Permission permission = new Permission(permissionName, permissionTitle, false);
         permissionRepository.saveAndFlush(permission);
 
         User account = accountUtil.getCurrentUser();
@@ -115,7 +121,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
         String nameFile = "Materials_" + savedMaterial.getId().trim();
         try {
-            String fileName = minioClient.uploadFile(file,nameFile,bucketName);
+            String fileName = minioClient.uploadFile(file, nameFile, bucketName);
             savedMaterial.setFileImage(fileName);
             LearningMaterial updatedMaterial = learningMaterialRepository.saveAndFlush(savedMaterial);
             return learningMaterialMapper.toResponse(updatedMaterial);
@@ -123,38 +129,38 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Override
     public LearningMaterialResponse getById(String id) {
         log.info("Getting learning material by id: {}", id);
-        
+
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
-        
+
         log.debug("Checking if user has permission to view material with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        
+
         if (!learningMaterial.getIsPublic() && !learningMaterial.getAuthor().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        
+
         return learningMaterialMapper.toResponse(learningMaterial);
     }
-    
+
     @Override
     public PageResponse<List<LearningMaterialResponse>> getAll(int pageNo, int pageSize, String... sorts) {
         log.info("Getting all learning materials with pagination - page: {}, size: {}", pageNo, pageSize);
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findAllNotDeleted(pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -164,23 +170,23 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .items(responses)
                 .build();
     }
-    
+
     @Override
     public PageResponse<List<LearningMaterialResponse>> getMyMaterials(int pageNo, int pageSize, String... sorts) {
         log.info("Getting my learning materials with pagination - page: {}, size: {}", pageNo, pageSize);
-        
+
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findByAuthorIdNotDeleted(currentUser.getId(), pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -190,19 +196,19 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .items(responses)
                 .build();
     }
-    
+
     @Override
     public PageResponse<List<LearningMaterialResponse>> getPublicMaterials(int pageNo, int pageSize, String... sorts) {
         log.info("Getting public learning materials with pagination - page: {}, size: {}", pageNo, pageSize);
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findAllPublicNotDeleted(pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -212,23 +218,23 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .items(responses)
                 .build();
     }
-    
+
     @Override
     public PageResponse<List<LearningMaterialResponse>> getBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting learning materials by subject: {} with pagination - page: {}, size: {}", subjectId, pageNo, pageSize);
-        
+
         log.debug("Validating subject exists with id: {}", subjectId);
         subjectRepository.findByIdNotDeleted(subjectId)
                 .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findBySubjectIdNotDeleted(subjectId, pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -238,23 +244,23 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .items(responses)
                 .build();
     }
-    
+
     @Override
     public PageResponse<List<LearningMaterialResponse>> getByType(String typeId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting learning materials by type: {} with pagination - page: {}, size: {}", typeId, pageNo, pageSize);
-        
+
         log.debug("Validating material type exists with id: {}", typeId);
         materialTypeRepository.findByIdNotDeleted(typeId)
                 .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findByTypeIdNotDeleted(typeId, pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -268,15 +274,15 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     @Override
     public PageResponse<List<LearningMaterialResponse>> searchByKeyword(String keyword, int pageNo, int pageSize, String... sorts) {
         log.info("Searching learning materials by keyword: {} with pagination - page: {}, size: {}", keyword, pageNo, pageSize);
-        
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findByKeywordNotDeleted(keyword, pageable);
-        
+
         List<LearningMaterialResponse> responses = page.getContent()
                 .stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
-        
+
         return PageResponse.<List<LearningMaterialResponse>>builder()
                 .pageNo(pageNo)
                 .pageSize(pageSize)
@@ -286,31 +292,31 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .items(responses)
                 .build();
     }
-    
+
     @Override
     @Transactional
     public LearningMaterialResponse update(String id, LearningMaterialUpdateRequest request) {
         log.info("Updating learning material with id: {}", id);
-        
+
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
-        
+
         log.debug("Checking if current user is the author of learning material with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        
+
         if (!learningMaterial.getAuthor().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        
+
         log.debug("Updating material type if provided: {}", request.typeId());
         if (request.typeId() != null && !request.typeId().trim().isEmpty()) {
             MaterialType materialType = materialTypeRepository.findByIdNotDeleted(request.typeId())
                     .orElseThrow(() -> new AppException(ErrorCode.MATERIAL_TYPE_NOT_FOUND));
             learningMaterial.setType(materialType);
         }
-        
+
         log.debug("Updating subject if provided: {}", request.subjectId());
         if (request.subjectId() != null) {
             if (request.subjectId().trim().isEmpty()) {
@@ -324,37 +330,37 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
         log.debug("Updating other fields of learning material");
         learningMaterialMapper.updateEntity(learningMaterial, request);
-        
+
         LearningMaterial updatedMaterial = learningMaterialRepository.save(learningMaterial);
         log.info("Successfully updated learning material with id: {}", updatedMaterial.getId());
-        
+
         return learningMaterialMapper.toResponse(updatedMaterial);
     }
-    
+
     @Override
     @Transactional
     public void delete(String id) {
         log.info("Deleting learning material with id: {}", id);
-        
+
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(id)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
-        
+
         log.debug("Checking if current user is the author of learning material to delete with id: {}", id);
         String currentUserEmail = getCurrentUserEmail();
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        
+
         if (!learningMaterial.getAuthor().getId().equals(currentUser.getId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-        
+
         log.debug("Performing soft delete for learning material with id: {}", id);
         learningMaterial.setDeleted(true);
         learningMaterialRepository.save(learningMaterial);
-        
+
         log.info("Successfully deleted learning material with id: {}", id);
     }
-    
+
     @Override
     public List<LearningMaterialResponse> getAllMaterials() {
         List<LearningMaterial> materials = learningMaterialRepository.findAllNotDeleted();
@@ -374,18 +380,18 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Payment payment = paymentRepository.findByUser(student).orElseThrow(
-                ()-> new RuntimeException("Payment not found")
+                () -> new RuntimeException("Payment not found")
         );
         // Get learning material
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(learningMaterialId)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));
 
-        if(payment.getAmount().compareTo(learningMaterial.getPrice()) < 0) {
+        if (payment.getAmount().compareTo(learningMaterial.getPrice()) < 0) {
             throw new AppException(ErrorCode.PAYMENT_AMOUNT_TOO_LOW);
         }
         if (payment.getAmount().compareTo(learningMaterial.getPrice()) == 0) {
             // Payment is exactly the price, proceed with registration
-            String permissionName = "LEARNING_"+learningMaterialId;
+            String permissionName = "LEARNING_" + learningMaterialId;
             log.debug("Creating/Getting permission with name: {}", permissionName);
 
             // Check if user already has this permission
@@ -411,13 +417,13 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         if (payment.getAmount().compareTo(learningMaterial.getPrice()) > 0) {
             // Payment is more than the price, you may want to log or handle this case
             log.warn("Payment amount is greater than the price. Consider refunding the excess or notifying the user.");
-            String permissionName = "LEARNING_"+learningMaterialId;
+            String permissionName = "LEARNING_" + learningMaterialId;
             log.debug("Creating/Getting permission with name: {}", permissionName);
             payment.setAmount(payment.getAmount().subtract(learningMaterial.getPrice()));
 
             User teacher = learningMaterial.getAuthor();
             Payment teacherPayment = paymentRepository.findByUser(teacher).orElseThrow(
-                    ()-> new AppException(ErrorCode.PAYMENT_NOT_FOUND)
+                    () -> new AppException(ErrorCode.PAYMENT_NOT_FOUND)
             );
             teacherPayment.setAmount(teacherPayment.getAmount().add(learningMaterial.getPrice().multiply(percentTeacher)));
             paymentRepository.saveAndFlush(payment);
@@ -435,7 +441,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transaction.setAmount(learningMaterial.getPrice());
             transaction.setPayment(payment);
             transaction.setBalanceAfter(payment.getAmount());
-            transaction.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
+            transaction.setExternalReference("PAYMENT LEARNING_" + learningMaterialId);
             transaction.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
             transactionRepository.saveAndFlush(transaction);
 
@@ -443,9 +449,24 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transactionTeacher.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
             transactionTeacher.setPayment(teacherPayment);
             transactionTeacher.setBalanceAfter(teacherPayment.getAmount());
-            transactionTeacher.setExternalReference("PAYMENT LEARNING_"+learningMaterialId);
+            transactionTeacher.setExternalReference("PAYMENT LEARNING_" + learningMaterialId);
             transactionTeacher.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
             transactionRepository.saveAndFlush(transactionTeacher);
+
+            TokenTransactionType tokenTransactionType = tokenTransactionTypeRepository.findByName("LEARNING_PAYMENT")
+                    .orElseGet(() -> {
+                        TokenTransactionType newType = new TokenTransactionType();
+                        newType.setName("LEARNING_PAYMENT");
+                        newType.setDescription("LEARNING PAYMENT");
+                        return tokenTransactionTypeRepository.save(newType);
+                    });
+
+            TokenTransaction tokenTransaction = new TokenTransaction();
+            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
+            tokenTransaction.setType(tokenTransactionType);
+            tokenTransaction.setUser(teacher);
+            tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
+            tokenTransactionRepository.saveAndFlush(tokenTransaction);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
 
@@ -473,7 +494,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         // Get all granted permissions that start with "ACCESS_"
         Set<String> permissionNames = currentUser.getGrantedPermissions().stream()
                 .map(Permission::getName)
-                .filter(name -> name.startsWith("ACCESS_"))
+                .filter(name -> name.startsWith("LEARNING_"))
                 .collect(java.util.stream.Collectors.toSet());
 
         log.debug("Found {} permissions with ACCESS_ prefix", permissionNames.size());

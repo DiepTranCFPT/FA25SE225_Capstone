@@ -47,7 +47,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     public TeacherProfileResponse updateProfile(String id, TeacherProfileRequest request) {
         validateAge(request.getDateOfBirth());
         TeacherProfile profile = teacherProfileRepository.findById(id)
-            .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
         teacherProfileMapper.updateEntity(profile, request);
         TeacherProfile updated = teacherProfileRepository.save(profile);
         return teacherProfileMapper.toResponse(updated);
@@ -61,7 +61,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     }
     private void validateAge(LocalDate dateOfBirth) {
         if (dateOfBirth == null || ChronoUnit.YEARS.between(dateOfBirth, LocalDate.now()) < 23) {
-            throw new AppException(ErrorCode.INVALID_INPUT);
+            throw new AppException(ErrorCode.TEACHER_INVALID_AGE);
         }
     }
 }

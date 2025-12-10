@@ -37,6 +37,8 @@ spring:
       redis:
         index: faq_idx
         prefix: faq
+    retry:
+
   main:
     allow-bean-definition-overriding: true
   jpa:

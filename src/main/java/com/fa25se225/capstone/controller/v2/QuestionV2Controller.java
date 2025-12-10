@@ -93,7 +93,7 @@ public class QuestionV2Controller {
     }
     
     // Import functionality endpoints
-    @PostMapping("/import")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path= "/import")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ApiResponse<QuestionImportResponse> importQuestionsFromExcel(
             @RequestParam("file") MultipartFile file,

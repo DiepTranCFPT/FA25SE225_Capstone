@@ -4,6 +4,7 @@ import java.util.List;
 
 public record LearningMaterialWithStudentsResponse(
     LearningMaterialResponse material,
-    List<UserResponse> registeredStudents
+    List<UserResponse> registeredStudents,
+    Integer totalStudent
 ) {}
 

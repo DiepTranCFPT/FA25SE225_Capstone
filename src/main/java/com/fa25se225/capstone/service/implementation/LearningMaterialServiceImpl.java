@@ -574,7 +574,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             List<UserResponse> studentResponses = students.stream().map(userMapper::toResponse).toList();
             return new LearningMaterialWithStudentsResponse(
                 learningMaterialMapper.toResponse(material),
-                studentResponses
+                studentResponses,studentResponses.size()
+
             );
         }).toList();
     }

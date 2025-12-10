@@ -1,6 +1,5 @@
 package com.fa25se225.capstone.controller;
 
-import com.fa25se225.capstone.constant.PredefinedSystemPermission;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

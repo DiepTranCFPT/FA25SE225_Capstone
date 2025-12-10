@@ -1,7 +1,6 @@
 package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.response.TransactionDTO;
-import com.fa25se225.capstone.entity.Transaction;
 import com.fa25se225.capstone.service.MomoPaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

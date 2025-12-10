@@ -1,7 +1,6 @@
 package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
-import com.fa25se225.capstone.dto.request.LessonDTO;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
@@ -9,7 +8,6 @@ import com.fa25se225.capstone.dto.response.LessonResponse;
 import com.fa25se225.capstone.service.LessonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

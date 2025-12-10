@@ -4,8 +4,9 @@ import com.fa25se225.capstone.dto.request.LearningMaterialCreationRequest;
 import com.fa25se225.capstone.dto.request.LearningMaterialUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.LearningMaterialResponse;
+import com.fa25se225.capstone.dto.response.LearningMaterialWithStudentsResponse;
+import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
-import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.Permission;
@@ -17,8 +18,8 @@ import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.LearningMaterialMapper;
+import com.fa25se225.capstone.mapper.UserMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
-import com.fa25se225.capstone.repository.LessonRepository;
 import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
@@ -32,7 +33,6 @@ import com.fa25se225.capstone.service.LearningMaterialService;
 import com.fa25se225.capstone.service.MinioService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
-import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,6 +69,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final BigDecimal percentAdmin = BigDecimal.valueOf(0.2);
     private final TokenTransactionRepository tokenTransactionRepository;
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
+    private final UserMapper userMapper;
 
     @Value("${minio.bucket.materials}")
     private String bucketName;
@@ -561,6 +562,22 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .sortBy(sorts)
                 .items(responses)
                 .build();
+    }
+
+    @Override
+    public List<LearningMaterialWithStudentsResponse> getMaterialsWithRegisteredStudents() {
+        User teacher = accountUtil.getCurrentUser();
+        List<LearningMaterial> materials = learningMaterialRepository.findByAuthorIdNotDeleted(teacher.getId(), Pageable.unpaged()).getContent();
+        return materials.stream().map(material -> {
+            String permissionName = "LEARNING_" + material.getId();
+            List<User> students = userRepository.findByGrantedPermissions_Name(permissionName);
+            List<UserResponse> studentResponses = students.stream().map(userMapper::toResponse).toList();
+            return new LearningMaterialWithStudentsResponse(
+                learningMaterialMapper.toResponse(material),
+                studentResponses,studentResponses.size()
+
+            );
+        }).toList();
     }
 
     private String getCurrentUserEmail() {

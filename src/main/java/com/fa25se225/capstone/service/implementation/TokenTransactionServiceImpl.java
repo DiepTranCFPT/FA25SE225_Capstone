@@ -181,6 +181,12 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         return transactions.stream().map(this::toDTO).toList();
     }
 
+    @Override
+    public BigDecimal getPendingTotalByCurrentUser() {
+        User user = accountUtil.getCurrentUser();
+        return tokenTransactionRepository.sumPendingAmountByUser(user);
+    }
+
 
 
     private TokenTransactionDTO toDTO(TokenTransaction entity) {

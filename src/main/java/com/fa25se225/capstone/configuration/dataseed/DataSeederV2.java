@@ -49,6 +49,7 @@ public class DataSeederV2 {
             seedPaymentStatuses();
             createTransactionStatusSeed();
             seedTokenTransactionTypes();
+//            createAPQuestionTopicsV2();
 
             if (questionRepository.findAll().isEmpty()) {
                 User teacher = userRepository.findByEmail("admin123@gmail.com")
@@ -113,6 +114,18 @@ public class DataSeederV2 {
                 .orElseGet(() -> topicRepository.save(
                         QuestionTopicV2.builder()
                                 .name(name)
+                                .subject(subject)
+                                .createdBy(teacher)
+                                .build()
+                ));
+    }
+
+    private QuestionTopicV2 createTopicWithDescription(String name, String description, Subject subject, User teacher) {
+        return topicRepository.findByNameIgnoreCase(name)
+                .orElseGet(() -> topicRepository.save(
+                        QuestionTopicV2.builder()
+                                .name(name)
+                                .description(description)
                                 .subject(subject)
                                 .createdBy(teacher)
                                 .build()
@@ -250,7 +263,7 @@ public class DataSeederV2 {
 
         questions.add(createSingleFrq(
                 "A circle has a circumference of $18\\pi$ cm. What is the area of the circle? Explain the formulas used.",
-                "Step 1: Find the radius using the circumference formula $C = 2\\pi r$. \nGiven $C = 18\\pi$. So, $18\\pi = 2\\pi r$. \nDivide by $2\\pi$: $r = 9$ cm. \nStep 2: Find the area using the area formula $A = \\pi r^2$. \nSubstitute the radius $r = 9$: $A = \\pi(9^2)$. \nThe area is $81\\pi$ cm$^2$.",
+                "Step 1: Find the radius using the circumference formula $C = 2\\pi r$. \nGiven $C = 18\\pi$. So, $18\\pi = 2\\pi r$. \nDivide by $2\\pi$: $r = 9$ cm. \nStep 2: Find the area using the area formula $A = \\pi r^2$. \nSubstitute the radius $r = 9$: $A = \\pi(9^2)`. \nThe area is $81\\pi$ cm$^2$.",
                 "The key is to use the circumference to find the radius first, then use the radius to find the area.",
                 teacher, subject, topic, diff
         ));
@@ -264,7 +277,7 @@ public class DataSeederV2 {
 
         questions.add(createSingleFrq(
                 "Find the volume of a cone with a radius of 3 units and a height of 7 units. What is the formula?",
-                "The formula for the volume of a cone is $V = (1/3)\\pi r^2 h$, where $r$ is the radius and $h$ is the height. \nGiven $r = 3$ and $h = 7$. \nSubstitute the values: $V = (1/3)\\pi(3^2)(7)$. \nSimplify $3^2$: $V = (1/3)\\pi(9)(7)$. \nMultiply: $V = 3 \\cdot \\pi \\cdot 7$. \nThe final volume is $21\\pi$ cubic units.",
+                "The formula for the volume of a cone is $V = (1/3)\\pi r^2 h$, where $r$ is the radius and $h$ is the height. \nGiven $r = 3$ and $h = 7$. \nSubstitute the values: $V = (1/3)\\pi(3^2)(7)`. \nSimplify $3^2$: $V = (1/3)\\pi(9)(7)`. \nMultiply: $V = 3 \\cdot \\pi \\cdot 7`. \nThe final volume is $21\\pi$ cubic units.",
                 "The volume of a cone is exactly one-third the volume of a cylinder with the same radius and height.",
                 teacher, subject, topic, diff
         ));
@@ -433,6 +446,67 @@ public class DataSeederV2 {
             tokenTransactionTypeRepository.save(incomeShare);
             log.info("Seeded TokenTransactionType: INCOME_SHARE");
         }
+    }
+
+    /**
+     * Seeds sample QuestionTopicV2 data for demonstration or testing.
+     */
+
+    @Transactional
+    public void createAPQuestionTopicsV2() {
+        User teacher = userRepository.findByEmail("teacher@gmail.com")
+                .orElseThrow(() -> new RuntimeException("User 'admin123@gmail.com' not found. Please ensure this user exists."));
+
+        // Create AP subjects as subjects, not topics
+        Subject apCalcAbSubject = subjectRepository.findByNameIgnoreCase("AP Calculus AB")
+                .orElseGet(() -> subjectRepository.save(
+                        Subject.builder().name("AP Calculus AB").code("APCALCAB").build()
+                ));
+        Subject apCalcBcSubject = subjectRepository.findByNameIgnoreCase("AP Calculus BC")
+                .orElseGet(() -> subjectRepository.save(
+                        Subject.builder().name("AP Calculus BC").code("APCALCBC").build()
+                ));
+        Subject apStatsSubject = subjectRepository.findByNameIgnoreCase("AP Statistics")
+                .orElseGet(() -> subjectRepository.save(
+                        Subject.builder().name("AP Statistics").code("APSTATS").build()
+                ));
+        Subject apEngLangSubject = subjectRepository.findByNameIgnoreCase("AP English Language")
+                .orElseGet(() -> subjectRepository.save(
+                        Subject.builder().name("AP English Language").code("APENGLANG").build()
+                ));
+        // Add topics for these AP subjects
+        // AP Calculus AB
+        createTopicWithDescription("Limits and Continuity", "Limits, continuity, and introduction to calculus", apCalcAbSubject, teacher);
+        createTopicWithDescription("Differentiation: Definition and Basic Rules", "Basic differentiation rules and concepts", apCalcAbSubject, teacher);
+        createTopicWithDescription("Differentiation: Composite, Implicit, and Inverse Functions", "Advanced differentiation techniques", apCalcAbSubject, teacher);
+        createTopicWithDescription("Applications of Derivatives", "Motion, related rates, optimization, graph analysis", apCalcAbSubject, teacher);
+        createTopicWithDescription("Integration and Accumulation of Change", "Antiderivatives, definite integrals", apCalcAbSubject, teacher);
+        createTopicWithDescription("Differential Equations", "Slope fields, separable DEs, exponential models", apCalcAbSubject, teacher);
+        createTopicWithDescription("Applications of Integration", "Areas, volumes, average value", apCalcAbSubject, teacher);
+        // AP Calculus BC
+        createTopicWithDescription("Parametric, Polar, and Vector Functions", "Parametric equations, polar coordinates, vectors", apCalcBcSubject, teacher);
+        createTopicWithDescription("Infinite Sequences and Series", "Convergence tests, Taylor series", apCalcBcSubject, teacher);
+        // AP Statistics
+        createTopicWithDescription("Exploring One-Variable Data", "Graphs, center, spread, shape", apStatsSubject, teacher);
+        createTopicWithDescription("Exploring Two-Variable Data", "Scatterplots, correlation, regression", apStatsSubject, teacher);
+        createTopicWithDescription("Collecting Data", "Surveys, experiments, sampling, bias", apStatsSubject, teacher);
+        createTopicWithDescription("Probability, Random Variables, and Probability Distributions", "Probability theory and distributions", apStatsSubject, teacher);
+        createTopicWithDescription("Sampling Distributions", "Sampling and the Central Limit Theorem", apStatsSubject, teacher);
+        createTopicWithDescription("Inference for Categorical Data: Proportions", "Proportion inference", apStatsSubject, teacher);
+        createTopicWithDescription("Inference for Quantitative Data: Means", "Mean inference", apStatsSubject, teacher);
+        createTopicWithDescription("Inference for Categorical Data: Chi-Square", "Chi-square tests", apStatsSubject, teacher);
+        createTopicWithDescription("Inference for Quantitative Data: Slopes", "Linear regression inference", apStatsSubject, teacher);
+        // AP English Language
+        createTopicWithDescription("Rhetorical Situation", "Audience, purpose, context", apEngLangSubject, teacher);
+        createTopicWithDescription("Claims and Evidence", "Finding and supporting arguments", apEngLangSubject, teacher);
+        createTopicWithDescription("Reasoning and Organization", "Line of reasoning, structure of an argument", apEngLangSubject, teacher);
+        createTopicWithDescription("Style and Tone", "Diction, syntax, rhetorical devices", apEngLangSubject, teacher);
+        createTopicWithDescription("Visual and Quantitative Texts", "Charts, images, graphics as arguments", apEngLangSubject, teacher);
+        createTopicWithDescription("Synthesis and Research", "Using multiple sources in one argument", apEngLangSubject, teacher);
+        createTopicWithDescription("Argumentation", "Writing your own argumentative essays", apEngLangSubject, teacher);
+        createTopicWithDescription("Rhetorical Analysis", "Analyzing how writers use language", apEngLangSubject, teacher);
+        createTopicWithDescription("Exam Review and Practice", "Timed writing, MC practice, FRQ practice", apEngLangSubject, teacher);
+        log.info("Seeded AP QuestionTopicV2 data.");
     }
 
 }

@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.dto;
 
 import lombok.Data;
+
 import java.math.BigDecimal;
 
 @Data

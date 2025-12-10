@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.LearningMaterialCreationRequest;
 import com.fa25se225.capstone.dto.request.LearningMaterialUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.LearningMaterialResponse;
+import com.fa25se225.capstone.dto.response.LearningMaterialWithStudentsResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -35,4 +36,6 @@ public interface LearningMaterialService {
     LearningMaterialResponse registerLearningMaterial(String learningMaterialId);
 
     PageResponse<List<LearningMaterialResponse>> getRegisteredMaterials(int pageNo, int pageSize, String... sorts);
+
+    List<LearningMaterialWithStudentsResponse> getMaterialsWithRegisteredStudents();
 }

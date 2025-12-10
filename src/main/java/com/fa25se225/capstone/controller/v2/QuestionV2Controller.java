@@ -5,7 +5,6 @@ import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
-import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

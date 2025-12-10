@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -38,5 +39,10 @@ public class TokenTransactionController {
     @GetMapping("/user")
     public ApiResponse<List<TokenTransactionDTO>> getAllByUser() {
         return ApiResponse.success(tokenTransactionService.getAllByUserId());
+    }
+
+    @GetMapping("/user/pending-total")
+    public ApiResponse<BigDecimal> getPendingTotalByUser() {
+        return ApiResponse.success(tokenTransactionService.getPendingTotalByCurrentUser());
     }
 }

@@ -2,12 +2,8 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.service.implementation.AIChatService;
-import com.fa25se225.capstone.utils.AccountUtil;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 

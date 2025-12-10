@@ -9,7 +9,6 @@ import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.response.SubmitAttemptV2Response;
 import com.fa25se225.capstone.service.v2.ExamV2Service;
 import com.fa25se225.capstone.service.v2.impl.SseNotificationService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

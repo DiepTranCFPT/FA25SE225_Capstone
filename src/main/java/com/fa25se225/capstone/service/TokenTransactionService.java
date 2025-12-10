@@ -14,5 +14,5 @@ public interface TokenTransactionService {
     void processExamPayment(String studentId, String teacherId, BigDecimal amount, String examTitle);
     TokenTransactionDTO rejectWithdrawal(WithdrawalConfirmDTO dto);
     List<TokenTransactionDTO> getAllByUserId();
-
+    BigDecimal getPendingTotalByCurrentUser();
 }

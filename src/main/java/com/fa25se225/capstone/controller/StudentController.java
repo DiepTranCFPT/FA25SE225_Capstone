@@ -2,10 +2,7 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.StudentProfileUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
-import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.service.StudentService;
-import io.swagger.v3.oas.annotations.Operation;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

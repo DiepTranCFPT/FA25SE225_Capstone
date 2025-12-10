@@ -1,19 +1,16 @@
 package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.PageResponse;
-import com.fa25se225.capstone.dto.request.UserCreationRequest;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.PermissionResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
-import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;

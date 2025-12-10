@@ -449,7 +449,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transactionTeacher.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
             transactionTeacher.setPayment(teacherPayment);
             transactionTeacher.setBalanceAfter(teacherPayment.getAmount());
-            transactionTeacher.setExternalReference("PAYMENT LEARNING_" + learningMaterialId);
+            transactionTeacher.setExternalReference("_" + learningMaterialId);
             transactionTeacher.setStatus(transactionStatusRepository.findByName("Success").orElse(null));
             transactionRepository.saveAndFlush(transactionTeacher);
 
@@ -468,6 +468,15 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
             tokenTransaction.setStatus("Success");
             tokenTransactionRepository.saveAndFlush(tokenTransaction);
+
+            User admin = accountUtil.getAccountAdmin();
+            TokenTransaction adminTransaction = new TokenTransaction();
+            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(BigDecimal.valueOf(100).subtract(percentTeacher)));
+            tokenTransaction.setType(tokenTransactionType);
+            tokenTransaction.setUser(admin);
+            tokenTransaction.setDescription("SYSTEM_LEARNING" + learningMaterialId);
+            tokenTransaction.setStatus("Success");
+            tokenTransactionRepository.saveAndFlush(adminTransaction);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));
 

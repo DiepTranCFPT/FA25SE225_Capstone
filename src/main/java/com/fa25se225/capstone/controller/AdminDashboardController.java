@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.DashboardAdminResponse;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.request.UserSearchRequest;
 import com.fa25se225.capstone.dto.response.AdminUserDashboardResponse;
@@ -44,5 +45,14 @@ public class AdminDashboardController {
     @GetMapping("/exam-stats")
     public ApiResponse<ExamDashboardResponse> getExamStats() {
         return ApiResponse.success(adminAnalyticsService.getExamAnalytics());
+    }
+
+    @GetMapping("/revenue/system")
+    public ApiResponse<DashboardAdminResponse> getRevenueSystem(
+            @RequestParam(required = false) long day,
+            @RequestParam(required = false) long month,
+            @RequestParam(required = false) long year
+    ) {
+        return ApiResponse.success(adminAnalyticsService.getRevenueSystem(day, month, year));
     }
 }

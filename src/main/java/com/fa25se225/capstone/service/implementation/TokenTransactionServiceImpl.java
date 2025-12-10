@@ -29,6 +29,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     private final PaymentStatusRepository paymentStatusRepository;
     private final AccountUtil accountUtil;
     private static final BigDecimal TEACHER_SHARE_PERCENTAGE = BigDecimal.valueOf(0.8);
+    private static final BigDecimal SYSTEM_PERCENTAGE = BigDecimal.valueOf(0.2);
 
     private static final String STATUS_SUCCESS = "success";
     private static final String STATUS_PENDING = "pending";
@@ -117,6 +118,8 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         User teacher = userRepository.findById(teacherId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        User admin = accountUtil.getAccountAdmin();
+
         PaymentStatus paymentStatus = paymentStatusRepository.findByCode("active").orElse(null);
 
         Payment studentPayment = paymentRepository.findByUser(student).orElseGet(() ->
@@ -149,6 +152,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
 
         BigDecimal teacherIncome =  amount.multiply(TEACHER_SHARE_PERCENTAGE);
 
+
         studentPayment.setAmount(studentPayment.getAmount().subtract(amount));
         paymentRepository.save(studentPayment);
 
@@ -164,6 +168,8 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         paymentRepository.save(teacherPayment);
 
         createTransaction(teacher, teacherIncome, incomeShare, "Revenue from exam: " + examTitle);
+        BigDecimal adminIncome =  amount.multiply(SYSTEM_PERCENTAGE);
+        createTransaction(admin,adminIncome,incomeShare,"SYSTEM EXAM: " + examTitle);
 
 
     }
@@ -174,6 +180,8 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         List<TokenTransaction> transactions = tokenTransactionRepository.findAllByUser(user);
         return transactions.stream().map(this::toDTO).toList();
     }
+
+
 
     private TokenTransactionDTO toDTO(TokenTransaction entity) {
         TokenTransactionDTO dto = new TokenTransactionDTO();

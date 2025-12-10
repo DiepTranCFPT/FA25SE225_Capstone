@@ -27,4 +27,9 @@ public class AccountUtil {
     private String getCurrentUserEmail() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
+
+    public User getAccountAdmin() {
+        return userRepository.findByEmail("admin123@gmail.com")
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
 }

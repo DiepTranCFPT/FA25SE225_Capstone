@@ -2,6 +2,7 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.service.implementation.AIChatService;
+import com.fa25se225.capstone.utils.AccountUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +20,37 @@ import java.io.IOException;
 public class AIChatController {
     private final AIChatService aiChatService;
 
+
     @PostMapping("/exam-ask")
     public SseEmitter chat(@RequestBody ExamAskingRequest request) {
         SseEmitter sseEmitter = new SseEmitter(-1L);
         aiChatService.examAsk(request)
+                .subscribe(
+                        token -> {
+                            log.info("SSe Received token");
+                            try {
+                                sseEmitter.send(SseEmitter.event().data(token));
+                            } catch (IOException e) {
+                                sseEmitter.completeWithError(e);
+                            }
+                        },
+                        error -> {
+                            error.printStackTrace();
+                            sseEmitter.completeWithError(error);
+                        },
+                        () -> {
+                            log.info("SSe Stream completed");
+                            sseEmitter.complete();
+                        }
+                );
+
+        return sseEmitter;
+    }
+
+    @PostMapping("/students/dashboard")
+    public SseEmitter chatStudentDashBoard(@RequestBody String prompt) {
+        SseEmitter sseEmitter = new SseEmitter(-1L);
+        aiChatService.chatStudentDashBoard(prompt)
                 .subscribe(
                         token -> {
                             log.info("SSe Received token");

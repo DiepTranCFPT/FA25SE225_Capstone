@@ -3,6 +3,7 @@ package com.fa25se225.capstone.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
@@ -28,6 +29,10 @@ public class StudentProfile {
 
     @Column(name = "school_name")
     private String schoolName;
+
+    @Column(columnDefinition = "TEXT")
+    @Nationalized
+    private String goal;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "grade_level_id")

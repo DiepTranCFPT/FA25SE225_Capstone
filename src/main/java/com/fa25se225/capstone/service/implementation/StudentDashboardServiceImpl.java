@@ -78,7 +78,7 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
             }
         }
 
-        var recentPage = attemptRepository.findByUserId(studentId, PageRequest.of(0, 5));
+        var recentPage = attemptRepository.findByUserId(studentId, PageRequest.of(0, 10));
         var recentList = recentPage.getContent().stream().map(attemptMapper::toResponse).toList();
 
         return StudentExamDashboardResponse.builder()

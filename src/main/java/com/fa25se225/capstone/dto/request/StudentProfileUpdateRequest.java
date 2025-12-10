@@ -8,4 +8,5 @@ public class StudentProfileUpdateRequest {
     private String schoolName;
     private String parentPhone;
     private String emergencyContact;
+    private String goal;
 }

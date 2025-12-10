@@ -12,5 +12,7 @@ public interface ExamAttemptV2Mapper {
     @Mapping(target = "title", source = "exam.title")
     @Mapping(target = "doneBy", source = "user.email")
     @Mapping(target = "status", expression = "java(attempt.getStatus() != null ? attempt.getStatus().name() : null)")
+    @Mapping(target = "passingScore", expression = "java(attempt.getExam().getPassingScore() != null ? Double.valueOf(attempt.getExam().getPassingScore().doubleValue()) : null)")
+    @Mapping(target = "subject", expression = "java(attempt.getExam().getSubject() != null ? attempt.getExam().getSubject().getName() : null)")
     ExamAttemptV2Response toResponse(ExamAttemptV2 attempt);
 }

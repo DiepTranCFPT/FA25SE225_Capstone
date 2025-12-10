@@ -13,14 +13,16 @@ import java.time.LocalDateTime;
 @Builder
 public class ExamAttemptV2Response {
     private String attemptId;
+    private String subject;
     private String title;
     private String examId;
     private String doneBy;
     private Double score;
+    private Double passingScore;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String status;
-
+    private String comment;
     private Integer rating;
 
 }

@@ -21,7 +21,7 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     @Transactional
-    public Certificate createCertificate(User student, User teacher, String materialId) {
+    public void createCertificate(User student, User teacher, String materialId) {
         LearningMaterial material = learningMaterialRepository.findById(materialId)
             .orElseThrow(() -> new RuntimeException("Learning material not found"));
         Certificate certificate = Certificate.builder()
@@ -32,6 +32,6 @@ public class CertificateServiceImpl implements CertificateService {
                 .isValid(true)
                 .deleted(false)
                 .build();
-        return certificateRepository.save(certificate);
+        certificateRepository.save(certificate);
     }
 }

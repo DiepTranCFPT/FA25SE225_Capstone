@@ -248,9 +248,8 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     @Override
     public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
-        Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateId(id, pageable);
+        Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateIdAndRatingNotNull(id, pageable);
         List<ExamTemplateRatingResponse> items = page.getContent().stream()
-                .filter(attempt -> Objects.nonNull(attempt.getRating()))
                 .map(attempt -> ExamTemplateRatingResponse.builder()
                         .rating(attempt.getRating())
                         .comment(attempt.getComment())

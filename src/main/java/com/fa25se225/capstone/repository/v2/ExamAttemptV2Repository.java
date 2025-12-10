@@ -18,7 +18,7 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
 
     Page<ExamAttemptV2> findByUserId(String userId, Pageable pageable);
 
-    Page<ExamAttemptV2> findBySourceTemplateId(String id, Pageable pageable);
+    Page<ExamAttemptV2> findBySourceTemplateIdAndRatingNotNull(String id, Pageable pageable);
 
     @Query("SELECT ea FROM ExamAttemptV2 ea " +
             "LEFT JOIN FETCH ea.user u " +

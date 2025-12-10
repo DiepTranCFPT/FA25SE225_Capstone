@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.dto.v2.request;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -20,6 +21,7 @@ public class ExamTemplateUpdateV2Request {
     private String subjectId;
     private Integer duration;
     private Integer passingScore;
+    @Min(value = 0, message = "Token cost must greater than 0")
     private BigDecimal tokenCost;
     private Boolean isActive = false;
     private List<ExamRuleV2Request> rules;

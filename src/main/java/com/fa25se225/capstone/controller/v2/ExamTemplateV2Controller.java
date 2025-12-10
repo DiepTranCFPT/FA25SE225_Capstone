@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
+import com.fa25se225.capstone.dto.v2.response.ExamTemplateRatingResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.service.v2.ExamTemplateV2Service;
@@ -43,8 +44,17 @@ public class ExamTemplateV2Controller {
         return ApiResponse.success(templateService.getTemplateById(id));
     }
 
+    @GetMapping("/ratings/{id}")
+    public ApiResponse<PageResponse<List<ExamTemplateRatingResponse>>> getByRateId(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(defaultValue = "ratingTime:desc") String... sorts) {
+        return ApiResponse.success(templateService.getRatingById(id, pageNo, pageSize, sorts));
+    }
+
     @PutMapping("/{id}")
-    public ApiResponse<ExamTemplateV2Response> updateTemplate(@PathVariable String id, @RequestBody ExamTemplateUpdateV2Request request) {
+    public ApiResponse<ExamTemplateV2Response> updateTemplate(@PathVariable String id, @RequestBody @Valid ExamTemplateUpdateV2Request request) {
         return ApiResponse.success(templateService.updateTemplate(id, request));
     }
 

@@ -51,6 +51,9 @@ public class ExamAttemptV2 {
     @Column(name = "rating")
     private Integer rating;
 
+    @Column(name = "rating_time")
+    private LocalDateTime ratingTime;
+
     @Nationalized
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;

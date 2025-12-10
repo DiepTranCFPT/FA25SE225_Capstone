@@ -279,6 +279,24 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    public PageResponse<List<UserResponse>> getAllUsersHaveTeacherRole(int pageNo, int pageSize, String[] sorts) {
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Role teacherRole = roleRepository.findByName(PredefinedSystemRole.TEACHER.name());
+        Page<User> page = userRepository.findAllByRoles(Set.of(teacherRole), pageable);
+
+        List<UserResponse> items = page.getContent().stream()
+                .map(userMapper::toResponse)
+                .toList();
+
+        return PageResponse.<List<UserResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(page.getTotalPages())
+                .totalElement(page.getTotalElements())
+                .items(items)
+                .build();
+    }
 
 
 }

@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.dto.v2.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
 
@@ -28,6 +29,7 @@ public class ExamTemplateV2Request {
     private Boolean isActive = true;
 
     @NonNull
+    @Min(value = 0, message = "Token cost must greater than 0")
     private BigDecimal tokenCost;
 
     @NotEmpty

@@ -28,7 +28,7 @@ import java.util.Set;
 @Slf4j
 public class AIChatService {
     @Autowired
-    @Qualifier("chatClientWithChatInMemory")
+    @Qualifier("chatClientWithChatInMemoryUsingLiteModel")
     private ChatClient chatClient;
 
     @Autowired

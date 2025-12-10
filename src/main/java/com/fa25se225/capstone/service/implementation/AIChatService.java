@@ -8,19 +8,24 @@ import com.fa25se225.capstone.repository.StudentProfileRepository;
 import com.fa25se225.capstone.service.StudentDashboardService;
 import com.fa25se225.capstone.service.v2.impl.SseNotificationService;
 import com.fa25se225.capstone.utils.AccountUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 @Service
+@Slf4j
 public class AIChatService {
     @Autowired
     @Qualifier("chatClientWithChatInMemory")
@@ -57,7 +62,14 @@ public class AIChatService {
                 .user(userAsking)
                 .advisors(advisorSpec -> advisorSpec.param("CONVERSATION_ID", conversationId))
                 .stream()
-                .content();
+                .content()
+                .retryWhen(
+                        Retry.backoff(3, Duration.ofSeconds(2))
+                                .filter(ex -> isRetryable(ex))
+                                .doBeforeRetry(retrySignal ->
+                                log.warn("Retrying examAsk for conversation due to exception {}", retrySignal.failure()))
+                                .onRetryExhaustedThrow((spec, sig) -> sig.failure())
+                );
 
     }
 
@@ -87,7 +99,19 @@ public class AIChatService {
                 .user(userAsking)
                 .advisors(advisorSpec -> advisorSpec.param("CONVERSATION_ID", conversationId))
                 .stream()
-                .content();
+                .content()
+                .retryWhen(
+                        Retry.backoff(3, Duration.ofSeconds(2))
+                                .filter(ex -> isRetryable(ex))
+                                .doBeforeRetry(retrySignal ->
+                                        log.warn("Retrying examAsk for conversation due to exception {}", retrySignal.failure()))
+                                .onRetryExhaustedThrow((spec, sig) -> sig.failure())
+                );
+    }
+
+    private boolean isRetryable(Throwable ex) {
+        return ex instanceof WebClientResponseException wex
+                && (wex.getStatusCode().value() == 429 || wex.getStatusCode().is5xxServerError());
     }
 
 

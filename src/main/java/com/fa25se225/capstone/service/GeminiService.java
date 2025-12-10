@@ -2,6 +2,7 @@ package com.fa25se225.capstone.service;
 
 import com.fa25se225.capstone.entity.ConversationAI;
 import com.fa25se225.capstone.entity.LearningMaterial;
+import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.repository.ConversationAIRepository;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
@@ -145,8 +146,19 @@ public class GeminiService {
                 sb.append(" | Mô tả: ").append(m.getDescription());
             }
             sb.append("\n");
-        }
 
+            // Thêm thông tin về các bài học (lessons)
+            if (m.getLessons() != null && !m.getLessons().isEmpty()) {
+                sb.append(" | Các bài học:\n");
+                for (Lesson lesson : m.getLessons()) {
+                    sb.append("    + Bài học: ").append(lesson.getName());
+                    if (lesson.getDescription() != null && !lesson.getDescription().isEmpty()) {
+                        sb.append(" | Mô tả: ").append(lesson.getDescription());
+                    }
+                    sb.append("\n");
+                }
+            }
+        }
         return sb.toString();
     }
 

@@ -3,15 +3,21 @@ package com.fa25se225.capstone.controller.v2;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -87,4 +93,33 @@ public class QuestionV2Controller {
         return ApiResponse.success("Question deleted successfully");
     }
     
+    // Import functionality endpoints
+    @PostMapping("/import")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ApiResponse<QuestionImportResponse> importQuestionsFromExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("subjectId") String subjectId,
+            @RequestParam(value = "skipErrors", defaultValue = "false") boolean skipErrors) {
+
+        QuestionImportRequest request = QuestionImportRequest.builder()
+                .subjectId(subjectId)
+                .skipErrors(skipErrors)
+                .build();
+
+        return ApiResponse.success(questionV2Service.importQuestionsFromExcel(file, request));
+    }
+
+    @GetMapping("/import/template")
+    public ResponseEntity<byte[]> downloadTemplate() {
+        byte[] template = questionV2Service.generateExampleTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment", "questions_import_template.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(template);
+    }
+
 }

@@ -4,7 +4,9 @@ import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.AnswerV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionV2Response;
 import com.fa25se225.capstone.entity.Subject;
@@ -23,6 +25,7 @@ import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
+import com.fa25se225.capstone.service.v2.QuestionImportService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -51,6 +55,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     private final QuestionV2Mapper questionV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
     private final PageHelper pageHelper;
+    private final QuestionImportService questionImportService;
 
     @Override
     @Transactional
@@ -289,6 +294,17 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         }
 
         questionV2Repository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public QuestionImportResponse importQuestionsFromExcel(MultipartFile file, QuestionImportRequest request) {
+        return questionImportService.importQuestionsFromExcel(file, request);
+    }
+
+    @Override
+    public byte[] generateExampleTemplate() {
+        return questionImportService.generateExampleTemplate();
     }
 
     private void validateQuestionAnswersRequest(List<AnswerV2Request> answers, String type) {

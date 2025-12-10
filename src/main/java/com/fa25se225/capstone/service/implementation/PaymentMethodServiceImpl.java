@@ -2,9 +2,12 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.entity.PaymentMethod;
 import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.exception.AppException;
+import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.PaymentMethodRepository;
 import com.fa25se225.capstone.service.PaymentMethodService;
 import com.fa25se225.capstone.utils.AccountUtil;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,9 +30,9 @@ public class PaymentMethodServiceImpl implements PaymentMethodService {
     }
 
     @Override
-    public Optional<PaymentMethod> getPaymentMethodByTeacher() {
+    public PaymentMethod getPaymentMethodByTeacher() {
         User teacher = accountUtil.getCurrentUser();
-        return paymentMethodRepository.findByTeacher(teacher);
+        return paymentMethodRepository.findByTeacher(teacher)
+            .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_METHOD_NOT_FOUND));
     }
 }
-

@@ -80,7 +80,9 @@ public enum ErrorCode {
     TRANSACTION_NOT_FOUND(1068,"Transaction not found" , HttpStatus.BAD_REQUEST ),
     INVALID_STATUS(1069,"Status is not pending" ,HttpStatus.BAD_REQUEST ),
     PAYMENT_NOT_FOUND(1070,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST ),
-    TRANSACTION_IS_VALID(1071, "You have a pending withdrawal order." , HttpStatus.BAD_REQUEST );
+    TRANSACTION_IS_VALID(1071, "You have a pending withdrawal order." , HttpStatus.BAD_REQUEST ),
+    PAYMENT_METHOD_NOT_FOUND(1072, "You dont have payment method" , HttpStatus.BAD_REQUEST );
+
 
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

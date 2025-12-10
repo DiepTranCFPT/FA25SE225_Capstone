@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface PaymentMethodService {
     PaymentMethod createOrUpdatePaymentMethod( String bankingNumber, String nameBanking);
-    Optional<PaymentMethod> getPaymentMethodByTeacher();
+    PaymentMethod getPaymentMethodByTeacher();
 }

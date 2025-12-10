@@ -1,8 +1,10 @@
 package com.fa25se225.capstone.service;
 
 import com.fa25se225.capstone.entity.ConversationAI;
+import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.repository.ConversationAIRepository;
+import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,12 +50,14 @@ public class GeminiService {
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final UserRepository userRepository;
+    private final LearningMaterialRepository learningMaterialRepository;
 
-    public GeminiService(ConversationAIRepository aiRepository, AccountUtil accountUtil, ChatClient.Builder chatClient, UserRepository userRepository) {
+    public GeminiService(ConversationAIRepository aiRepository, AccountUtil accountUtil, ChatClient.Builder chatClient, UserRepository userRepository, LearningMaterialRepository learningMaterialRepository) {
         this.aiRepository = aiRepository;
         this.accountUtil = accountUtil;
         this.chatClient = chatClient.build();
         this.userRepository = userRepository;
+        this.learningMaterialRepository = learningMaterialRepository;
     }
 
 //    public Question ask(String question) throws Exception {
@@ -79,10 +83,16 @@ public class GeminiService {
 
     public String chat(String message){
         User user = accountUtil.getCurrentUser();
-        String start = "Bắt buộc khi bắt đầu chat là Xin Chào"+ user.getLastName();
-        String system = start + promt ;
+
+        String start = "Bắt buộc khi bắt đầu chat là Xin Chào "+ user.getLastName();
+        String system = start;
+
+        String listLearning = ",He Thong cua toi co nhung khoa hoc nhu sau : "+ getLearningMaterials();
+
+        system += start +"Bắt buộc phai chao có tên" + promt + listLearning  ;
 
         SystemMessage systemMessage = new SystemMessage(system);
+
         UserMessage userMessage = new UserMessage(message);
 
         Prompt prom = new Prompt(systemMessage, userMessage);
@@ -115,6 +125,10 @@ public class GeminiService {
                 .toList();
         vectorStore.add(docs);
     }
+    private List<LearningMaterial> getLearningMaterials() {
+        return learningMaterialRepository.findAll();
+    }
+
 
 
 }

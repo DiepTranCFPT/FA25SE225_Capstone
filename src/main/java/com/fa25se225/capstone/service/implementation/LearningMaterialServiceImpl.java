@@ -471,7 +471,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
             User admin = accountUtil.getAccountAdmin();
             TokenTransaction adminTransaction = new TokenTransaction();
-            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(BigDecimal.valueOf(100).subtract(percentTeacher)));
+            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(BigDecimal.valueOf(0.2)));
             tokenTransaction.setType(tokenTransactionType);
             tokenTransaction.setUser(admin);
             tokenTransaction.setDescription("SYSTEM_LEARNING" + learningMaterialId);

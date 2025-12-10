@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.request.LearningMaterialUpdateRequest;
 import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.LearningMaterialResponse;
+import com.fa25se225.capstone.dto.response.LearningMaterialWithStudentsResponse;
 import com.fa25se225.capstone.service.LearningMaterialService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -198,5 +199,12 @@ public class LearningMaterialController {
             @RequestParam(required = false) String... sorts
     ) {
         return ApiResponse.success(learningMaterialService.getRegisteredMaterials(pageNo, pageSize, sorts));
+    }
+
+    @GetMapping("/teacher/materials-with-students")
+    @Operation(summary = "Get learning materials by teacher with registered students",
+        description = "Returns all learning materials authored by the current teacher, including the list of students registered for each material.")
+    public ApiResponse<List<LearningMaterialWithStudentsResponse>> getMaterialsWithRegisteredStudents() {
+        return ApiResponse.success(learningMaterialService.getMaterialsWithRegisteredStudents());
     }
 }

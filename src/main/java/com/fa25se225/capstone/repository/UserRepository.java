@@ -33,4 +33,6 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     long countTotalByRole(@Param("roleName") String roleName);
 
     Page<User> findAllByRoles(Set<Role> roles, Pageable pageable);
+
+    List<User> findByGrantedPermissions_Name(String permissionName);
 }

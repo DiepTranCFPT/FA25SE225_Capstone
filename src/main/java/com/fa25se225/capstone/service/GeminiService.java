@@ -84,21 +84,17 @@ public class GeminiService {
     public String chat(String message){
         User user = accountUtil.getCurrentUser();
 
-        String start = "Bắt buộc khi bắt đầu chat là Xin Chào "+ user.getLastName();
-        String system = start;
-
-        String listLearning = ",He Thong cua toi co nhung khoa hoc nhu sau : "+ getLearningMaterials();
-
-        system += start +"Bắt buộc phai chao có tên" + promt + listLearning  ;
+        String system = buildSystemPrompt(user);
 
         SystemMessage systemMessage = new SystemMessage(system);
-
         UserMessage userMessage = new UserMessage(message);
 
         Prompt prom = new Prompt(systemMessage, userMessage);
+
         String response = chatClient.prompt(prom)
                 .call()
                 .content();
+
         ConversationAI conversationAI = new ConversationAI(message,user,response);
         try {
             if (aiRepository != null) {
@@ -111,6 +107,49 @@ public class GeminiService {
         log.debug("Conversation AI : {}", conversationAI);
         return response;
     }
+    private String buildSystemPrompt(User user) {
+        StringBuilder sb = new StringBuilder();
+
+
+        sb.append("Khi bắt đầu cuộc trò chuyện, bạn PHẢI chào người dùng bằng câu: ")
+                .append("\"Xin chào ").append(user.getLastName()).append("\".\n\n");
+
+        sb.append(promt).append("\n\n");
+
+        sb.append(buildLearningMaterialsContext());
+
+        sb.append("\n\n")
+                .append("Nếu người dùng hỏi về khóa học không nằm trong danh sách trên, hãy trả lời rằng hệ thống hiện chưa có khóa học đó.\n")
+                .append("Chỉ sử dụng thông tin về các khóa học đã liệt kê khi trả lời câu hỏi liên quan tới khóa học.\n");
+
+        return sb.toString();
+    }
+
+
+    private String buildLearningMaterialsContext() {
+        List<LearningMaterial> materials = getLearningMaterials();
+
+        if (materials == null || materials.isEmpty()) {
+            return "Hiện tại hệ thống chưa có khóa học nào.\n";
+        }
+
+        StringBuilder sb = new StringBuilder("Hệ thống của tôi có những khóa học sau:\n");
+
+        for (LearningMaterial m : materials) {
+            sb.append("- Tên khóa học: ").append(m.getTitle()).append("\n");
+
+            if (m.getSubject() != null) {
+                sb.append(" | Môn: ").append(m.getSubject());
+            }
+            if (m.getDescription() != null) {
+                sb.append(" | Mô tả: ").append(m.getDescription());
+            }
+            sb.append("\n");
+        }
+
+        return sb.toString();
+    }
+
 
     private void upsert(String text) {
         if (vectorStore == null) return;

@@ -66,6 +66,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TransactionStatusRepository transactionStatusRepository;
 
     private final BigDecimal percentTeacher = BigDecimal.valueOf(0.8);
+    private final BigDecimal percentAdmin = BigDecimal.valueOf(0.2);
     private final TokenTransactionRepository tokenTransactionRepository;
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
 
@@ -471,11 +472,11 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
             User admin = accountUtil.getAccountAdmin();
             TokenTransaction adminTransaction = new TokenTransaction();
-            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(BigDecimal.valueOf(0.2)));
-            tokenTransaction.setType(tokenTransactionType);
-            tokenTransaction.setUser(admin);
-            tokenTransaction.setDescription("SYSTEM_LEARNING" + learningMaterialId);
-            tokenTransaction.setStatus("Success");
+            adminTransaction.setAmount(learningMaterial.getPrice().multiply(percentAdmin));
+            adminTransaction.setType(tokenTransactionType);
+            adminTransaction.setUser(admin);
+            adminTransaction.setDescription("SYSTEM_LEARNING" + learningMaterialId);
+            adminTransaction.setStatus("Success");
             tokenTransactionRepository.saveAndFlush(adminTransaction);
 
             Permission permission = permissionRepository.findById(permissionName).orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_FOUND));

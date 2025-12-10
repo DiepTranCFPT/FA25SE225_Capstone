@@ -9,5 +9,5 @@ public interface AdminDashboardService {
 
     ExamDashboardResponse getExamAnalytics();
 
-    DashboardAdminResponse getRevenueSystem(Long day, Long month, Long year);
+    DashboardAdminResponse getRevenueSystem(String day, String month, String year);
 }

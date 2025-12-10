@@ -49,9 +49,9 @@ public class AdminDashboardController {
 
     @GetMapping("/revenue/system")
     public ApiResponse<DashboardAdminResponse> getRevenueSystem(
-            @RequestParam(required = false) long day,
-            @RequestParam(required = false) long month,
-            @RequestParam(required = false) long year
+            @RequestParam(required = false) String day,
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) String year
     ) {
         return ApiResponse.success(adminAnalyticsService.getRevenueSystem(day, month, year));
     }

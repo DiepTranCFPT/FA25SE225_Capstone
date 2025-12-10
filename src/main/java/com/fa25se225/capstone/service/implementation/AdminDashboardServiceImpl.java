@@ -93,58 +93,63 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
     @Override
-    public DashboardAdminResponse getRevenueSystem(Long day, Long month, Long year) {
-        return getRevenueByType( day, month, year);
+    public DashboardAdminResponse getRevenueSystem(String day, String month, String year) {
+        return getRevenueByType(day, month, year);
     }
 
-
-    public DashboardAdminResponse getRevenueByType(Long day, Long month, Long year) {
+    public DashboardAdminResponse getRevenueByType(String day, String month, String year) {
         User admin = accountUtil.getAccountAdmin();
-        List<TokenTransaction> transactions = tokenTransactionRepository.findAllByUser(admin);
-        DateTimeFormatter dayFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        DateTimeFormatter monthFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM");
-        DateTimeFormatter yearFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy");
-
         List<TokenTransaction> filtered;
-        if (day != null) {
-            filtered = transactions.stream()
-                .filter(t -> {
-                    if (t.getCreatedAt() != null) {
-                        t.getCreatedAt().format(dayFormatter);
-                    }
-                    return false;
-                })
-                .toList();
-        } else if ( month != null) {
-            filtered = transactions.stream()
-                .filter(t -> {
-                    if (t.getCreatedAt() != null) {
-                        t.getCreatedAt().format(monthFormatter);
-                    }
-                    return false;
-                })
-                .toList();
-        } else if (year != null) {
-            filtered = transactions.stream()
-                .filter(t -> {
-                    if (t.getCreatedAt() != null) {
-                        t.getCreatedAt().format(yearFormatter);
-                    }
-                    return false;
-                })
-                .toList();
-        } else {
-            filtered = transactions;
+        Long dayLong = null, monthLong = null, yearLong = null;
+        try {
+            // If all three are present and are numbers, construct date and filter by day
+            if (day != null && month != null && year != null && day.matches("\\d{1,2}") && month.matches("\\d{1,2}") && year.matches("\\d{4}")) {
+                int dayInt = Integer.parseInt(day);
+                int monthInt = Integer.parseInt(month);
+                int yearInt = Integer.parseInt(year);
+                java.time.LocalDate localDate = java.time.LocalDate.of(yearInt, monthInt, dayInt);
+                filtered = tokenTransactionRepository.findAllByUserAndCreatedAt(admin, localDate);
+                dayLong = (long) dayInt;
+                monthLong = (long) monthInt;
+                yearLong = (long) yearInt;
+            } else if (month != null && year != null && month.matches("\\d{1,2}") && year.matches("\\d{4}")) {
+                int monthInt = Integer.parseInt(month);
+                int yearInt = Integer.parseInt(year);
+                filtered = tokenTransactionRepository.findAllByUserAndMonth(admin, yearInt, monthInt);
+                monthLong = (long) monthInt;
+                yearLong = (long) yearInt;
+            } else if (year != null && year.matches("\\d{4}")) {
+                int yearInt = Integer.parseInt(year);
+                filtered = tokenTransactionRepository.findAllByUserAndYear(admin, yearInt);
+                yearLong = (long) yearInt;
+            } else if (day != null && day.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                java.time.LocalDate localDate = java.time.LocalDate.parse(day);
+                filtered = tokenTransactionRepository.findAllByUserAndCreatedAt(admin, localDate);
+                dayLong = (long) localDate.getDayOfMonth();
+                monthLong = (long) localDate.getMonthValue();
+                yearLong = (long) localDate.getYear();
+            } else if (month != null && month.matches("\\d{4}-\\d{2}")) {
+                String[] parts = month.split("-");
+                int yearInt = Integer.parseInt(parts[0]);
+                int monthInt = Integer.parseInt(parts[1]);
+                filtered = tokenTransactionRepository.findAllByUserAndMonth(admin, yearInt, monthInt);
+                monthLong = (long) monthInt;
+                yearLong = (long) yearInt;
+            } else {
+                filtered = tokenTransactionRepository.findAllByUser(admin);
+            }
+        } catch (Exception e) {
+            filtered = tokenTransactionRepository.findAllByUser(admin);
         }
         BigDecimal totalAmount = filtered.stream()
             .map(TokenTransaction::getAmount)
             .filter(java.util.Objects::nonNull)
-            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         DashboardAdminResponse response = new DashboardAdminResponse();
         response.setTotalAmount(totalAmount);
-        response.setDay(day);
-        response.setMonth(month);
-        response.setYear(year);
+        response.setDay(dayLong);
+        response.setMonth(monthLong);
+        response.setYear(yearLong);
         return response;
     }
 }

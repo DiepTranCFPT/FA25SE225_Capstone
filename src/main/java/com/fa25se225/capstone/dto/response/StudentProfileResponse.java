@@ -13,6 +13,7 @@ public class StudentProfileResponse {
     private String id;
     private String schoolName;
     private String emergencyContact;
+    private String goal;
 
 
 }

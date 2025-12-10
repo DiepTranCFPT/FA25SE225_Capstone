@@ -8,6 +8,7 @@ import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.LearningMaterialRatingMapper;
 import com.fa25se225.capstone.repository.*;
+import com.fa25se225.capstone.service.CertificateService;
 import com.fa25se225.capstone.service.LearningMaterialRatingService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
     private final LearningMaterialRepository learningMaterialRepository;
     private final LearningMaterialRatingMapper ratingMapper;
     private final AccountUtil accountUtil;
+    private final CertificateService certificateService;
 
     @Override
     @Transactional
@@ -55,6 +57,8 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         
         rating = ratingRepository.save(rating);
         
+        certificateService.createCertificate(currentUser, material.getAuthor(), material.getId());
+
         updateMaterialRatingCache(material.getId());
         
         return ratingMapper.toResponse(rating);

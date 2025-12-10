@@ -9,6 +9,7 @@ import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.entity.Payment;
+import com.fa25se225.capstone.entity.PaymentStatus;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.TokenTransaction;
@@ -22,6 +23,7 @@ import com.fa25se225.capstone.mapper.UserMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PaymentRepository;
+import com.fa25se225.capstone.repository.PaymentStatusRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.TokenTransactionRepository;
@@ -70,6 +72,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TokenTransactionRepository tokenTransactionRepository;
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
     private final UserMapper userMapper;
+    private final PaymentStatusRepository paymentStatus;
 
     @Value("${minio.bucket.materials}")
     private String bucketName;
@@ -386,6 +389,9 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             Payment newPayment = new Payment();
             newPayment.setUser(student);
             newPayment.setAmount(BigDecimal.ZERO);
+            PaymentStatus status = paymentStatus.findByCode("active").orElse(null);
+            newPayment.setDescription("CREATE WALLET");
+            newPayment.setStatus(status);
             return paymentRepository.save(newPayment);
         });
 

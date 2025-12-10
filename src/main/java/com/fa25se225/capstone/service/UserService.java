@@ -30,4 +30,6 @@ public interface UserService {
     User createUser(UserCreationRequest request);
 
     PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String... sorts);
+
+    PageResponse<List<UserResponse>> getAllUsersHaveTeacherRole(int pageNo, int pageSize, String[] sorts);
 }

@@ -63,6 +63,15 @@ public class UserController {
         return ApiResponse.success(userService.getAllUserSortBy(pageNo, pageSize, sorts));
     }
 
+    @GetMapping("/teachers")
+    public ApiResponse<PageResponse<List<UserResponse>>> getAllUsersHaveTeacherRole(
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts
+    ) {
+        return ApiResponse.success(userService.getAllUsersHaveTeacherRole(pageNo, pageSize, sorts));
+    }
+
 
     @PutMapping("/me")
     @Operation(summary = "Update current user's profile",

@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
+import com.fa25se225.capstone.dto.v2.response.ExamTemplateRatingResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
 
@@ -28,5 +29,7 @@ public interface ExamTemplateV2Service {
     PageResponse<List<ExamTemplateV2Response>> getTemplatesByCurrentUser(
             int pageNo, int pageSize, String... sorts
     );
+
+    PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String... sorts);
 }
 

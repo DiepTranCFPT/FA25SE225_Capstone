@@ -478,6 +478,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
         attempt.setRating(request.getRating());
         attempt.setComment(request.getComment());
+        attempt.setRatingTime(LocalDateTime.now());
         attemptRepository.save(attempt);
 
         ExamTemplateV2 template = attempt.getSourceTemplate();

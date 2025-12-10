@@ -2,6 +2,8 @@ package com.fa25se225.capstone.repository;
 
 import com.fa25se225.capstone.entity.Role;
 import com.fa25se225.capstone.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -30,5 +32,5 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.name = :roleName")
     long countTotalByRole(@Param("roleName") String roleName);
 
-    List<User> findAllByRoles(Set<Role> roles);
+    Page<User> findAllByRoles(Set<Role> roles, Pageable pageable);
 }

@@ -6,13 +6,11 @@ import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.response.ExamRuleV2Response;
+import com.fa25se225.capstone.dto.v2.response.ExamTemplateRatingResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamTemplateV2Response;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
-import com.fa25se225.capstone.entity.v2.ExamRuleV2;
-import com.fa25se225.capstone.entity.v2.ExamTemplateV2;
-import com.fa25se225.capstone.entity.v2.QuestionDifficultyV2;
-import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
+import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.ExamRuleV2Mapper;
@@ -46,12 +44,12 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     private final SubjectRepository subjectRepository;
     private final QuestionTopicV2Repository questionTopicV2Repository;
     private final QuestionDifficultyV2Repository questionDifficultyV2Repository;
-    private final UserRepository userRepository;
     private final AccountUtil accountUtil;
     private final ExamTemplateV2Mapper templateMapper;
     private final ExamRuleV2Mapper ruleMapper;
     private final PageHelper pageHelper;
     private final QuestionV2Repository questionV2Repository;
+    private final ExamAttemptV2Repository examAttemptV2Repository;
 
     @Override
     @Transactional
@@ -245,6 +243,38 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
                 .items(items)
                 .build();
     }
+
+
+    @Override
+    public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String... sorts) {
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateIdAndRatingNotNull(id, pageable);
+        List<ExamTemplateRatingResponse> items = page.getContent().stream()
+                .map(attempt -> ExamTemplateRatingResponse.builder()
+                        .rating(attempt.getRating())
+                        .comment(attempt.getComment())
+                        .ratingTime(attempt.getRatingTime())
+                        .rateBy(ExamTemplateRatingResponse.Student.builder()
+                                .id(attempt.getUser().getId())
+                                .firstName(attempt.getUser().getFirstName())
+                                .lastName(attempt.getUser().getLastName())
+                                .email(attempt.getUser().getEmail())
+                                .imgUrl(attempt.getUser().getImgUrl())
+                                .dob(attempt.getUser().getDob())
+                                .build())
+                        .build())
+                .toList();
+        return PageResponse.<List<ExamTemplateRatingResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .sortBy(sorts)
+                .totalElement(page.getTotalElements())
+                .totalPage(page.getTotalPages())
+                .items(items)
+                .build();
+    }
+
+
 
     private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedCount) {
         log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requested={}",

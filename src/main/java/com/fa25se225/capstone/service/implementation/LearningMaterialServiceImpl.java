@@ -381,9 +381,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         User student = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Payment payment = paymentRepository.findByUser(student).orElseThrow(
-                () -> new RuntimeException("Payment not found")
-        );
+        // Get or create payment for the student
+        Payment payment = paymentRepository.findByUser(student).orElseGet(() -> {
+            Payment newPayment = new Payment();
+            newPayment.setUser(student);
+            newPayment.setAmount(BigDecimal.ZERO);
+            return paymentRepository.save(newPayment);
+        });
+
         // Get learning material
         LearningMaterial learningMaterial = learningMaterialRepository.findByIdNotDeleted(learningMaterialId)
                 .orElseThrow(() -> new AppException(ErrorCode.LEARNING_MATERIAL_NOT_FOUND));

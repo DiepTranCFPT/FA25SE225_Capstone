@@ -7,6 +7,8 @@ import com.fa25se225.capstone.dto.response.TeacherRatingStatisticsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+
 public interface TeacherRatingService {
     
    
@@ -25,5 +27,5 @@ public interface TeacherRatingService {
     TeacherRatingResponse getUserRatingForTeacher(String teacherId, String userId);
     
    
-    TeacherRatingResponse verifyRating(String ratingId);
+    BigDecimal getAvgTeacherRating(String teacherId);
 }

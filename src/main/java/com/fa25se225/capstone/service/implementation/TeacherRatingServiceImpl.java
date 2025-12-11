@@ -19,9 +19,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +36,8 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     private final LearningMaterialRepository learningMaterialRepository;
     private final TeacherRatingMapper teacherRatingMapper;
     private final AccountUtil accountUtil;
+    private final LearningMaterialRatingRepository learningMaterialRatingRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
@@ -173,19 +178,22 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
     }
 
     @Override
-    @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
-    public TeacherRatingResponse verifyRating(String ratingId) {
-        TeacherRating rating = teacherRatingRepository.findById(ratingId)
-            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_RATING_NOT_FOUND));
-        
-        rating.setIsVerified(true);
-        TeacherRating verifiedRating = teacherRatingRepository.save(rating);
-        
-        log.info("Admin verified rating {}", ratingId);
-        
-        return teacherRatingMapper.toResponse(verifiedRating);
+    public BigDecimal getAvgTeacherRating(String teacherId) {
+        User teacher = userRepository.findById(teacherId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        List<LearningMaterialRating> rate = learningMaterialRatingRepository.findAllByUser(teacher);
+        int rateAvg = (int) Math.round(
+                rate.stream()
+                        .map(LearningMaterialRating::getRating)
+                        .filter(Objects::nonNull)
+                        .mapToInt(Integer::intValue)
+                        .average()
+                        .orElse(0.0)
+        );
+        return BigDecimal.valueOf(rateAvg);
     }
+
+
 
     private void updateTeacherAverageRating(String teacherId) {
         Double averageRating = teacherRatingRepository.calculateAverageRating(teacherId);

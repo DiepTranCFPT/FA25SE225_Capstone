@@ -12,7 +12,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @RestController
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class TeacherRatingController {
     
     private final TeacherRatingService teacherRatingService;
+
 
     @PostMapping
     public ApiResponse<TeacherRatingResponse> rateTeacher(@Valid @RequestBody TeacherRatingRequest request) {
@@ -61,4 +65,12 @@ public class TeacherRatingController {
         TeacherRatingResponse rating = teacherRatingService.getUserRatingForTeacher(teacherId, userId);
         return ApiResponse.success(rating);
     }
+
+
+    @GetMapping("/avg/{teacherId}")
+    public ResponseEntity<BigDecimal> getAvgTeacherRating(@PathVariable String teacherId) {
+        BigDecimal avgRating = teacherRatingService.getAvgTeacherRating(teacherId);
+        return ResponseEntity.ok(avgRating);
+    }
+
 }

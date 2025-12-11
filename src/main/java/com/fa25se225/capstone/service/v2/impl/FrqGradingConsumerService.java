@@ -133,7 +133,7 @@ public class FrqGradingConsumerService {
     }
 
     private void checkIfAttemptIsFullyGraded(String attemptId) {
-        ExamAttemptV2 attempt = attemptRepository.findById(attemptId).orElse(null);
+        ExamAttemptV2 attempt = attemptRepository.findByIdWithLock(attemptId).orElse(null);
         if (attempt == null) return;
 
         List<StudentAnswerV2> studentAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);

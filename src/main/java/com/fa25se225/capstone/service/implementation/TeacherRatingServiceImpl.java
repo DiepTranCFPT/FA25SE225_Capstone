@@ -179,19 +179,31 @@ public class TeacherRatingServiceImpl implements TeacherRatingService {
 
     @Override
     public BigDecimal getAvgTeacherRating(String teacherId) {
-        User teacher = userRepository.findById(teacherId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        List<LearningMaterial> list = learningMaterialRepository.findByAuthor(teacherId);
 
-        List<LearningMaterialRating> rate = learningMaterialRatingRepository.findAllByUser(teacher);
-        int rateAvg = (int) Math.round(
-                rate.stream()
-                        .map(LearningMaterialRating::getRating)
-                        .filter(Objects::nonNull)
-                        .mapToInt(Integer::intValue)
-                        .average()
-                        .orElse(0.0)
-        );
-        return BigDecimal.valueOf(rateAvg);
+        if (list == null || list.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        double avgOfAllMaterials = list.stream()
+                .mapToDouble(lm -> {
+                    List<LearningMaterialRating> rate =
+                            learningMaterialRatingRepository.findAllByLearningMaterial(lm);
+
+                    return rate.stream()
+                            .map(LearningMaterialRating::getRating)
+                            .filter(Objects::nonNull)
+                            .mapToInt(Integer::intValue)
+                            .average()
+                            .orElse(0.0);
+                })
+                .average()
+                .orElse(0.0);
+
+
+        return BigDecimal.valueOf(avgOfAllMaterials);
     }
+
 
 
 

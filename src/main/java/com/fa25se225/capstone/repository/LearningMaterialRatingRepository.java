@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.repository;
 
+import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.LearningMaterialRating;
 import com.fa25se225.capstone.entity.User;
 import org.springframework.data.domain.Page;
@@ -30,4 +31,6 @@ public interface LearningMaterialRatingRepository extends JpaRepository<Learning
     Long countByLearningMaterialIdAndRating(@Param("materialId") String materialId, @Param("rating") Integer rating);
 
     List<LearningMaterialRating> findAllByUser(User user);
+
+    List<LearningMaterialRating> findAllByLearningMaterial(LearningMaterial learningMaterial);
 }

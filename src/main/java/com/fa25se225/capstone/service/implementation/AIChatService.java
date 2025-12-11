@@ -27,9 +27,14 @@ import java.util.Set;
 @Service
 @Slf4j
 public class AIChatService {
+
+    @Autowired
+    @Qualifier("chatClientWithChatInMemory")
+    private ChatClient primaryChatClient;
+
     @Autowired
     @Qualifier("chatClientWithChatInMemoryUsingLiteModel")
-    private ChatClient chatClient;
+    private ChatClient secondaryChatClient;
 
     @Autowired
     private InMemoryChatMemoryRepository inMemoryChatMemoryRepository;
@@ -57,19 +62,13 @@ public class AIChatService {
                         """,
                 request.getQuestionContent(), request.getStudentAnswer(), request.getStudentAsking()
         );
-        return chatClient.prompt()
-                .system("You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)")
-                .user(userAsking)
-                .advisors(advisorSpec -> advisorSpec.param("CONVERSATION_ID", conversationId))
-                .stream()
-                .content()
-                .retryWhen(
-                        Retry.backoff(3, Duration.ofSeconds(2))
-                                .filter(ex -> isRetryable(ex))
-                                .doBeforeRetry(retrySignal ->
-                                log.warn("Retrying examAsk for conversation due to exception {}", retrySignal.failure()))
-                                .onRetryExhaustedThrow((spec, sig) -> sig.failure())
-                );
+        String systemText = "You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)";
+
+        return callChatClient(primaryChatClient, systemText, userAsking, conversationId)
+                .onErrorResume(e -> {
+                    log.warn("Primary model failed for conversation {}. Switching to Lite model. Error: {}", conversationId, e.getMessage());
+                    return callChatClient(secondaryChatClient, systemText, userAsking, conversationId);
+                });
 
     }
 
@@ -94,19 +93,30 @@ public class AIChatService {
                         """,
                 studentProfile.getGoal(), studentInfo, prompt
         );
-        return chatClient.prompt()
-                .system("You are an expert in advising on study pathways for AP exams. Based on the information provided by the user, offer the optimal route. (Only answer questions that are related to the questions and answers students produce.)")
-                .user(userAsking)
+        String systemText = "You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)";
+
+        return callChatClient(primaryChatClient, systemText, userAsking, conversationId)
+                .onErrorResume(e -> {
+                    log.warn("Primary model failed for conversation {}. Switching to Lite model. Error: {}", conversationId, e.getMessage());
+                    return callChatClient(secondaryChatClient, systemText, userAsking, conversationId);
+                });
+
+    }
+
+    private Flux<String> callChatClient(ChatClient client, String systemText, String userText, String conversationId) {
+        return client.prompt()
+                .system(systemText)
+                .user(userText)
                 .advisors(advisorSpec -> advisorSpec.param("CONVERSATION_ID", conversationId))
                 .stream()
                 .content()
                 .retryWhen(
                         Retry.backoff(3, Duration.ofSeconds(2))
-                                .filter(ex -> isRetryable(ex))
+                                .filter(this::isRetryable)
                                 .doBeforeRetry(retrySignal ->
-                                        log.warn("Retrying examAsk for conversation due to exception {}", retrySignal.failure()))
-                                .onRetryExhaustedThrow((spec, sig) -> sig.failure())
-                );
+                        log.warn("Retrying chat for conversation {} due to exception {}", conversationId, retrySignal.failure()))
+                .onRetryExhaustedThrow((spec, sig) -> sig.failure())
+                 );
     }
 
     private boolean isRetryable(Throwable ex) {

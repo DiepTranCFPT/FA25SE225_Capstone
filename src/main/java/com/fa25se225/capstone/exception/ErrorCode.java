@@ -81,7 +81,8 @@ public enum ErrorCode {
     INVALID_STATUS(1069,"Status is not pending" ,HttpStatus.BAD_REQUEST ),
     PAYMENT_NOT_FOUND(1070,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST ),
     TRANSACTION_IS_VALID(1071, "You have a pending withdrawal order." , HttpStatus.BAD_REQUEST ),
-    PAYMENT_METHOD_NOT_FOUND(1072, "You dont have payment method" , HttpStatus.BAD_REQUEST );
+    PAYMENT_METHOD_NOT_FOUND(1072, "You dont have payment method" , HttpStatus.BAD_REQUEST ),
+    CANNOT_DELETE_QUESTION(1073,"Cannot delete question because it is referenced by other entities (e.g., exams)." , HttpStatus.BAD_REQUEST);
 
 
 

@@ -82,7 +82,7 @@ public class GeminiService {
 //        return objectMapper.readValue(jsonResponse, Question.class);
 //    }
 
-    public String chat(String message){
+    public String chat(String message) {
         User user = accountUtil.getCurrentUser();
 
         String system = buildSystemPrompt(user);
@@ -96,7 +96,7 @@ public class GeminiService {
                 .call()
                 .content();
 
-        ConversationAI conversationAI = new ConversationAI(message,user,response);
+        ConversationAI conversationAI = new ConversationAI(message, user, response);
         try {
             if (aiRepository != null) {
                 aiRepository.save(conversationAI);
@@ -108,52 +108,54 @@ public class GeminiService {
         log.debug("Conversation AI : {}", conversationAI);
         return response;
     }
+
     private String buildSystemPrompt(User user) {
         StringBuilder sb = new StringBuilder();
 
+        sb.append("At the beginning of the conversation, you MUST greet the user with: ")
+                .append("\"Hello ").append(user.getLastName()).append("\".\n\n");
 
-        sb.append("Khi bắt đầu cuộc trò chuyện, bạn PHẢI chào người dùng bằng câu: ")
-                .append("\"Xin chào ").append(user.getLastName()).append("\".\n\n");
-
+        // Your base prompt (existing variable)
         sb.append(promt).append("\n\n");
 
         sb.append(buildLearningMaterialsContext());
 
         sb.append("\n\n")
-                .append("Nếu người dùng hỏi về khóa học không nằm trong danh sách trên, hãy trả lời rằng hệ thống hiện chưa có khóa học đó.\n")
-                .append("Chỉ sử dụng thông tin về các khóa học đã liệt kê khi trả lời câu hỏi liên quan tới khóa học.\n");
+                .append("If the user asks about a course that is not in the list above, ")
+                .append("reply that the system currently does not offer that course.\n")
+                .append("Only use information about the courses listed above when answering ")
+                .append("questions related to courses.\n");
 
         return sb.toString();
     }
-
 
     private String buildLearningMaterialsContext() {
         List<LearningMaterial> materials = getLearningMaterials();
 
         if (materials == null || materials.isEmpty()) {
-            return "Hiện tại hệ thống chưa có khóa học nào.\n";
+            return "At the moment, the system does not have any courses.\n";
         }
 
-        StringBuilder sb = new StringBuilder("Hệ thống của tôi có những khóa học sau:\n");
+        StringBuilder sb = new StringBuilder("My system has the following courses:\n");
 
         for (LearningMaterial m : materials) {
-            sb.append("- Tên khóa học: ").append(m.getTitle()).append("\n");
+            sb.append("- Course name: ").append(m.getTitle()).append("\n");
 
             if (m.getSubject() != null) {
-                sb.append(" | Môn: ").append(m.getSubject());
+                sb.append("  | Subject: ").append(m.getSubject());
             }
             if (m.getDescription() != null) {
-                sb.append(" | Mô tả: ").append(m.getDescription());
+                sb.append("  | Description: ").append(m.getDescription());
             }
             sb.append("\n");
 
-            // Thêm thông tin về các bài học (lessons)
+            // Add lesson info
             if (m.getLessons() != null && !m.getLessons().isEmpty()) {
-                sb.append(" | Các bài học:\n");
+                sb.append("  | Lessons:\n");
                 for (Lesson lesson : m.getLessons()) {
-                    sb.append("    + Bài học: ").append(lesson.getName());
+                    sb.append("    + Lesson: ").append(lesson.getName());
                     if (lesson.getDescription() != null && !lesson.getDescription().isEmpty()) {
-                        sb.append(" | Mô tả: ").append(lesson.getDescription());
+                        sb.append(" | Description: ").append(lesson.getDescription());
                     }
                     sb.append("\n");
                 }
@@ -161,6 +163,7 @@ public class GeminiService {
         }
         return sb.toString();
     }
+
 
 
     private void upsert(String text) {

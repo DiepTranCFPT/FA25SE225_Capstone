@@ -58,6 +58,18 @@ public class AIModelConfig {
                 .build();
     }
 
+    @Bean(name = "chatClientWithOutChatInMemoryUsingLiteModel")
+    public ChatClient chatClientWithOutChatInMemoryUsingLiteModel(ChatClient.Builder chatClientBuilder, InMemoryChatMemoryRepository inMemoryChatMemoryRepository){
+
+
+        return  chatClientBuilder
+                .defaultOptions(ChatOptions.builder()
+                        .model("gemini-2.5-flash-lite")
+                        .temperature(0.3)
+                        .build())
+                .build();
+    }
+
     @Bean
     public InMemoryChatMemoryRepository MyChatInMemoryRepository(){
         return new InMemoryChatMemoryRepository();

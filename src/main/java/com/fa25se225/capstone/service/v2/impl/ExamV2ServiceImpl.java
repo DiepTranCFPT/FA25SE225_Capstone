@@ -20,6 +20,7 @@ import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -278,7 +279,14 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
 
         Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
-                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+                .collect(Collectors.toMap(
+                        sa -> sa.getExamQuestion().getId(),
+                        Function.identity(),
+                        (existing, replacement) -> {
+                            log.warn("Detected DUPLICATE answers for question {}. Merging...", existing.getExamQuestion().getId());
+                            return existing;
+                        }
+                ));
 
         List<StudentAnswerV2> finalAnswersToSave = new ArrayList<>();
         List<FrqGradingEvent> gradingTasks = new ArrayList<>();
@@ -504,36 +512,39 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
-        Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(existingAnswers);
+        Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
+                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
 
-        List<StudentAnswerV2> answersToSave = new ArrayList<>();
-
+        List<StudentAnswerV2> toSave = new ArrayList<>();
         for (StudentAnswerV2Request dto : request.getAnswers()) {
-            StudentAnswerV2 studentAnswer = answerMap.get(dto.getExamQuestionId());
+            StudentAnswerV2 answer = answerMap.get(dto.getExamQuestionId());
 
-            if (studentAnswer == null) {
+            if (answer == null) {
                 ExamQuestionV2 examQuestion = examQuestionRepository.findById(dto.getExamQuestionId())
                         .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
 
-                studentAnswer = StudentAnswerV2.builder()
+                answer = StudentAnswerV2.builder()
                         .examAttempt(attempt)
                         .examQuestion(examQuestion)
                         .build();
             }
 
             if (dto.getSelectedAnswerId() != null) {
-                AnswerV2 selectedAnswer = answerRepository.findById(dto.getSelectedAnswerId()).orElse(null);
-                studentAnswer.setSelectedAnswer(selectedAnswer);
+                AnswerV2 selected = answerRepository.findById(dto.getSelectedAnswerId()).orElse(null);
+                answer.setSelectedAnswer(selected);
             } else {
-                studentAnswer.setSelectedAnswer(null);
+                answer.setSelectedAnswer(null);
             }
+            answer.setFrqAnswerText(dto.getFrqAnswerText());
 
-            studentAnswer.setFrqAnswerText(dto.getFrqAnswerText());
-
-            answersToSave.add(studentAnswer);
+            toSave.add(answer);
         }
 
-        studentAnswerRepository.saveAll(answersToSave);
+        try {
+            studentAnswerRepository.saveAll(toSave);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Concurrent save detected for attempt {}", attemptId);
+        }
 
     }
 

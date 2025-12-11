@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "student_answers_v2")
+@Table(name = "student_answers_v2", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"exam_attempt_id", "exam_question_id"})
+})
 public class StudentAnswerV2 {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

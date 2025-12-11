@@ -30,6 +30,7 @@ import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -293,7 +294,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
             throw new AppException(ErrorCode.QUESTION_V2_NOT_FOUND);
         }
 
-        questionV2Repository.deleteById(id);
+        try {
+            questionV2Repository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(ErrorCode.CANNOT_DELETE_QUESTION);
+        }
     }
 
     @Override

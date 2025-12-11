@@ -1,12 +1,12 @@
 package com.fa25se225.capstone.dto.request;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageResponse<T> {
     private int pageNo;
     private int pageSize;

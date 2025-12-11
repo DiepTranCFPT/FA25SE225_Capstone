@@ -1,12 +1,16 @@
 package com.fa25se225.capstone.dto.v2.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExamV2Response {
     private String id;
     private String title;

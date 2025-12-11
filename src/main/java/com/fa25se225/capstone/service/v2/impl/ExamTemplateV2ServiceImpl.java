@@ -23,6 +23,9 @@ import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -50,6 +53,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     private final PageHelper pageHelper;
     private final QuestionV2Repository questionV2Repository;
     private final ExamAttemptV2Repository examAttemptV2Repository;
+    private final CacheManager cacheManager;
 
     @Override
     @Transactional
@@ -73,6 +77,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_template", key = "#id")
     public ExamTemplateV2Response updateTemplate(String id, ExamTemplateUpdateV2Request request) {
         log.info("Updating ExamTemplateV2 id={}", id);
         ExamTemplateV2 existing = templateRepository.findById(id)
@@ -93,6 +98,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_template", key = "#id")
     public void deleteTemplate(String id) {
         if (!templateRepository.existsById(id)) {
             throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
@@ -101,6 +107,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     }
 
     @Override
+    @Cacheable(value = "exam_template", key = "#id")
     public ExamTemplateV2Response getTemplateById(String id) {
         ExamTemplateV2 template = templateRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
@@ -124,6 +131,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_template", key = "#templateId")
     public ExamRuleV2Response addRule(String templateId, ExamRuleV2Request request) {
         ExamTemplateV2 template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
@@ -186,16 +194,24 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
             rule.setPoints(request.getPoints());
         }
         ExamRuleV2 saved = ruleRepository.save(rule);
+
+        // Evict cache for the parent template
+        evictTemplateCache(saved.getTemplate().getId());
+
         return ruleMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
     public void deleteRule(String ruleId) {
-        if (!ruleRepository.existsById(ruleId)) {
-            throw new AppException(ErrorCode.EXAM_RULE_NOT_FOUND);
-        }
-        ruleRepository.deleteById(ruleId);
+        ExamRuleV2 rule = ruleRepository.findById(ruleId)
+                .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
+
+        String templateId = rule.getTemplate().getId();
+        ruleRepository.delete(rule);
+
+        // Evict cache for the parent template
+        evictTemplateCache(templateId);
     }
 
     @Override
@@ -272,6 +288,12 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
                 .totalPage(page.getTotalPages())
                 .items(items)
                 .build();
+    }
+
+    private void evictTemplateCache(String templateId) {
+        if (templateId != null && cacheManager.getCache("exam_template") != null) {
+            cacheManager.getCache("exam_template").evict(templateId);
+        }
     }
 
 

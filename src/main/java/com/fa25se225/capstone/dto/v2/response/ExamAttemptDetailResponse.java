@@ -2,14 +2,18 @@ package com.fa25se225.capstone.dto.v2.response;
 
 import com.fa25se225.capstone.dto.v2.response.SubjectV2Response;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExamAttemptDetailResponse {
     private String attemptId;
     private String examId;

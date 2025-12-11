@@ -20,6 +20,8 @@ import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -268,6 +270,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
     public SubmitAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
         log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
@@ -416,6 +419,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "exam_attempt_detail", key = "#attemptId")
     public ExamAttemptDetailResponse getAttemptResultDetails(String attemptId) {
         User currentUser = accountUtil.getCurrentUser();
 
@@ -466,6 +470,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
     public void rateAttempt(String attemptId, RateAttemptRequest request) {
         User currentUser = accountUtil.getCurrentUser();
 
@@ -574,6 +579,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
     public ExamAttemptV2Response manualGradeAttempt(String attemptId, ManualGradeRequest request) {
         log.info("Teacher manually grade attempt: {}", attemptId);
 
@@ -626,6 +632,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
     public void requestReview(String attemptId, RequestReviewRequest request) {
         ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));

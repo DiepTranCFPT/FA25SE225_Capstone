@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/certificates")
+@RequestMapping("/certificates")
 @RequiredArgsConstructor
 public class CertificateController {
     private final CertificateService certificateService;

@@ -162,14 +162,14 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         TokenTransactionType incomeShare = tokenTransactionTypeRepository.findByName("INCOME_SHARE")
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_TYPE_NOT_FOUND));
 
-        createTransaction(student, amount.negate(), examPayment, "Payment for exam: " + examTitle);
+        createTransaction(student, amount.negate(), examPayment, "Payment for exam: " + examTitle,studentPayment.getAmount());
 
         teacherPayment.setAmount(teacherPayment.getAmount().add(teacherIncome));
         paymentRepository.save(teacherPayment);
 
-        createTransaction(teacher, teacherIncome, incomeShare, "Revenue from exam: " + examTitle);
+        createTransaction(teacher, teacherIncome, incomeShare, "Revenue from exam: " + examTitle,teacherPayment.getAmount());
         BigDecimal adminIncome =  amount.multiply(SYSTEM_PERCENTAGE);
-        createTransaction(admin,adminIncome,incomeShare,"SYSTEM EXAM: " + examTitle);
+        createTransaction(admin,adminIncome,incomeShare,"SYSTEM EXAM: " + examTitle,null);
 
 
     }
@@ -209,7 +209,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         return dto;
     }
 
-    private void createTransaction(User user, BigDecimal amount, TokenTransactionType type, String description) {
+    private void createTransaction(User user, BigDecimal amount, TokenTransactionType type, String description,BigDecimal blanceAfter) {
         TokenTransaction tx = TokenTransaction.builder()
                 .user(user)
                 .amount(amount)
@@ -217,6 +217,7 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
                 .description(description)
                 .createdAt(LocalDate.now())
                 .status(STATUS_SUCCESS)
+                .balanceAfter(blanceAfter)
                 .build();
         tokenTransactionRepository.save(tx);
     }

@@ -33,16 +33,20 @@ public class WithdrawRequestService {
                     dto.setTeacherName(tx.getUser().getFirstName()+" "+tx.getUser().getLastName());
                     dto.setAmount(tx.getAmount());
                     dto.setStatus(tx.getStatus());
-                    PaymentMethod pm = paymentMethodRepository.findByTeacher(tx.getUser()).orElseThrow(
-                            ()-> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
-                    if (pm != null) {
-                        dto.setBankingNumber(pm.getBankingNumber());
-                        dto.setNameBanking(pm.getNameBanking());
+                    List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllByTeacher(tx.getUser());
+                    if (paymentMethods.isEmpty()) {
+                        throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
                     }
+                    // Use the most recently created payment method
+                    PaymentMethod pm = paymentMethods.stream()
+                        .max((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+                        .orElse(paymentMethods.get(0));
+                    dto.setBankingNumber(pm.getBankingNumber());
+                    dto.setNameBanking(pm.getNameBanking());
+                    dto.setAuthorName(pm.getAuthorName());
                     dto.setCreatedAt(tx.getCreatedAt() != null ? tx.getCreatedAt().toString() : null);
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
 }
-

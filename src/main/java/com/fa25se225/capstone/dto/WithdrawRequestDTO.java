@@ -14,5 +14,5 @@ public class WithdrawRequestDTO {
     private String bankingNumber;
     private String nameBanking;
     private String createdAt;
+    private String authorName;
 }
-

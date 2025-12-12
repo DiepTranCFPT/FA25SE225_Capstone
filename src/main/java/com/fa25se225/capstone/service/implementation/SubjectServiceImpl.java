@@ -58,7 +58,7 @@ public class SubjectServiceImpl implements SubjectService {
     
     @Override
     @Cacheable(value = "subjects_list", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<SubjectResponse>> getAllSubjects(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<SubjectResponse>> getAllSubjects(int pageNo, int pageSize, String[] sorts) {
         log.info("Getting all subjects with pagination - page: {}, size: {}", pageNo, pageSize);
         
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);

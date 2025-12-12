@@ -184,7 +184,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Cacheable(value = "questions", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<QuestionManageV2Response>> getAllQuestions(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getAllQuestions(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findAll(pageable);
 
@@ -205,7 +205,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Cacheable(value = "questions", key = "'subject_' + #subjectId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<QuestionManageV2Response>> getQuestionsBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsBySubject(String subjectId, int pageNo, int pageSize, String[] sorts) {
         if (!subjectRepository.existsById(subjectId)) {
             throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
         }
@@ -231,7 +231,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Cacheable(value = "questions", key = "'topic_' + #topicId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<QuestionManageV2Response>> getQuestionsByTopic(String topicId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsByTopic(String topicId, int pageNo, int pageSize, String[] sorts) {
         if (!questionTopicV2Repository.existsById(topicId)) {
             throw new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND);
         }
@@ -255,7 +255,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Cacheable(value = "questions", key = "'user_' + #userId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<QuestionManageV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String[] sorts) {
         log.info("Getting questions V2 by created by user ID: {}", userId);
 
         if (!userRepository.existsById(userId)) {
@@ -281,7 +281,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Cacheable(value = "questions", key = "'search_' + #keyword + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<QuestionManageV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionManageV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String[] sorts) {
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findByContentContaining(keyword, pageable);

@@ -37,7 +37,7 @@ public class QuestionTopicV2ServiceImpl implements QuestionTopicV2Service {
 
 
     @Override
-    public PageResponse<List<QuestionTopicV2Response>> getAllTopics(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<QuestionTopicV2Response>> getAllTopics(int pageNo, int pageSize, String[] sorts) {
         log.info("Getting all topics with pagination - page: {}, size: {}", pageNo, pageSize);
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);

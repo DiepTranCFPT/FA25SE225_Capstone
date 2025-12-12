@@ -4,6 +4,7 @@ package com.fa25se225.capstone.exception;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
@@ -37,8 +38,14 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(errorCode));
     }
 
+    @ExceptionHandler(value = SpelEvaluationException.class)
+    ResponseEntity<ApiResponse> handlingSpelEvaluationException(SpelEvaluationException exception) {
+        ErrorCode errorCode = ErrorCode.SPEL;
+        return ResponseEntity.status(errorCode.getStatusCode())
+                .body(ApiResponse.error(errorCode));
 
-    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+
+        @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handlingValidation(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new HashMap<>();
 

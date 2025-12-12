@@ -394,7 +394,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     }
     @Override
     @Cacheable(value = "exam_history", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<ExamAttemptV2Response>> getMyExamHistory(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<ExamAttemptV2Response>> getMyExamHistory(int pageNo, int pageSize, String[] sorts) {
         User currentUser = accountUtil.getCurrentUser();
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
@@ -668,7 +668,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Cacheable(value = "teacher_review_list", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + #includePending + '_' + #includeReviewRequested + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String... sorts) {
+    public PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String[] sorts) {
 
         User teacher = accountUtil.getCurrentUser();
         List<AttemptStatusV2> statuses = new ArrayList<>();

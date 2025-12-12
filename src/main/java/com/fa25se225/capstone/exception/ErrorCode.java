@@ -82,7 +82,8 @@ public enum ErrorCode {
     PAYMENT_NOT_FOUND(1070,"PAYMENT NOT FOUND" , HttpStatus.BAD_REQUEST ),
     TRANSACTION_IS_VALID(1071, "You have a pending withdrawal order." , HttpStatus.BAD_REQUEST ),
     PAYMENT_METHOD_NOT_FOUND(1072, "You dont have payment method" , HttpStatus.BAD_REQUEST ),
-    CANNOT_DELETE_QUESTION(1073,"Cannot delete question because it is referenced by other entities (e.g., exams)." , HttpStatus.BAD_REQUEST);
+    CANNOT_DELETE_QUESTION(1073,"Cannot delete question because it is referenced by other entities (e.g., exams)." , HttpStatus.BAD_REQUEST),
+    SPEL(1074,"Please cast varargs... to array" ,HttpStatus.INTERNAL_SERVER_ERROR );
 
 
 

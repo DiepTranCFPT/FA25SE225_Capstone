@@ -122,7 +122,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Cacheable(value = "exam_templates", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<ExamTemplateV2Response>> getAllTemplates(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<ExamTemplateV2Response>> getAllTemplates(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<ExamTemplateV2> page = templateRepository.findAll(pageable);
         List<ExamTemplateV2Response> items = page.getContent().stream().map(templateMapper::toResponse).toList();
@@ -230,7 +230,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     @Cacheable(value = "exam_templates", key = "'browse_' + #subjectId + '_' + #teacherId + '_' + #minRating + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> browseActiveTemplates(
             String subjectId, String teacherId, double minRating,
-            int pageNo, int pageSize, String... sorts) {
+            int pageNo, int pageSize, String[] sorts) {
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
@@ -256,7 +256,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     @Override
     @Cacheable(value = "exam_templates", key = "'user_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> getTemplatesByCurrentUser(
-            int pageNo, int pageSize, String... sorts) {
+            int pageNo, int pageSize, String[] sorts) {
 
         User currentUser = accountUtil.getCurrentUser();
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
@@ -277,7 +277,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Cacheable(value = "exam_template_ratings", key = "#id + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateIdAndRatingNotNull(id, pageable);
         List<ExamTemplateRatingResponse> items = page.getContent().stream()

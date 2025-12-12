@@ -141,7 +141,7 @@ public class ParentServiceImpl implements ParentService {
 
     @Override
     @Cacheable(value = "child_exam_history", key = "#studentId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<ExamAttemptV2Response>> getChildExamHistory(String studentId, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<ExamAttemptV2Response>> getChildExamHistory(String studentId, int pageNo, int pageSize, String[] sorts) {
         User parentUser = accountUtil.getCurrentUser();
         ParentProfile parentProfile = parentRepository.findByUserId(parentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Parent profile not found"));

@@ -15,6 +15,7 @@ import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,7 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
     private final PermissionRepository permissionRepository;
 
     @Override
+    @Cacheable(value = "student_exam_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public StudentExamDashboardResponse getStudentExamDashboard() {
         User student = accountUtil.getCurrentUser();
         String studentId = student.getId();
@@ -48,6 +50,7 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
     }
 
     @Override
+    @Cacheable(value = "children_exam_dashboard", key = "#childrenId", unless = "#result == null")
     public StudentExamDashboardResponse getChildrenExamDashboard(String childrenId) {
         return getStudentExamDashboardById(childrenId);
     }
@@ -92,17 +95,20 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
     }
 
     @Override
+    @Cacheable(value = "student_financial_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public StudentFinancialDashboardResponse getStudentFinancialDashboard() {
         User student = accountUtil.getCurrentUser();
         return getStudentFinancialDashboardById(student.getId());
     }
 
     @Override
+    @Cacheable(value = "children_financial_dashboard", key = "#childrenId", unless = "#result == null")
     public StudentFinancialDashboardResponse getChildrenFinancialDashboard(String childrenId) {
         return getStudentFinancialDashboardById(childrenId);
     }
 
     @Override
+    @Cacheable(value = "student_overall_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public StudentOverallDashboardResponse getStudentOverallDashboard() {
         User student = accountUtil.getCurrentUser();
         

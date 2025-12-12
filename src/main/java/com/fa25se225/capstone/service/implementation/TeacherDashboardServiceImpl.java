@@ -9,6 +9,7 @@ import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.TeacherDashboardService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ public class TeacherDashboardServiceImpl implements TeacherDashboardService {
     private final QuestionV2Repository questionRepository;
 
     @Override
+    @Cacheable(value = "teacher_exam_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()", unless = "#result == null")
     public TeacherExamDashboardResponse getExamDashboard() {
         User teacher = accountUtil.getCurrentUser();
         String teacherId = teacher.getId();

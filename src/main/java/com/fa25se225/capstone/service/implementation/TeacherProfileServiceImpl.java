@@ -12,6 +12,9 @@ import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('TEACHER')")
+    @CacheEvict(value = "user", key = "#result.userId")
     public TeacherProfileResponse createProfile(TeacherProfileRequest request) {
         validateAge(request.getDateOfBirth());
         User user = accountUtil.getCurrentUser();
@@ -44,6 +48,10 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('TEACHER')")
+    @Caching(evict = {
+            @CacheEvict(value = "teacher_profile", key = "#id"),
+            @CacheEvict(value = "user", key = "#result.userId")
+    })
     public TeacherProfileResponse updateProfile(String id, TeacherProfileRequest request) {
         validateAge(request.getDateOfBirth());
         TeacherProfile profile = teacherProfileRepository.findById(id)
@@ -54,6 +62,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     }
 
     @Override
+    @Cacheable(value = "teacher_profile", key = "#userId")
     public TeacherProfileResponse getProfileByUserId(String userId) {
         return teacherProfileRepository.findByUserId(userId)
             .map(teacherProfileMapper::toResponse)

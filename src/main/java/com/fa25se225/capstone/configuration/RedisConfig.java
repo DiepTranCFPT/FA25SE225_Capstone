@@ -17,6 +17,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @EnableCaching
@@ -48,8 +50,27 @@ public class RedisConfig {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(getJsonSerializer()));
 
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+        Duration fiveMinutesTtl = Duration.ofMinutes(5);
+
+        cacheConfigurations.put("student_exam_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("children_exam_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("student_financial_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("children_financial_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("student_overall_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("teacher_exam_dashboard", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("admin_user_overview", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("admin_exam_analytics", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("admin_revenue", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("child_exam_history", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("children_overview", config.entryTtl(fiveMinutesTtl));
+
+
+        cacheConfigurations.put("unverified_teachers", config.entryTtl(Duration.ofMinutes(30)));
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(config)
+                .withInitialCacheConfigurations(cacheConfigurations)
                 .build();
     }
 

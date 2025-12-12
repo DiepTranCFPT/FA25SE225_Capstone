@@ -107,7 +107,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable(value = "users_list", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<User> page = userRepository.findAll(pageable);
         List<UserResponse> userResponses = page.getContent()
@@ -301,7 +301,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable(value = "users_list", key = "#request.toString() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
-    public PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String... sorts) {
+    public PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
         Specification<User> spec = UserSpecification.getSpec(request);

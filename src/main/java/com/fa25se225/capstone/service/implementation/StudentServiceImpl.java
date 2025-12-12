@@ -12,6 +12,7 @@ import com.fa25se225.capstone.repository.StudentProfileRepository;
 import com.fa25se225.capstone.service.StudentService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public String generateConnectionCode() {
         User studentUser = accountUtil.getCurrentUser();
         StudentProfile profile = getCurrentStudentProfileOrThrowException(studentUser);
@@ -43,6 +45,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public void updateProfile(StudentProfileUpdateRequest request) {
         User studentUser = accountUtil.getCurrentUser();
         StudentProfile profile = getCurrentStudentProfileOrThrowException(studentUser);

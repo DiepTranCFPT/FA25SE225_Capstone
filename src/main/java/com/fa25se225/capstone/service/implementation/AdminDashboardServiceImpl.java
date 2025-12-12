@@ -17,6 +17,7 @@ import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.AdminDashboardService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
     @Override
+    @Cacheable("admin_user_overview")
     public AdminUserDashboardResponse getUserOverview() {
         long totalStudents = userRepository.countTotalByRole(PredefinedSystemRole.STUDENT.name());
         long totalTeachers = userRepository.countTotalByRole(PredefinedSystemRole.TEACHER.name());
@@ -58,6 +60,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
                 .build();
     }
 
+    @Cacheable("admin_exam_analytics")
     public ExamDashboardResponse getExamAnalytics() {
         long totalAttempts = attemptV2Repository.count();
         long completed = attemptV2Repository.countByStatus(AttemptStatusV2.COMPLETED);
@@ -93,6 +96,7 @@ public class AdminDashboardServiceImpl implements AdminDashboardService {
 
 
     @Override
+    @Cacheable(value = "admin_revenue", key = "{#day, #month, #year}")
     public DashboardAdminResponse getRevenueSystem(String day, String month, String year) {
         return getRevenueByType(day, month, year);
     }

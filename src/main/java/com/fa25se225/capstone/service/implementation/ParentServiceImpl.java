@@ -23,6 +23,9 @@ import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,6 +52,7 @@ public class ParentServiceImpl implements ParentService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "children_overview", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public void linkStudent(LinkStudentRequest request) {
         User parentUser = accountUtil.getCurrentUser();
         ParentProfile parentProfile = findParentProfileByUserIdOrElseThrowException(parentUser.getId());
@@ -82,6 +86,7 @@ public class ParentServiceImpl implements ParentService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "children_overview", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public void unlinkStudent(UnlinkStudentRequest request) {
         User parentUser = accountUtil.getCurrentUser();
 
@@ -105,6 +110,7 @@ public class ParentServiceImpl implements ParentService {
     }
 
     @Override
+    @Cacheable(value = "children_overview", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public List<ChildOverviewResponse> getChildrenOverview() {
         User parentUser = accountUtil.getCurrentUser();
         ParentProfile parentProfile = findParentProfileByUserIdOrElseThrowException(parentUser.getId());
@@ -134,6 +140,7 @@ public class ParentServiceImpl implements ParentService {
     }
 
     @Override
+    @Cacheable(value = "child_exam_history", key = "#studentId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamAttemptV2Response>> getChildExamHistory(String studentId, int pageNo, int pageSize, String... sorts) {
         User parentUser = accountUtil.getCurrentUser();
         ParentProfile parentProfile = parentRepository.findByUserId(parentUser.getId())
@@ -163,6 +170,10 @@ public class ParentServiceImpl implements ParentService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "parent_profile", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()"),
+            @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
+    })
     public void updateProfile(ParentProfileUpdateRequest request) {
         User parentUser = accountUtil.getCurrentUser();
         ParentProfile profile = findParentProfileByUserIdOrElseThrowException(parentUser.getId());

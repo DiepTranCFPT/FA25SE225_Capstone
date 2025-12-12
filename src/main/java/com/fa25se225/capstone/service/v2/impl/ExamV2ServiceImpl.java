@@ -526,8 +526,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
-        Map<String, StudentAnswerV2> answerMap = existingAnswers.stream()
-                .collect(Collectors.toMap(sa -> sa.getExamQuestion().getId(), Function.identity()));
+        Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(existingAnswers);
 
         List<StudentAnswerV2> toSave = new ArrayList<>();
         for (StudentAnswerV2Request dto : request.getAnswers()) {

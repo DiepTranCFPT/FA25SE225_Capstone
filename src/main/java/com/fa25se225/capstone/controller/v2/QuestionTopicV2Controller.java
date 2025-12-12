@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.controller.v2;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionTopicV2CreationRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionTopicV2UpdateRequest;

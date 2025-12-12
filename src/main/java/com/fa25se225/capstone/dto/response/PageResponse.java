@@ -1,4 +1,4 @@
-package com.fa25se225.capstone.dto.request;
+package com.fa25se225.capstone.dto.response;
 
 import lombok.*;
 

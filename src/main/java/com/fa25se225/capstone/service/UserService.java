@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service;
 
 import com.fa25se225.capstone.dto.request.*;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.User;
 import org.springframework.web.multipart.MultipartFile;

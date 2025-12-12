@@ -1,7 +1,7 @@
 package com.fa25se225.capstone.service;
 
 import com.fa25se225.capstone.dto.request.LinkStudentRequest;
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.request.ParentProfileUpdateRequest;
 import com.fa25se225.capstone.dto.request.UnlinkStudentRequest;
 import com.fa25se225.capstone.dto.response.ChildOverviewResponse;

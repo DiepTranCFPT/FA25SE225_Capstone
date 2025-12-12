@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.service.v2;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;

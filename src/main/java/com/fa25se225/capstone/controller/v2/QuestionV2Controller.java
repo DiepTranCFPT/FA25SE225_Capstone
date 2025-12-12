@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.controller.v2;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
@@ -92,7 +92,6 @@ public class QuestionV2Controller {
         return ApiResponse.success("Question deleted successfully");
     }
     
-    // Import functionality endpoints
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path= "/import")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ApiResponse<QuestionImportResponse> importQuestionsFromExcel(

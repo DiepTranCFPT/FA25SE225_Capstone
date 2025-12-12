@@ -3,6 +3,7 @@ package com.fa25se225.capstone.service.implementation;
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.*;
@@ -14,16 +15,13 @@ import com.fa25se225.capstone.repository.specs.UserSpecification;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.service.UserService;
-import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Service

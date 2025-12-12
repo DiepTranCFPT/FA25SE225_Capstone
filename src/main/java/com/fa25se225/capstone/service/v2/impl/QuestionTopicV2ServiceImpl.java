@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.service.v2.impl;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionTopicV2CreationRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionTopicV2UpdateRequest;
 import com.fa25se225.capstone.dto.v2.response.QuestionTopicV2Response;
@@ -11,7 +11,6 @@ import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.QuestionTopicV2Mapper;
 import com.fa25se225.capstone.repository.SubjectRepository;
-import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.service.v2.QuestionTopicV2Service;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -20,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -2,7 +2,7 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
 import com.fa25se225.capstone.service.LessonService;

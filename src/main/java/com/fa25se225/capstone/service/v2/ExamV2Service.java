@@ -1,12 +1,11 @@
 package com.fa25se225.capstone.service.v2;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.*;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptDetailResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.ExamV2Response;
 import com.fa25se225.capstone.dto.v2.response.SubmitAttemptV2Response;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 

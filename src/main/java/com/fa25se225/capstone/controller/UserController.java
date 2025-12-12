@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.controller;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.request.UserRoleUpdateRequest;
 import com.fa25se225.capstone.dto.request.UserUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;

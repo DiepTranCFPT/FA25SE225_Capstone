@@ -1,7 +1,7 @@
 package com.fa25se225.capstone.service.v2.impl;
 
 import com.fa25se225.capstone.constant.QuestionType;
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
@@ -16,7 +16,6 @@ import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.ExamRuleV2Mapper;
 import com.fa25se225.capstone.mapper.v2.ExamTemplateV2Mapper;
 import com.fa25se225.capstone.repository.SubjectRepository;
-import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.service.v2.ExamTemplateV2Service;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -35,7 +34,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

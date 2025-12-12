@@ -1,6 +1,6 @@
 package com.fa25se225.capstone.service.implementation;
 
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.request.SubjectCreationRequest;
 import com.fa25se225.capstone.dto.request.SubjectUpdateRequest;
 import com.fa25se225.capstone.dto.response.SubjectResponse;

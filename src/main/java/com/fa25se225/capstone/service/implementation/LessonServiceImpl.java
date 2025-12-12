@@ -1,14 +1,11 @@
 package com.fa25se225.capstone.service.implementation;
 
-import com.cloudinary.provisioning.Account;
 import com.fa25se225.capstone.dto.request.LessonCreationRequest;
-import com.fa25se225.capstone.dto.request.LessonDTO;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
-import com.fa25se225.capstone.dto.request.PageResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
-import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.QuestionV2;
 import com.fa25se225.capstone.exception.AppException;
@@ -16,7 +13,6 @@ import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.LessonMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.LessonRepository;
-import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.LessonService;
 

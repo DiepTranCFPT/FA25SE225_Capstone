@@ -13,6 +13,8 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthenticationResponse {
 
     String token;

@@ -1,8 +1,13 @@
 package com.fa25se225.capstone.dto.response;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransactionDTO {
     private String id;
     private BigDecimal amount;

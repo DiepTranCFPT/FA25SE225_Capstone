@@ -43,9 +43,9 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = ErrorCode.SPEL;
         return ResponseEntity.status(errorCode.getStatusCode())
                 .body(ApiResponse.error(errorCode));
+    }
 
-
-        @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handlingValidation(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new HashMap<>();
 

@@ -13,6 +13,9 @@ import com.fa25se225.capstone.service.SubjectService;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class SubjectServiceImpl implements SubjectService {
     
     @Override
     @Transactional
+    @CacheEvict(value = "subjects_list", allEntries = true)
     public SubjectResponse createSubject(SubjectCreationRequest request) {
         log.info("Creating subject with name: {}", request.name());
         
@@ -42,6 +46,7 @@ public class SubjectServiceImpl implements SubjectService {
     }
     
     @Override
+    @Cacheable(value = "subjects", key = "#id")
     public SubjectResponse getSubjectById(String id) {
         log.info("Getting subject by id: {}", id);
         
@@ -52,6 +57,7 @@ public class SubjectServiceImpl implements SubjectService {
     }
     
     @Override
+    @Cacheable(value = "subjects_list", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<SubjectResponse>> getAllSubjects(int pageNo, int pageSize, String... sorts) {
         log.info("Getting all subjects with pagination - page: {}, size: {}", pageNo, pageSize);
         
@@ -75,6 +81,10 @@ public class SubjectServiceImpl implements SubjectService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "subjects", key = "#id"),
+        @CacheEvict(value = "subjects_list", allEntries = true)
+    })
     public SubjectResponse updateSubject(String id, SubjectUpdateRequest request) {
         log.info("Updating subject with id: {}", id);
         
@@ -90,6 +100,10 @@ public class SubjectServiceImpl implements SubjectService {
     
     @Override
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = "subjects", key = "#id"),
+        @CacheEvict(value = "subjects_list", allEntries = true)
+    })
     public void deleteSubject(String id) {
         log.info("Deleting subject with id: {}", id);
         

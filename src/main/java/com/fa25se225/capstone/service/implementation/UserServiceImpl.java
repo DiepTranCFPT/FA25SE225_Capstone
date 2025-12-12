@@ -20,6 +20,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -56,6 +59,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users_list", allEntries = true)
     public User createUser(UserCreationRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new AppException(ErrorCode.EXISTED_EMAIL);
@@ -90,6 +94,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
+    @Cacheable(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public UserResponse getMyProfile() {
         String email = getCurrentEmail();
         User user = findUserByEmailOrThrowException(email);
@@ -101,6 +106,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users_list", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<User> page = userRepository.findAll(pageable);
@@ -118,6 +124,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public UserResponse update(UserUpdateRequest request) {
         User user = findUserByEmailOrThrowException(getCurrentEmail());
         userMapper.updateUser(user, request);
@@ -126,6 +136,10 @@ public class UserServiceImpl implements UserService {
 
     //
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#id"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public UserResponse updateUserRole(String id, UserRoleUpdateRequest request) {
         User user = findUserIdOrThrowException(id);
         List<Role> roles = roleRepository.findAllById(request.roles());
@@ -136,6 +150,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#userId"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public void delete(String userId) {
         User user = findUserIdOrThrowException(userId);
         user.setDeleted(true);
@@ -144,6 +162,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public UserResponse updateUserAvatar(MultipartFile file) {
         User user = findUserByEmailOrThrowException(getCurrentEmail());
         if(Strings.isNotEmpty(user.getImgUrl())){
@@ -161,6 +183,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public UserResponse deleteUserAvatar() {
         User user = findUserByEmailOrThrowException(getCurrentEmail());
         String avatarUrl = user.getImgUrl();
@@ -178,6 +204,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable("unverified_teachers")
     public List<UserResponse> getUnverifiedTeachers() {
         List<User> teachers = userRepository.findUnverifiedTeachers("TEACHER");
         List<UserResponse> responses = new ArrayList<>();
@@ -192,6 +219,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#userId"),
+            @CacheEvict(value = "unverified_teachers", allEntries = true),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public UserResponse verifyTeacher(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -203,6 +235,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "user", key = "#userId")
     public UserResponse getProfileByUserId(String userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         TeacherProfileResponse teacherProfile = null;
@@ -230,6 +263,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#userId"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public void grantPermissions(String userId, Set<String> permissionNames) {
         User user = findUserIdOrThrowException(userId);
         Set<Permission> permissionsToGrant = new HashSet<>(permissionRepository.findAllById(permissionNames));
@@ -242,8 +279,14 @@ public class UserServiceImpl implements UserService {
         permissionService.clearUserPermissionsCache(user.getEmail());
     }
 
+
+
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "user", key = "#userId"),
+            @CacheEvict(value = "users_list", allEntries = true)
+    })
     public void revokePermissions(String userId, Set<String> permissionNames) {
         User user = findUserIdOrThrowException(userId);
         Set<Permission> permissionsToRevoke = new HashSet<>(permissionRepository.findAllById(permissionNames));
@@ -257,6 +300,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users_list", key = "#request.toString() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<UserResponse>> searchUsers(UserSearchRequest request, int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
@@ -277,6 +321,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Cacheable(value = "users_list", key = "'teachers_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<UserResponse>> getAllUsersHaveTeacherRole(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Role teacherRole = roleRepository.findByName(PredefinedSystemRole.TEACHER.name());

@@ -25,6 +25,9 @@ public class PaymentMethod {
     @Column(name = "name_banking", nullable = false)
     private String nameBanking;
 
+    @Column(name = "author_name", nullable = false)
+    private String authorName;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -42,4 +45,3 @@ public class PaymentMethod {
         updatedAt = LocalDateTime.now();
     }
 }
-

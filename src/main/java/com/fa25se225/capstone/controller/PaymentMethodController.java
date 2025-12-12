@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.PaymentMethodDTO;
 import com.fa25se225.capstone.entity.PaymentMethod;
 import com.fa25se225.capstone.service.PaymentMethodService;
 import lombok.RequiredArgsConstructor;
@@ -15,16 +16,16 @@ public class PaymentMethodController {
 
     @PostMapping
     @PreAuthorize("hasRole('TEACHER')")
-    public ResponseEntity<PaymentMethod> createOrUpdatePaymentMethod(
+    public ResponseEntity<PaymentMethodDTO> createPaymentMethod(
             @RequestParam String bankingNumber,
-            @RequestParam String nameBanking) {
-        PaymentMethod paymentMethod = paymentMethodService.createOrUpdatePaymentMethod( bankingNumber, nameBanking);
+            @RequestParam String nameBanking,
+            @RequestParam String authorName) {
+        PaymentMethodDTO paymentMethod = paymentMethodService.createPaymentMethod(bankingNumber, nameBanking, authorName);
         return ResponseEntity.ok(paymentMethod);
     }
 
     @GetMapping
-    public ResponseEntity<PaymentMethod> getPaymentMethod() {
-        return ResponseEntity.ok(paymentMethodService.getPaymentMethodByTeacher());
+    public ResponseEntity<java.util.List<PaymentMethodDTO>> getAllPaymentMethods() {
+        return ResponseEntity.ok(paymentMethodService.getAllPaymentMethodsByTeacher());
     }
 }
-

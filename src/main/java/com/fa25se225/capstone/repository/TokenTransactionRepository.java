@@ -21,7 +21,7 @@ public interface TokenTransactionRepository extends JpaRepository<TokenTransacti
     @Query("SELECT t FROM TokenTransaction t WHERE FUNCTION('YEAR', t.createdAt) = :year AND t.user = :user")
     List<TokenTransaction> findAllByUserAndYear(User user, int year);
 
-    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(t.amount), 0) FROM TokenTransaction t WHERE t.user = :user AND t.status = 'pending'")
-    BigDecimal sumPendingAmountByUser(com.fa25se225.capstone.entity.User user);
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM TokenTransaction t WHERE t.user = :user AND t.status = 'pending'")
+    BigDecimal sumPendingAmountByUser(User user);
 
 }

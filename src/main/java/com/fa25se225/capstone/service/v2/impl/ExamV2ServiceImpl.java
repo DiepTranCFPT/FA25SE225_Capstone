@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -69,6 +70,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"exam_history", "exam_attempt_detail"}, allEntries = true)
     public ExamV2Response startExamFromTemplate(StartSingleExamRequest request) {
         log.info("Bắt đầu tạo bài thi lẻ từ template: {}", request.getTemplateId());
         ExamTemplateV2 template = templateRepository.findById(request.getTemplateId())
@@ -79,6 +81,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"exam_history", "exam_attempt_detail"}, allEntries = true)
     public ExamV2Response startExamFromComboTemplates(StartComboExamRequest request) {
         List<String> templateIds = request.getTemplateIds();
         log.info("Bắt đầu tạo bài thi combo từ {} templates", templateIds.size());
@@ -93,6 +96,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"exam_history", "exam_attempt_detail"}, allEntries = true)
     public ExamV2Response startRandomExamCombo(StartRandomComboRequest request) {
         List<String> subjectIds = request.getSubjectIds();
         log.info("Bắt đầu tạo bài thi combo ĐỀ XUẤT (Recommended) cho các môn: {}", subjectIds);
@@ -268,7 +272,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_attempt_detail", key = "#attemptId"),
+            @CacheEvict(value = "exam_history", allEntries = true)
+    })
     public SubmitAttemptV2Response gradeExamAttempt(String attemptId, SubmitAttemptV2Request request) {
         log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
@@ -386,6 +393,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .build();
     }
     @Override
+    @Cacheable(value = "exam_history", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamAttemptV2Response>> getMyExamHistory(int pageNo, int pageSize, String... sorts) {
         User currentUser = accountUtil.getCurrentUser();
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
@@ -468,7 +476,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_attempt_detail", key = "#attemptId"),
+            @CacheEvict(value = "exam_history", allEntries = true)
+    })
     public void rateAttempt(String attemptId, RateAttemptRequest request) {
         User currentUser = accountUtil.getCurrentUser();
 
@@ -577,7 +588,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_attempt_detail", key = "#attemptId"),
+            @CacheEvict(value = "exam_history", allEntries = true)
+    })
     public ExamAttemptV2Response manualGradeAttempt(String attemptId, ManualGradeRequest request) {
         log.info("Teacher manually grade attempt: {}", attemptId);
 
@@ -630,7 +644,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_attempt_detail", key = "#attemptId")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_attempt_detail", key = "#attemptId"),
+            @CacheEvict(value = "exam_history", allEntries = true)
+    })
     public void requestReview(String attemptId, RequestReviewRequest request) {
         ExamAttemptV2 attempt = attemptRepository.findById(attemptId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_ATTEMPT_NOT_FOUND));
@@ -650,6 +667,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     }
 
     @Override
+    @Cacheable(value = "teacher_review_list", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + #includePending + '_' + #includeReviewRequested + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String... sorts) {
 
         User teacher = accountUtil.getCurrentUser();

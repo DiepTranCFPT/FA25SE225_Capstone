@@ -29,6 +29,9 @@ import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -59,6 +62,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "questions", allEntries = true)
     public QuestionManageV2Response createQuestion(QuestionCreationV2Request request) {
         log.info("Creating new question V2");
 
@@ -111,6 +115,10 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "question", key = "#id"),
+            @CacheEvict(value = "questions", allEntries = true)
+    })
     public QuestionManageV2Response updateQuestion(String id, QuestionUpdateV2Request request) {
         log.info("Updating question V2 with ID: {}", id);
 
@@ -164,6 +172,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
+    @Cacheable(value = "question", key = "#id")
     public QuestionManageV2Response getQuestionById(String id) {
         log.info("Getting question V2 by ID: {}", id);
 
@@ -174,6 +183,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
+    @Cacheable(value = "questions", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<QuestionManageV2Response>> getAllQuestions(int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<QuestionV2> questionPage = questionV2Repository.findAll(pageable);
@@ -194,6 +204,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
+    @Cacheable(value = "questions", key = "'subject_' + #subjectId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<QuestionManageV2Response>> getQuestionsBySubject(String subjectId, int pageNo, int pageSize, String... sorts) {
         if (!subjectRepository.existsById(subjectId)) {
             throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
@@ -219,6 +230,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
 
     @Override
+    @Cacheable(value = "questions", key = "'topic_' + #topicId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<QuestionManageV2Response>> getQuestionsByTopic(String topicId, int pageNo, int pageSize, String... sorts) {
         if (!questionTopicV2Repository.existsById(topicId)) {
             throw new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND);
@@ -242,6 +254,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
+    @Cacheable(value = "questions", key = "'user_' + #userId + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<QuestionManageV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String... sorts) {
         log.info("Getting questions V2 by created by user ID: {}", userId);
 
@@ -267,6 +280,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     }
 
     @Override
+    @Cacheable(value = "questions", key = "'search_' + #keyword + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<QuestionManageV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String... sorts) {
 
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
@@ -288,6 +302,10 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "question", key = "#id"),
+            @CacheEvict(value = "questions", allEntries = true)
+    })
     public void deleteQuestion(String id) {
         if (!questionV2Repository.existsById(id)) {
             throw new AppException(ErrorCode.QUESTION_V2_NOT_FOUND);
@@ -302,6 +320,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "questions", allEntries = true)
     public QuestionImportResponse importQuestionsFromExcel(MultipartFile file, QuestionImportRequest request) {
         return questionImportService.importQuestionsFromExcel(file, request);
     }

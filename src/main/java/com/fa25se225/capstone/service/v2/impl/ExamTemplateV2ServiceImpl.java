@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -55,6 +56,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_templates", allEntries = true)
     public ExamTemplateV2Response createTemplate(ExamTemplateV2Request request) {
         log.info("Creating ExamTemplateV2: {}", request.getTitle());
         ExamTemplateV2 template = templateMapper.toEntity(request);
@@ -75,7 +77,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_template", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_template", key = "#id"),
+            @CacheEvict(value = "exam_templates", allEntries = true)
+    })
     public ExamTemplateV2Response updateTemplate(String id, ExamTemplateUpdateV2Request request) {
         log.info("Updating ExamTemplateV2 id={}", id);
         ExamTemplateV2 existing = templateRepository.findById(id)
@@ -96,7 +101,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_template", key = "#id")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_template", key = "#id"),
+            @CacheEvict(value = "exam_templates", allEntries = true)
+    })
     public void deleteTemplate(String id) {
         if (!templateRepository.existsById(id)) {
             throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
@@ -113,6 +121,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     }
 
     @Override
+    @Cacheable(value = "exam_templates", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> getAllTemplates(int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<ExamTemplateV2> page = templateRepository.findAll(pageable);
@@ -129,7 +138,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_template", key = "#templateId")
+    @Caching(evict = {
+            @CacheEvict(value = "exam_template", key = "#templateId"),
+            @CacheEvict(value = "exam_templates", allEntries = true)
+    })
     public ExamRuleV2Response addRule(String templateId, ExamRuleV2Request request) {
         ExamTemplateV2 template = templateRepository.findById(templateId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND));
@@ -157,6 +169,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_templates", allEntries = true)
     public ExamRuleV2Response updateRule(String ruleId, ExamRuleV2Request request) {
         ExamRuleV2 rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
@@ -201,6 +214,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_templates", allEntries = true)
     public void deleteRule(String ruleId) {
         ExamRuleV2 rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
@@ -213,6 +227,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     }
 
     @Override
+    @Cacheable(value = "exam_templates", key = "'browse_' + #subjectId + '_' + #teacherId + '_' + #minRating + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> browseActiveTemplates(
             String subjectId, String teacherId, double minRating,
             int pageNo, int pageSize, String... sorts) {
@@ -239,6 +254,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
                 .build();
     }
     @Override
+    @Cacheable(value = "exam_templates", key = "'user_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> getTemplatesByCurrentUser(
             int pageNo, int pageSize, String... sorts) {
 
@@ -260,6 +276,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
 
     @Override
+    @Cacheable(value = "exam_template_ratings", key = "#id + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String... sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateIdAndRatingNotNull(id, pageable);

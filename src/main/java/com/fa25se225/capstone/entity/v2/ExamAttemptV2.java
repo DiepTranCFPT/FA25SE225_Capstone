@@ -62,6 +62,9 @@ public class ExamAttemptV2 {
     @JoinColumn(name = "template_id")
     private ExamTemplateV2 sourceTemplate;
 
+    @Column(name = "attempt_session_token")
+    private String attemptSessionToken;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -77,5 +80,8 @@ public class ExamAttemptV2 {
     @Nationalized
     @Column(name = "review_reason", columnDefinition = "TEXT")
     private String reviewReason;
+
+    @Column(name = "is_late")
+    private Boolean isLate;
 
 }

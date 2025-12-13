@@ -28,5 +28,6 @@ public class ExamAttemptV2Response {
     private String status;
     private String comment;
     private Integer rating;
+    private Boolean isLate;
 
 }

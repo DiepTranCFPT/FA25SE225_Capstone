@@ -27,5 +27,6 @@ public class ExamAttemptDetailResponse {
     private LocalDateTime endTime;
     private Integer rating;
     private String comment;
+    private Boolean isLate;
     private List<ExamQuestionDetailResponse> questions;
 }

@@ -33,6 +33,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,6 +67,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final FrqGradingProducerService gradingProducer;
 
     private final TokenTransactionService tokenTransactionService;
+    private final SecureRandom secureRandom;
 
 
     @Override
@@ -115,11 +117,12 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         return handleExamStart(templates);
     }
 
-    private ExamV2Response resumeExam(ExamAttemptV2 attempt) {
+    private ExamV2Response resumeExam(ExamAttemptV2 attempt, String newSessionToken) {
         ExamV2 exam = attempt.getExam();
 
         ExamV2Response response = examV2Mapper.toResponse(exam);
         response.setExamAttemptId(attempt.getId());
+        response.setAttemptSessionToken(newSessionToken);
 
         List<StudentAnswerV2> savedAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attempt.getId());
 
@@ -146,23 +149,29 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
         ExamTemplateV2 primaryTemplate = templates.get(0);
 
+        String newSessionToken = Integer.toString(100_000 + secureRandom.nextInt(900_000));
+
         Optional<ExamAttemptV2> existingAttempt = attemptRepository
                 .findFirstByUserIdAndSourceTemplateIdAndStatus(
                         currentUser.getId(),
                         primaryTemplate.getId(),
                         AttemptStatusV2.IN_PROGRESS
                 );
+        ExamAttemptV2 attempt;
 
         if (existingAttempt.isPresent()) {
             log.info("Found an unfinished test (AttemptID: {}). Restoring...", existingAttempt.get().getId());
-            return resumeExam(existingAttempt.get());
+            attempt = existingAttempt.get();
+            attempt.setAttemptSessionToken(newSessionToken);
+            attempt = attemptRepository.save(attempt);
+            return resumeExam(attempt, newSessionToken);
         }
 
         log.info("Unfinished test not found. Creating the new one...");
-        return generateExamAndAttempt(templates);
+        return generateExamAndAttempt(templates, newSessionToken);
     }
 
-    private ExamV2Response generateExamAndAttempt(List<ExamTemplateV2> templates) {
+    private ExamV2Response generateExamAndAttempt(List<ExamTemplateV2> templates, String newSessionToken) {
         User currentUser = accountUtil.getCurrentUser();
 
         String examTitle = templates.size() > 1 ? "Bài thi tổ hợp" : templates.get(0).getTitle();
@@ -250,6 +259,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .user(currentUser)
                 .startTime(LocalDateTime.now())
                 .status(AttemptStatusV2.IN_PROGRESS)
+                .attemptSessionToken(newSessionToken)
                 .score(0.0)
                 .sourceTemplate(templates.get(0))
                 .build();
@@ -258,6 +268,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
         ExamV2Response response = examV2Mapper.toResponse(savedExam);
         response.setExamAttemptId(attempt.getId());
+        response.setAttemptSessionToken(newSessionToken);
 
         response.getQuestions().forEach(examQuestion -> {
             var answers = examQuestion.getQuestion().getAnswers();
@@ -280,6 +291,30 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         log.info("Bắt đầu luồng submit cho Lượt thi (Attempt): {}", attemptId);
 
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
+
+        if (!attempt.getAttemptSessionToken().equals(request.getAttemptSessionToken())) {
+            throw new AppException(ErrorCode.CONCURRENT_LOGIN_DETECTED);
+        }
+
+        ExamV2 exam = attempt.getExam();
+        Integer durationMinutes = exam.getDuration();
+
+        if (Objects.nonNull(durationMinutes) && durationMinutes > 0) {
+            LocalDateTime startTime = attempt.getStartTime();
+            LocalDateTime now = LocalDateTime.now();
+
+            LocalDateTime expectedEndTime = startTime.plusMinutes(durationMinutes);
+
+            int gracePeriodMinutes = 2;
+            LocalDateTime hardDeadline = expectedEndTime.plusMinutes(gracePeriodMinutes);
+
+            if (now.isAfter(hardDeadline)) {
+
+                log.warn("User submitted late! AttemptID: {}. Expected: {}, Actual: {}",
+                        attemptId, expectedEndTime, now);
+                attempt.setIsLate(true);
+            }
+        }
 
         attempt.setEndTime(LocalDateTime.now());
         attempt.setStatus(AttemptStatusV2.PENDING_GRADING);
@@ -386,6 +421,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 }
             });
         }
+        attempt.setAttemptSessionToken(null);
 
         return SubmitAttemptV2Response.builder()
                 .attemptId(savedAttempt.getId())
@@ -524,6 +560,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     @Transactional
     public void saveExamProgress(String attemptId, SaveProgressRequest request) {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
+
+        if (!attempt.getAttemptSessionToken().equals(request.getAttemptSessionToken())) {
+            throw new AppException(ErrorCode.CONCURRENT_LOGIN_DETECTED);
+        }
 
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
         Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(existingAnswers);

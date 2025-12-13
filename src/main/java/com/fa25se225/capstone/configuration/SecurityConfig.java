@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -134,6 +135,11 @@ public class SecurityConfig {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider(passwordEncoder);
         authenticationProvider.setUserDetailsService(userDetailsService);
         return authenticationProvider;
+    }
+
+    @Bean
+    SecureRandom secureRandom(){
+        return new SecureRandom();
     }
 
 }

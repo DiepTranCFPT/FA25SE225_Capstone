@@ -16,6 +16,6 @@ public record UserUpdateRequest (
     String firstName,
     String lastName,
 
-    @DobConstraint(min = 13, message = "At least 13 years old")
+    @DobConstraint(min = 13, max = 105 ,message = "Age must be between 13 and 105 years old")
     LocalDate dob
 ){}

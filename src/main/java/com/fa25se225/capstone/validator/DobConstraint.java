@@ -17,6 +17,8 @@ public @interface DobConstraint {
 
     int min();
 
+    int max();
+
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};

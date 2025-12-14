@@ -22,7 +22,7 @@ public record UserCreationRequest(
     String lastName,
 
     @NotNull(message = "Date of birth must not be null")
-    @DobConstraint(min = 13, message = "At least 13 years old")
+    @DobConstraint(min = 13, max = 105 ,message = "Age must be between 13 and 105 years old")
     LocalDate dob,
 
     @NotBlank(message = "You must choose the role")

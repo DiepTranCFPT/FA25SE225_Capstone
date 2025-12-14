@@ -38,6 +38,8 @@ public class UserSpecification {
                 predicates.add(cb.equal(root.get("emailVerified"), request.isVerified()));
             }
 
+            predicates.add(cb.equal(root.get("deleted"), false));
+
             if (Objects.nonNull(request.isLocked())) {
                 predicates.add(cb.equal(root.get("accountLocked"), request.isLocked()));
             }

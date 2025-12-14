@@ -34,5 +34,9 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
     Page<User> findAllByRoles(Set<Role> roles, Pageable pageable);
 
+    Page<User> findAllByRolesAndDeletedFalse(Set<Role> roles, Pageable pageable);
+
+    Page<User> findAllByDeletedFalse(Pageable pageable);
+
     List<User> findByGrantedPermissions_Name(String permissionName);
 }

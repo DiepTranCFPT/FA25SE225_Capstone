@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users_list", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
-        Page<User> page = userRepository.findAll(pageable);
+        Page<User> page = userRepository.findAllByDeletedFalse(pageable);
         List<UserResponse> userResponses = page.getContent()
                 .stream().map(userMapper::toResponse).toList();
 
@@ -325,7 +325,7 @@ public class UserServiceImpl implements UserService {
     public PageResponse<List<UserResponse>> getAllUsersHaveTeacherRole(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Role teacherRole = roleRepository.findByName(PredefinedSystemRole.TEACHER.name());
-        Page<User> page = userRepository.findAllByRoles(Set.of(teacherRole), pageable);
+        Page<User> page = userRepository.findAllByRolesAndDeletedFalse(Set.of(teacherRole), pageable);
 
         List<UserResponse> items = page.getContent().stream()
                 .map(userMapper::toResponse)

@@ -28,6 +28,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,6 +66,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     TeacherProfileRepository teacherProfileRepository;
     PaymentStatusRepository paymentStatus;
     UserMapper userMapper;
+    AuthenticationManager authenticationManager;
 
     static int MAX_FAILED_ATTEMPTS = 5;
 
@@ -190,7 +193,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.LOCKED_ACCOUNT);
         }
 
-        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        if (user.isDeleted()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        boolean authenticated = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        ).isAuthenticated();
 
         if (!authenticated) {
             handleFailedLogin(user);

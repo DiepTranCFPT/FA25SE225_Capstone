@@ -8,6 +8,7 @@ import com.fa25se225.capstone.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
@@ -22,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "questions_v2")
+@SQLDelete(sql = "UPDATE questions_v2 SET deleted = true WHERE id = ?")
 public class QuestionV2 {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

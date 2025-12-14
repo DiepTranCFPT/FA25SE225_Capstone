@@ -307,15 +307,10 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
             @CacheEvict(value = "questions", allEntries = true)
     })
     public void deleteQuestion(String id) {
-        if (!questionV2Repository.existsById(id)) {
-            throw new AppException(ErrorCode.QUESTION_V2_NOT_FOUND);
-        }
-
-        try {
-            questionV2Repository.deleteById(id);
-        } catch (DataIntegrityViolationException e) {
-            throw new AppException(ErrorCode.CANNOT_DELETE_QUESTION);
-        }
+        QuestionV2 question = questionV2Repository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.QUESTION_V2_NOT_FOUND));
+        question.setDeleted(true);
+        questionV2Repository.save(question);
     }
 
     @Override

@@ -21,5 +21,12 @@ public class AdminWithdrawRequestController {
         List<WithdrawRequestDTO> requests = withdrawRequestService.getAllWithdrawRequests();
         return ResponseEntity.ok(requests);
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<WithdrawRequestDTO>> getAllWithdrawRequestsNotPending() {
+        List<WithdrawRequestDTO> requests = withdrawRequestService.getAllWithdrawRequestsNotPending();
+        return ResponseEntity.ok(requests);
+    }
+
 }
 

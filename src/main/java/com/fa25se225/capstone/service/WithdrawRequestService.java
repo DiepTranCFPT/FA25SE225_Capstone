@@ -49,4 +49,31 @@ public class WithdrawRequestService {
                 })
                 .collect(Collectors.toList());
     }
+    public List<WithdrawRequestDTO> getAllWithdrawRequestsNotPending() {
+        List<TokenTransaction> transactions = tokenTransactionRepository.findAll();
+        return transactions.stream()
+                .filter(tx -> tx.getType().getName().equalsIgnoreCase(WITHDRAWAL))
+                .map(tx -> {
+                    WithdrawRequestDTO dto = new WithdrawRequestDTO();
+                    dto.setTransactionId(tx.getId());
+                    dto.setTeacherId(tx.getUser().getId());
+                    dto.setTeacherName(tx.getUser().getFirstName()+" "+tx.getUser().getLastName());
+                    dto.setAmount(tx.getAmount());
+                    dto.setStatus(tx.getStatus());
+                    List<PaymentMethod> paymentMethods = paymentMethodRepository.findAllByTeacher(tx.getUser());
+                    if (paymentMethods.isEmpty()) {
+                        throw new AppException(ErrorCode.PAYMENT_NOT_FOUND);
+                    }
+                    // Use the most recently created payment method
+                    PaymentMethod pm = paymentMethods.stream()
+                            .max((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()))
+                            .orElse(paymentMethods.get(0));
+                    dto.setBankingNumber(pm.getBankingNumber());
+                    dto.setNameBanking(pm.getNameBanking());
+                    dto.setAuthorName(pm.getAuthorName());
+                    dto.setCreatedAt(tx.getCreatedAt() != null ? tx.getCreatedAt().toString() : null);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
 }

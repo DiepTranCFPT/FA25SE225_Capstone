@@ -316,6 +316,18 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     @Override
     @Transactional
     @CacheEvict(value = "questions", allEntries = true)
+    public void deleteQuestions(List<String> ids) {
+        if (Objects.isNull(ids) || ids.isEmpty()) {
+            return;
+        }
+        List<QuestionV2> questions = questionV2Repository.findAllById(ids);
+        questions.forEach(question -> question.setDeleted(true));
+        questionV2Repository.saveAll(questions);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "questions", allEntries = true)
     public QuestionImportResponse importQuestionsFromExcel(MultipartFile file, QuestionImportRequest request) {
         return questionImportService.importQuestionsFromExcel(file, request);
     }

@@ -20,6 +20,7 @@ public interface QuestionV2Service {
     PageResponse<List<QuestionManageV2Response>> getQuestionsByCreatedBy(String userId, int pageNo, int pageSize, String... sorts);
     PageResponse<List<QuestionManageV2Response>> searchQuestions(String keyword, int pageNo, int pageSize, String... sorts);
     void deleteQuestion(String id);
+    void deleteQuestions(List<String> ids);
 
     // Import functionality
     QuestionImportResponse importQuestionsFromExcel(MultipartFile file, QuestionImportRequest request);

@@ -91,6 +91,13 @@ public class QuestionV2Controller {
         questionV2Service.deleteQuestion(id);
         return ApiResponse.success("Question deleted successfully");
     }
+
+    @DeleteMapping("/batch")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ApiResponse<String> deleteQuestions(@RequestBody List<String> ids) {
+        questionV2Service.deleteQuestions(ids);
+        return ApiResponse.success("Questions deleted successfully");
+    }
     
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path= "/import")
     @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")

@@ -4,6 +4,7 @@ import com.fa25se225.capstone.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +40,10 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Comment> comments;
+
+    @Formula("(SELECT COUNT(*) FROM comments c WHERE c.post_id = id)")
+    private int commentCount;
+
 
     @CreationTimestamp
     private LocalDateTime createdAt;

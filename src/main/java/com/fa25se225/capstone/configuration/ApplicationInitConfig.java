@@ -6,7 +6,7 @@ import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.entity.forum.Community;
 import com.fa25se225.capstone.repository.*;
-import com.fa25se225.capstone.repository.forum.CommunityRepository;
+import com.fa25se225.capstone.repository.CommunityRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

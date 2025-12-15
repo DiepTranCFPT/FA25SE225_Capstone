@@ -16,4 +16,5 @@ public interface PostService {
     void deletePost(String postId);
 
     PageResponse<List<PostResponse>> getPostsByCommunityId(String communityId, int page, int size);
+    void votePost(String postId, int value);
 }

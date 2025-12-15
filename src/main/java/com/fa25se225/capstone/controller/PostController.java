@@ -46,4 +46,10 @@ public class PostController {
             @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(commentService.getCommentsByPostId(postId, page, size));
     }
+
+    @PostMapping("/{postId}/vote")
+    public ApiResponse<Void> votePost(@PathVariable String postId, @RequestParam int value) {
+        postService.votePost(postId, value);
+        return ApiResponse.success(null);
+    }
 }

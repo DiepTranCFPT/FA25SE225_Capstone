@@ -78,7 +78,6 @@ public class CommentServiceImpl implements CommentService {
                 .author(currentUser)
                 .parent(parentComment)
                 .replyToUser(replyToUser)
-                .likeCount(0)
                 .replyCount(0)
                 .build();
 

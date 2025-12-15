@@ -2,10 +2,11 @@ package com.fa25se225.capstone.entity.forum;
 
 import com.fa25se225.capstone.entity.User;
 import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,7 +40,12 @@ public class Post {
     private Community community;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Comment> comments;
+
+    @Column(name = "vote_count")
+    @Builder.Default
+    private int voteCount = 0;
 
     @Formula("(SELECT COUNT(*) FROM comments c WHERE c.post_id = id)")
     private int commentCount;

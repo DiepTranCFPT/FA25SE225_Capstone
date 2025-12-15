@@ -51,10 +51,6 @@ public class Comment {
     @JoinColumn(name = "reply_to_user_id")
     private User replyToUser;
 
-    @Column(name = "like_count")
-    @Builder.Default
-    private int likeCount = 0;
-
     @Column(name = "reply_count")
     @Builder.Default
     private int replyCount = 0;

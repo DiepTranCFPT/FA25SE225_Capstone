@@ -8,11 +8,13 @@ import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.forum.Comment;
 import com.fa25se225.capstone.entity.forum.Community;
 import com.fa25se225.capstone.entity.forum.Post;
+import com.fa25se225.capstone.entity.forum.PostVote;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.PostMapper;
 import com.fa25se225.capstone.repository.CommunityRepository;
 import com.fa25se225.capstone.repository.PostRepository;
+import com.fa25se225.capstone.repository.PostVoteRepository;
 import com.fa25se225.capstone.service.PostService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
@@ -23,8 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,48 @@ public class PostServiceImpl implements PostService {
     private final AccountUtil accountUtil;
     private final PostMapper postMapper;
     private final PageHelper pageHelper;
+    private final PostVoteRepository postVoteRepository;
     private final static String COMMUNITY_POSTS_FOLDER = "community_posts";
+
+    @Override
+    @Transactional
+    public void votePost(String postId, int value) {
+        User currentUser = accountUtil.getCurrentUser();
+        Post post = findPostByIdOrThrowException(postId);
+
+        if (value != 1 && value != -1 && value != 0) {
+            throw new AppException(ErrorCode.INVALID_VOTE_VALUE);
+        }
+
+        Optional<PostVote> existingVoteOpt = postVoteRepository.findByUserAndPost(currentUser, post);
+        int currentVoteCount = post.getVoteCount();
+
+        if (existingVoteOpt.isPresent()) {
+            PostVote existingVote = existingVoteOpt.get();
+            int oldValue = existingVote.getValue();
+
+            if (value == 0) {
+                postVoteRepository.delete(existingVote);
+                post.setVoteCount(currentVoteCount - oldValue);
+            } else if (oldValue != value) {
+                existingVote.setValue(value);
+                postVoteRepository.save(existingVote);
+                post.setVoteCount(currentVoteCount - oldValue + value);
+            }
+        } else {
+            if (value != 0) {
+                PostVote newVote = PostVote.builder()
+                        .user(currentUser)
+                        .post(post)
+                        .value(value)
+                        .build();
+                postVoteRepository.save(newVote);
+                post.setVoteCount(currentVoteCount + value);
+            }
+        }
+
+        postRepository.save(post);
+    }
 
     @Override
     @Transactional
@@ -100,14 +142,37 @@ public class PostServiceImpl implements PostService {
         }
 
         Pageable pageable = pageHelper.pageEngine(page, size, "isPinned:desc", "createdAt:desc");
-        Page<Post> posts = postRepository.findAllByCommunityId(communityId, pageable);
+        Page<Post> postsPage = postRepository.findAllByCommunityId(communityId, pageable);
+        List<Post> posts = postsPage.getContent();
+
+        User currentUser = null;
+        try {
+            currentUser = accountUtil.getCurrentUser();
+        } catch (Exception e) {
+        }
+
+        Map<String, Integer> userVotesMap = new HashMap<>();
+        if (currentUser != null && !posts.isEmpty()) {
+            List<String> postIds = posts.stream().map(Post::getId).toList();
+            List<PostVote> votes = postVoteRepository.findAllByUserIdAndPostIds(currentUser.getId(), postIds);
+
+            for (PostVote v : votes) {
+                userVotesMap.put(v.getPost().getId(), v.getValue());
+            }
+        }
+
+        List<PostResponse> responseItems = posts.stream().map(post -> {
+            PostResponse res = postMapper.toResponse(post);
+            res.setUserVoteValue(userVotesMap.getOrDefault(post.getId(), 0));
+            return res;
+        }).toList();
 
         return PageResponse.<List<PostResponse>>builder()
                 .pageNo(page)
                 .pageSize(size)
-                .totalPage(posts.getTotalPages())
-                .totalElement(posts.getTotalElements())
-                .items(posts.getContent().stream().map(postMapper::toResponse).toList())
+                .totalPage(postsPage.getTotalPages())
+                .totalElement(postsPage.getTotalElements())
+                .items(responseItems)
                 .build();
     }
 

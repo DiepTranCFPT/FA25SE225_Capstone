@@ -21,4 +21,6 @@ public class PostResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private int commentCount;
+    private int voteCount;
+    private int userVoteValue;
 }

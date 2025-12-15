@@ -44,6 +44,10 @@ public class Comment {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reply_to_user_id")
+    private User replyToUser;
+
     @Column(name = "like_count")
     @Builder.Default
     private int likeCount = 0;

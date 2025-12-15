@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class PostController {
     }
 
     @GetMapping("/{postId}/comments")
-    public ApiResponse<PageResponse<CommentResponse>> getCommentsOfPost(
+    public ApiResponse<PageResponse<List<CommentResponse>>> getCommentsOfPost(
             @PathVariable String postId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {

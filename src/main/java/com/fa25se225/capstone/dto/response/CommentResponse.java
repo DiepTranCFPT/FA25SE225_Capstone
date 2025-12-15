@@ -14,12 +14,16 @@ import java.time.LocalDateTime;
 public class CommentResponse {
     private String id;
     private String content;
-    private String authorName;
-    private String authorAvatar;
-    private LocalDateTime createdAt;
+    private String imgUrl;
+    private UserResponse author;
+
+    private String parenCommentId;
 
     private int likeCount;
     private boolean isLikedByMe;
     private int replyCount;
     private String replyToUserName;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

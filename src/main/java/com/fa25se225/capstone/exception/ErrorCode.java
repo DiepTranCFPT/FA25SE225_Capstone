@@ -86,7 +86,9 @@ public enum ErrorCode {
     SPEL(1074,"Please cast varargs... to array" ,HttpStatus.INTERNAL_SERVER_ERROR ),
     CONCURRENT_LOGIN_DETECTED(1075, "Invalid exam session, your account is currently taking this test on a different device.", HttpStatus.CONFLICT),
     COMMUNITY_NOT_FOUND(1076, "Community not found", HttpStatus.BAD_REQUEST),
-    POST_NOT_FOUND(1077,"Post not found", HttpStatus.BAD_REQUEST);
+    POST_NOT_FOUND(1077,"Post not found", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_FOUND(1078, "Comment not found", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_SAME_THE_POST(1079,"Comment not in the same post" , HttpStatus.BAD_REQUEST);
 
 
 

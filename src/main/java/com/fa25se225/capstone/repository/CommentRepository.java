@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, String> {
 
-    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId AND c.parent IS NULL")
+    @Query("SELECT c FROM Comment c JOIN FETCH c.author LEFT JOIN FETCH c.replyToUser WHERE c.post.id = :postId AND c.parent IS NULL")
     Page<Comment> findRootCommentsByPostId(@Param("postId") String postId, Pageable pageable);
 
-    @Query("SELECT c FROM Comment c WHERE c.parent.id = :parentId")
+    @Query("SELECT c FROM Comment c JOIN FETCH c.author LEFT JOIN FETCH c.replyToUser WHERE c.parent.id = :parentId")
     Page<Comment> findRepliesByParentId(@Param("parentId") String parentId, Pageable pageable);
 }

@@ -4,7 +4,9 @@ import com.fa25se225.capstone.configuration.dataseed.DataSeederV2;
 import com.fa25se225.capstone.constant.PredefinedSystemPermission;
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
 import com.fa25se225.capstone.entity.*;
+import com.fa25se225.capstone.entity.forum.Community;
 import com.fa25se225.capstone.repository.*;
+import com.fa25se225.capstone.repository.forum.CommunityRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -51,7 +53,8 @@ public class ApplicationInitConfig {
                                         StudentProfileRepository studentProfileRepository,
                                         TeacherProfileRepository teacherProfileRepository,
                                         PaymentRepository paymentRepository,
-                                        PaymentStatusRepository paymentStatusRepository) {
+                                        PaymentStatusRepository paymentStatusRepository,
+                                        CommunityRepository communityRepository) {
         return args -> {
 
             log.info("Seeding permissions...");
@@ -62,6 +65,15 @@ public class ApplicationInitConfig {
             log.info("Seeding roles and permissions mapping...");
             for (PredefinedSystemRole roleEnum : PredefinedSystemRole.values()) {
                 createRoleIfNotFound(roleRepository, permissionRepository, roleEnum);
+            }
+
+            log.info("Seeding common communicate");
+            if (communityRepository.count() == 0) {
+                log.info("Creating default community: Common");
+                communityRepository.save(Community.builder()
+                        .name("Common Community")
+                        .description("A Common Community for everyone to discuss")
+                        .build());
             }
 
             createUsersIfNotFound(userRepository, roleRepository, parentProfileRepository, studentProfileRepository, teacherProfileRepository, paymentRepository, paymentStatusRepository);

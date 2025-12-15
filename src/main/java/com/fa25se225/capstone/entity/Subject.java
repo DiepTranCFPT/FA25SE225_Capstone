@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import com.fa25se225.capstone.entity.forum.Community;
 import com.fa25se225.capstone.utils.CodeGenerator;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +34,9 @@ public class Subject {
     @OneToMany(mappedBy = "subject")
     private List<LearningMaterial> learningMaterials = new ArrayList<>();
 
+    @OneToOne(mappedBy = "subject", cascade = CascadeType.ALL)
+    private Community community;
+
     @Column(name = "created_at")
     private LocalDate createdAt;
 
@@ -57,4 +61,18 @@ public class Subject {
     protected void onUpdate() {
         updatedAt = LocalDate.now();
     }
+
+    @PostPersist
+    protected void onPostPersist() {
+        if (this.community == null) {
+            this.community = Community.builder()
+                    .name(this.name)
+                    .description("Community for " + this.name)
+                    .subject(this)
+                    .build();
+        }
+    }
+
+
+
 }

@@ -10,4 +10,5 @@ public interface PostService {
     void togglePinPost(String postId);
     void updatePost(String id, PostUpdateRequest request);
 
+    void deletePost(String postId);
 }

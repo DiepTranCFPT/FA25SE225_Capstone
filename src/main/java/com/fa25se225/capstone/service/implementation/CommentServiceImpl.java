@@ -15,6 +15,7 @@ import com.fa25se225.capstone.service.CommentService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -105,7 +106,15 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void deleteComment(String commentId) {
-        commentRepository.deleteById(commentId);
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        String imgUrl = comment.getImgUrl();
+        if(Objects.nonNull(imgUrl)) {
+            String publicId = cloudinaryService.getPublicIdFromUrl(imgUrl);
+            if (Strings.isNotEmpty(publicId)) {
+                cloudinaryService.deleteFile(publicId);
+            }
+        }
+        commentRepository.delete(comment);
     }
 
     @Override

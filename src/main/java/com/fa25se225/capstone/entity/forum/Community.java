@@ -3,6 +3,9 @@ package com.fa25se225.capstone.entity.forum;
 import com.fa25se225.capstone.entity.Subject;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -30,4 +33,7 @@ public class Community {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     private Subject subject;
+
+    @CreationTimestamp
+    private LocalDateTime createAt;
 }

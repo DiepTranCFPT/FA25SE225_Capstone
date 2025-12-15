@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.PostCreationRequest;
 import com.fa25se225.capstone.dto.request.PostUpdateRequest;
 import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.entity.forum.Comment;
 import com.fa25se225.capstone.entity.forum.Community;
 import com.fa25se225.capstone.entity.forum.Post;
 import com.fa25se225.capstone.exception.AppException;
@@ -14,8 +15,11 @@ import com.fa25se225.capstone.repository.PostRepository;
 import com.fa25se225.capstone.service.PostService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +72,19 @@ public class PostServiceImpl implements PostService {
         postMapper.updatePost(post, request);
         postRepository.save(post);
 
+    }
+
+    @Override
+    public void deletePost(String postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        String imgUrl = post.getImageUrl();
+        if(Objects.nonNull(imgUrl)) {
+            String publicId = cloudinaryService.getPublicIdFromUrl(imgUrl);
+            if (Strings.isNotEmpty(publicId)) {
+                cloudinaryService.deleteFile(publicId);
+            }
+        }
+        postRepository.delete(post);
     }
 
     private Post findPostByIdOrThrowException(String postId){

@@ -33,6 +33,12 @@ public class PostController {
         return ApiResponse.success("Update Post successfully");
     }
 
+    @DeleteMapping("/{postId}")
+    public ApiResponse<String> deletePost(@PathVariable String postId) {
+        postService.deletePost(postId);
+        return ApiResponse.success("Delete Post successfully");
+    }
+
     @GetMapping("/{postId}/comments")
     public ApiResponse<PageResponse<List<CommentResponse>>> getCommentsOfPost(
             @PathVariable String postId,

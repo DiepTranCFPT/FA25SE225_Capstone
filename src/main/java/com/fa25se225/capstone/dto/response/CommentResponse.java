@@ -19,8 +19,6 @@ public class CommentResponse {
 
     private String parenCommentId;
 
-    private int likeCount;
-    private boolean isLikedByMe;
     private int replyCount;
     private String replyToUserName;
 

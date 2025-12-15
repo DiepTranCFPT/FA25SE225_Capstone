@@ -87,7 +87,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public PageResponse<List<CommentResponse>> getCommentsByPostId(String postId, int page, int size) {
-        Pageable pageable = pageHelper.pageEngine(page, size, "likeCount:desc", "createdAt:desc");
+        Pageable pageable = pageHelper.pageEngine(page, size, "replyCount:desc", "createdAt:desc");
 
         Page<Comment> commentPage = commentRepository.findRootCommentsByPostId(postId, pageable);
 

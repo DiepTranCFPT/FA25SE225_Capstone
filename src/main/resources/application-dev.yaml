@@ -85,7 +85,7 @@ outbound:
     grant-type: "authorization_code"
 jwt:
   signerKey: ${JWT_SIGNER_KEY}
-  valid-duration-in-second: 3600
+  valid-duration-in-second: 36000
   refreshable-duration-in-second: 36000
   issuer: "Tri dep trai"
 

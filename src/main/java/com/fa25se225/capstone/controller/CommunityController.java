@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.request.PostCreationRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.CommunityResponse;
 import com.fa25se225.capstone.dto.response.PostResponse;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.service.CommunityService;
 import com.fa25se225.capstone.service.PostService;
 import jakarta.validation.Valid;
@@ -28,9 +29,22 @@ public class CommunityController {
         return ApiResponse.success(postService.createPost(communityId, request));
     }
 
+    @GetMapping("/{communityId}/posts")
+    public ApiResponse<PageResponse<List<PostResponse>>> getPostsByCommunityId(
+            @PathVariable String communityId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "15") int size) {
+        return ApiResponse.success(postService.getPostsByCommunityId(communityId, page, size));
+    }
+
     @GetMapping
     public ApiResponse<List<CommunityResponse>> getAll() {
         return ApiResponse.success(communityService.getAll());
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<List<CommunityResponse>> searchCommunity(@RequestParam String keyword) {
+        return ApiResponse.success(communityService.searchCommunity(keyword));
     }
 
     @PutMapping("/{communityId}")

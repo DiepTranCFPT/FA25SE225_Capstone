@@ -47,4 +47,13 @@ public class CommunityServiceImpl implements CommunityService {
 
         communityRepository.save(community);
     }
+
+    @Override
+    public List<CommunityResponse> searchCommunity(String keyword) {
+        List<Community> communities = communityRepository.findByNameContainingIgnoreCase(keyword);
+        return communities.stream()
+                .map(communityMapper::toResponse)
+                .toList();
+    }
+
 }

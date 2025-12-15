@@ -2,6 +2,7 @@ package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.dto.request.PostCreationRequest;
 import com.fa25se225.capstone.dto.request.PostUpdateRequest;
+import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.forum.Comment;
@@ -14,11 +15,15 @@ import com.fa25se225.capstone.repository.CommunityRepository;
 import com.fa25se225.capstone.repository.PostRepository;
 import com.fa25se225.capstone.service.PostService;
 import com.fa25se225.capstone.utils.AccountUtil;
+import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -29,6 +34,7 @@ public class PostServiceImpl implements PostService {
     private final CloudinaryService cloudinaryService;
     private final AccountUtil accountUtil;
     private final PostMapper postMapper;
+    private final PageHelper pageHelper;
     private final static String COMMUNITY_POSTS_FOLDER = "community_posts";
 
     @Override
@@ -85,6 +91,24 @@ public class PostServiceImpl implements PostService {
             }
         }
         postRepository.delete(post);
+    }
+
+    @Override
+    public PageResponse<List<PostResponse>> getPostsByCommunityId(String communityId, int page, int size) {
+        if (!communityRepository.existsById(communityId)) {
+            throw new AppException(ErrorCode.COMMUNITY_NOT_FOUND);
+        }
+
+        Pageable pageable = pageHelper.pageEngine(page, size, "isPinned:desc", "createdAt:desc");
+        Page<Post> posts = postRepository.findAllByCommunityId(communityId, pageable);
+
+        return PageResponse.<List<PostResponse>>builder()
+                .pageNo(page)
+                .pageSize(size)
+                .totalPage(posts.getTotalPages())
+                .totalElement(posts.getTotalElements())
+                .items(posts.getContent().stream().map(postMapper::toResponse).toList())
+                .build();
     }
 
     private Post findPostByIdOrThrowException(String postId){

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class CommunityResponse {
+    private String id;
     private String name;
     private String description;
     private String imgUrl;

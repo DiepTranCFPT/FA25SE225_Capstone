@@ -9,4 +9,6 @@ public interface CommunityService {
     List<CommunityResponse> getAll();
 
     void updateCommunity(String communityId, CommunityUpdateRequest request);
+
+    List<CommunityResponse> searchCommunity(String keyword);
 }

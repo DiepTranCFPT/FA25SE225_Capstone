@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.dto.request.PostCreationRequest;
+import com.fa25se225.capstone.dto.request.PostUpdateRequest;
 import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.forum.Community;
@@ -28,10 +29,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public PostResponse createPost(PostCreationRequest request) {
+    public PostResponse createPost(String communityId, PostCreationRequest request) {
         User currentUser = accountUtil.getCurrentUser();
 
-        Community community = communityRepository.findById(request.getCommunityId())
+        Community community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new AppException(ErrorCode.COMMUNITY_NOT_FOUND));
 
         String imgUrl = null;
@@ -55,10 +56,22 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public void togglePinPost(String postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
+        Post post = findPostByIdOrThrowException(postId);
 
         post.setPinned(!post.isPinned());
         postRepository.save(post);
+    }
+
+    @Override
+    public void updatePost(String id, PostUpdateRequest request) {
+        Post post = findPostByIdOrThrowException(id);
+        postMapper.updatePost(post, request);
+        postRepository.save(post);
+
+    }
+
+    private Post findPostByIdOrThrowException(String postId){
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
     }
 }

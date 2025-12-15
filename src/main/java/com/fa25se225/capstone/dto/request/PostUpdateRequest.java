@@ -5,10 +5,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class PostCreationRequest {
-    @NotBlank
+public class PostUpdateRequest {
     private String title;
-    @NotBlank
     private String content;
-    private MultipartFile image;
 }

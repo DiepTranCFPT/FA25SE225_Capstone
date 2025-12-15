@@ -7,7 +7,6 @@ import com.fa25se225.capstone.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,16 +16,9 @@ public class CommunityController {
 
     private final PostService postService;
 
-    @PostMapping(value = "/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<PostResponse> createPost(@ModelAttribute @Valid PostCreationRequest request) {
-        return ApiResponse.success(postService.createPost(request));
+    @PostMapping(value = "/{communityId}/posts", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<PostResponse> createPost(@PathVariable String communityId,
+                                                @ModelAttribute @Valid PostCreationRequest request) {
+        return ApiResponse.success(postService.createPost(communityId, request));
     }
-
-    @PutMapping("/posts/{postId}/pin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<String> pinPost(@PathVariable String postId) {
-        postService.togglePinPost(postId);
-        return ApiResponse.success("Post pin status updated");
-    }
-
 }

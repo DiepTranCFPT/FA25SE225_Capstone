@@ -30,4 +30,16 @@ public class CommentController {
     public ApiResponse<CommentResponse> createComment(@ModelAttribute CommentRequest request) {
         return ApiResponse.success(commentService.createComment(request));
     }
+
+    @DeleteMapping("/{commentId}")
+    public ApiResponse<String> deleteComment(@PathVariable String commentId) {
+        commentService.deleteComment(commentId);
+        return ApiResponse.success("Delete comment successfully");
+    }
+
+    @PutMapping("/{commentId}")
+    public ApiResponse<String> updateComment(@PathVariable String commentId, @RequestBody String content) {
+        commentService.updateComment(commentId, content);
+        return ApiResponse.success("Update comment successfully");
+    }
 }

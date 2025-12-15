@@ -103,6 +103,20 @@ public class CommentServiceImpl implements CommentService {
         return buildPageResponse(replyPage, page, size);
     }
 
+    @Override
+    public void deleteComment(String commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public void updateComment(String id, String content) {
+        Comment comment = commentRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+        comment.setContent(content);
+        commentRepository.save(comment);
+
+    }
+
+
     private PageResponse<List<CommentResponse>>buildPageResponse(Page<Comment> pageData, int page, int size) {
         List<CommentResponse> items = pageData.getContent().stream()
                 .map(commentMapper::toResponse)

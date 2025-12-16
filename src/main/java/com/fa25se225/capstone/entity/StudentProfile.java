@@ -48,6 +48,9 @@ public class StudentProfile {
     @JoinColumn(name = "advisor_profile_id")
     private AdvisorProfile advisorProfile;
 
+    @Column(columnDefinition = "TEXT")
+    private String recommend;
+
     @ManyToMany(mappedBy = "children", fetch = FetchType.LAZY)
     @Builder.Default
     private List<ParentProfile> parents = new ArrayList<>();

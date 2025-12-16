@@ -1,18 +1,18 @@
 package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
-import com.fa25se225.capstone.dto.response.StudentExamDashboardResponse;
 import com.fa25se225.capstone.entity.StudentProfile;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.repository.StudentProfileRepository;
+import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
 import com.fa25se225.capstone.service.StudentDashboardService;
-import com.fa25se225.capstone.service.v2.impl.SseNotificationService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
@@ -46,7 +47,18 @@ public class AIChatService {
     private StudentProfileRepository studentProfileRepository;
 
     @Autowired
+    private ExamAttemptV2Repository examAttemptV2Repository;
+
+    @Autowired
     private StudentDashboardService studentDashboardService;
+
+
+//    private final ConcurrentHashMap<String, Integer> dailyRequestMap = new ConcurrentHashMap<>();
+
+//    @Scheduled(cron = "0 0 0 * * ?")
+//    private void clearDailyRequests() {
+//        dailyRequestMap.clear();
+//    }
 
 
     private Set<String> conversationIds = new HashSet<>();
@@ -101,6 +113,52 @@ public class AIChatService {
                     return callChatClient(secondaryChatClient, systemText, userAsking, conversationId);
                 });
 
+    }
+
+    @Scheduled(cron = "0 0 23 * * *")
+    protected void createRecommendForStudents() {
+        List<User> students = examAttemptV2Repository.findDistinctUsersAttemptedToday();
+        for (User student : students) {
+            setRecommendOfStudentByAI(student.getId());
+            try {
+                Thread.sleep(10_000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("Sleep interrupted while processing student {}: {}", student.getId(), e.getMessage());
+            }
+
+        }
+
+    }
+
+    @CacheEvict(value = "student_exam_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
+    public void createRecommendForCurrentStudent(){
+        String userId = accountUtil.getCurrentUser().getId();
+        setRecommendOfStudentByAI(userId);
+    }
+
+
+    private void setRecommendOfStudentByAI(String studentId) {
+        StudentProfile studentProfile = studentProfileRepository.findByUserId(studentId).get();
+        String studentInfo = studentDashboardService.getStudentExamDashboard().toString();
+        String userText = String.format(
+                """
+                        Student Goal : %s
+                        Student information : %s
+                        """,
+                studentProfile.getGoal(), studentInfo
+        );
+        String systemText = """
+                You are an AP exam expert. Analyze and guide students based on their information. (~100 words)
+                If the student doesn't have a goal yet, still reply, but remind them to update their goal profile.
+                """;
+
+        String recommend =  primaryChatClient.prompt().system(systemText)
+                                            .user(userText)
+                                            .call()
+                                            .content();
+        studentProfile.setRecommend(recommend);
+        studentProfileRepository.save(studentProfile);
     }
 
     private Flux<String> callChatClient(ChatClient client, String systemText, String userText, String conversationId) {

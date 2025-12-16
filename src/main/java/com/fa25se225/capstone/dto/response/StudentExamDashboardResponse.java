@@ -19,6 +19,7 @@ public class StudentExamDashboardResponse {
     private Map<String, Double> topicPerformance;
 
     private String recommendedTopic;
+    private String recommend;
 
     private List<ExamAttemptV2Response> recentAttempts;
 }

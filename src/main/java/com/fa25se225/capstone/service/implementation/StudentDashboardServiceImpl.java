@@ -15,6 +15,7 @@ import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,8 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
     private final ExamAttemptV2Repository attemptRepository;
     private final StudentAnswerV2Repository answerRepository;
     private final ExamAttemptV2Mapper attemptMapper;
-    
+    private final StudentProfileRepository studentProfileRepository;
+
     // Repositories for financial dashboard
     private final TransactionRepository transactionRepository;
     private final PaymentRepository paymentRepository;
@@ -59,8 +61,14 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
 
         long total = attemptRepository.countByUserIdAndStatus(studentId, AttemptStatusV2.COMPLETED);
         Double avgScore = attemptRepository.getAverageScoreByUserId(studentId);
+        String recommend = "";
+        StudentProfile studentProfile = studentProfileRepository.findByUserId(studentId).get();
+        if(Strings.isNotBlank(studentProfile.getRecommend())){
+            recommend = studentProfile.getRecommend();
+        }
 
         long inProgress = 0;
+
 
         List<Object[]> topicStats = answerRepository.analyzeTopicPerformance(studentId);
         Map<String, Double> topicPerformance = new HashMap<>();
@@ -84,12 +92,14 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
         var recentPage = attemptRepository.findByUserId(studentId, PageRequest.of(0, 10));
         var recentList = recentPage.getContent().stream().map(attemptMapper::toResponse).toList();
 
+
         return StudentExamDashboardResponse.builder()
                 .totalExamsTaken(total)
                 .averageScore(avgScore != null ? Math.round(avgScore * 100.0) / 100.0 : 0.0)
                 .examsInProgress(inProgress)
                 .topicPerformance(topicPerformance)
                 .recommendedTopic(weakestTopic)
+                .recommend(recommend)
                 .recentAttempts(recentList)
                 .build();
     }

@@ -78,4 +78,11 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM ExamAttemptV2 e WHERE e.id = :id")
     Optional<ExamAttemptV2> findByIdWithLock(@Param("id") String id);
+
+
+    @Query("SELECT DISTINCT ea.user FROM ExamAttemptV2 ea " +
+            "WHERE ea.createdAt >= CURRENT_DATE ")
+    List<User> findDistinctUsersAttemptedToday();
+
+
 }

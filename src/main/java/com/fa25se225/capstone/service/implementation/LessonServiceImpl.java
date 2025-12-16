@@ -274,6 +274,13 @@ public class LessonServiceImpl implements LessonService {
         List<LessonVideoProgress> progresses = lessonVideoProgressRepository.findByUserAndCompletedTrue(user);
         List<LessonVideoProgress> inProgress = lessonVideoProgressRepository.findByUserAndCompletedFalseOrderByUpdatedAtDesc(user);
 
+        String permissions = "LEARNING_" + learningMaterialId.trim();
+        boolean hasPermission = user.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals(permissions));
+        if (!hasPermission) {
+            throw new AccessDeniedException("You do not have permission: " + permissions);
+        }
+
         Map<String, LessonVideoProgress> progressMap = new HashMap<>();
         for (LessonVideoProgress p : progresses) {
             progressMap.put(p.getLesson().getId(), p);

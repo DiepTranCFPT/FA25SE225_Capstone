@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.repository;
 
+import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.flashcard.FlashcardSet;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,4 +24,6 @@ public interface FlashcardSetRepository extends JpaRepository<FlashcardSet, Stri
 
     @Query("SELECT fs FROM FlashcardSet fs LEFT JOIN FETCH fs.flashcards WHERE fs.id = :id")
     Optional<FlashcardSet> findByIdWithCards(@Param("id") String id);
+
+    Page<FlashcardSet> getByAuthor(User author, Pageable pageable);
 }

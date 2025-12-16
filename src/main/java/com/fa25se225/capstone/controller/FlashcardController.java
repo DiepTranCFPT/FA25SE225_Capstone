@@ -38,6 +38,14 @@ public class FlashcardController {
         return ApiResponse.success(flashcardService.searchSets(keyword, page, size));
     }
 
+    @GetMapping("/my-sets")
+    public ApiResponse<PageResponse<List<FlashcardSetResponse>>> getMySets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(flashcardService.getMySets(page, size));
+    }
+
+
     @PutMapping("/{id}")
     public ApiResponse<FlashcardSetDetailResponse> updateSet(@PathVariable String id, @RequestBody @Valid FlashcardSetRequest request) {
         return ApiResponse.success(flashcardService.updateFlashcardSet(id, request));

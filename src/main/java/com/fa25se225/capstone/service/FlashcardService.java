@@ -5,7 +5,6 @@ import com.fa25se225.capstone.dto.response.FlashcardSetDetailResponse;
 import com.fa25se225.capstone.dto.response.FlashcardSetResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.QuizQuestionResponse;
-import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -19,4 +18,6 @@ public interface FlashcardService {
     FlashcardSetDetailResponse updateFlashcardSet(String id, FlashcardSetRequest request);
 
     List<QuizQuestionResponse> generateQuiz(String setId);
+
+    PageResponse<List<FlashcardSetResponse>> getMySets(int page, int size);
 }

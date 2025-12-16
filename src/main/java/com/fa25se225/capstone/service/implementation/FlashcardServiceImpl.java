@@ -189,4 +189,19 @@ public class FlashcardServiceImpl implements FlashcardService {
         
         return quiz;
     }
+
+    @Override
+    public PageResponse<List<FlashcardSetResponse>> getMySets(int page, int size) {
+        User user = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(page, size, "viewCount:desc", "createdAt:desc");
+        Page<FlashcardSet> fsPage = flashcardSetRepository.getByAuthor(user, pageable);
+        List<FlashcardSetResponse> responseItems = fsPage.getContent().stream().map(flashCardSetMapper::toResponse).toList();
+        return PageResponse.<List<FlashcardSetResponse>>builder()
+                .pageNo(page)
+                .pageSize(size)
+                .totalPage(fsPage.getTotalPages())
+                .totalElement(fsPage.getTotalElements())
+                .items(responseItems)
+                .build();
+    }
 }

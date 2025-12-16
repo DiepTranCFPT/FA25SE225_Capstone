@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.LessonCreationRequest;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
+import com.fa25se225.capstone.dto.response.LessonProgressResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -24,4 +25,7 @@ public interface LessonService {
     void saveLessonVideoProgress(String lessonId, int lastWatchedSecond);
 
     int getLessonVideoProgress(String lessonIdd);
+
+
+    List<LessonProgressResponse> getLessonsWithProgressByLearningMaterial(String learningMaterialId);
 }

@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.LessonCreationRequest;
 import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
+import com.fa25se225.capstone.dto.response.LessonProgressResponse;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.User;
@@ -31,7 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -52,7 +56,7 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     @Transactional
-    public LessonResponse create(LessonCreationRequest request,MultipartFile file, MultipartFile video) {
+    public LessonResponse create(LessonCreationRequest request, MultipartFile file, MultipartFile video) {
         log.info("Creating lesson with name: {}", request.name());
 
         QuestionV2 question = null;
@@ -60,7 +64,7 @@ public class LessonServiceImpl implements LessonService {
             log.debug("Validating and getting question with id: {}", request.questionId());
             question = questionRepository.findById(request.questionId())
                     .orElseThrow(() -> new AppException(ErrorCode.QUESTION_NOT_FOUND));
-            if(question.getDeleted() == true){
+            if (question.getDeleted() == true) {
                 throw new AppException(ErrorCode.QUESTION_NOT_FOUND);
             }
         }
@@ -82,8 +86,8 @@ public class LessonServiceImpl implements LessonService {
         String nameFile = "LESSON_" + "_" + savedLesson.getId().trim();
         String nameVideo = "VIDEO" + "_" + savedLesson.getId().trim();
         try {
-            String fileLesson =   minioClient.uploadFile(file,nameFile,bucketName);
-            String fileVideo = minioClient.uploadVideo(video,nameVideo);
+            String fileLesson = minioClient.uploadFile(file, nameFile, bucketName);
+            String fileVideo = minioClient.uploadVideo(video, nameVideo);
             savedLesson.setFile(fileLesson);
             savedLesson.setUrl(fileVideo);
             Lesson updatedLesson = lessonRepository.saveAndFlush(savedLesson);
@@ -260,5 +264,72 @@ public class LessonServiceImpl implements LessonService {
         return lessonVideoProgressRepository.findByUserAndLesson(user, lesson)
                 .map(LessonVideoProgress::getLastWatchedSecond)
                 .orElse(0);
+    }
+
+
+    @Override
+    public List<LessonProgressResponse> getLessonsWithProgressByLearningMaterial(String learningMaterialId) {
+        User user = accountUtil.getCurrentUser();
+        List<Lesson> lessons = lessonRepository.findByLearningMaterialIdNotDeletedList(learningMaterialId);
+        List<LessonVideoProgress> progresses = lessonVideoProgressRepository.findByUserAndCompletedTrue(user);
+        List<LessonVideoProgress> inProgress = lessonVideoProgressRepository.findByUserAndCompletedFalseOrderByUpdatedAtDesc(user);
+
+        Map<String, LessonVideoProgress> progressMap = new HashMap<>();
+        for (LessonVideoProgress p : progresses) {
+            progressMap.put(p.getLesson().getId(), p);
+        }
+        for (LessonVideoProgress p : inProgress) {
+            progressMap.put(p.getLesson().getId(), p);
+        }
+
+        String nextLessonId = null;
+        if (!inProgress.isEmpty()) {
+            for (LessonVideoProgress p : inProgress) {
+                if (p.getLesson().getLearningMaterial() != null && learningMaterialId.equals(p.getLesson().getLearningMaterial().getId())) {
+                    nextLessonId = p.getLesson().getId();
+                    break;
+                }
+            }
+        }
+        if (nextLessonId == null) {
+            for (Lesson lesson : lessons) {
+                LessonVideoProgress prog = progressMap.get(lesson.getId());
+                if (prog == null || !prog.isCompleted()) {
+                    nextLessonId = lesson.getId();
+                    break;
+                }
+            }
+        }
+
+        List<LessonProgressResponse> result = new ArrayList<>();
+        int lastWatchedSecond;
+        for (Lesson lesson : lessons) {
+            LessonVideoProgress progress = progressMap.get(lesson.getId());
+            lastWatchedSecond = progress != null ? progress.getLastWatchedSecond() : 0;
+            boolean completed = progress != null && progress.isCompleted();
+            LocalDateTime updatedAt = progress != null ? progress.getUpdatedAt() : null;
+            boolean isNext = lesson.getId().equals(nextLessonId);
+            LocalDateTime createdAt = null;
+            if (lesson.getCreatedAt() != null) {
+                createdAt = lesson.getCreatedAt().atStartOfDay();
+            }
+            result.add(LessonProgressResponse.builder()
+                    .id(lesson.getId())
+                    .name(lesson.getName())
+                    .file(lesson.getFile())
+                    .url(lesson.getUrl())
+                    .questionId(lesson.getQuestion() != null ? lesson.getQuestion().getId() : null)
+                    .description(lesson.getDescription())
+                    .questionContent(lesson.getQuestion() != null ? lesson.getQuestion().getContent() : null)
+                    .learningMaterialId(lesson.getLearningMaterial() != null ? lesson.getLearningMaterial().getId() : null)
+                    .learningMaterialTitle(lesson.getLearningMaterial() != null ? lesson.getLearningMaterial().getTitle() : null)
+                    .createdAt(createdAt)
+                    .updatedAt(updatedAt)
+                    .lastWatchedSecond(lastWatchedSecond)
+                    .completed(completed)
+                    .isNextToContinue(isNext)
+                    .build());
+        }
+        return result;
     }
 }

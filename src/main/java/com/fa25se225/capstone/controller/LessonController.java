@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.request.LessonUpdateRequest;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.LessonResponse;
+import com.fa25se225.capstone.dto.response.LessonProgressResponse;
 import com.fa25se225.capstone.service.LessonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -98,13 +99,9 @@ public class LessonController {
         lessonService.saveLessonVideoProgress(lessonId, lastWatchedSecond);
         return ApiResponse.success("Progress saved");
     }
-
-    @GetMapping("/{lessonId}/progress")
-    @Operation(summary = "Get lesson video progress", description = "Get the last watched second for the current user in a lesson video")
-    public ApiResponse<Integer> getLessonVideoProgress(
-            @PathVariable String lessonId
-    ) {
-        int progress = lessonService.getLessonVideoProgress(lessonId);
-        return ApiResponse.success(progress);
+    @GetMapping("/progress/by-learning-material/{learningMaterialId}")
+    @Operation(summary = "Get all lessons with user progress by learning material", description = "Retrieves all lessons for the current user with progress and next-to-continue flag, filtered by learning material")
+    public ApiResponse<List<LessonProgressResponse>> getLessonsWithProgressByLearningMaterial(@PathVariable String learningMaterialId) {
+        return ApiResponse.success(lessonService.getLessonsWithProgressByLearningMaterial(learningMaterialId));
     }
 }

@@ -26,5 +26,11 @@ public class LessonVideoProgress {
 
     private LocalDateTime updatedAt;
 
-}
+    private boolean completed;
 
+    @PrePersist
+    @PreUpdate
+    public void updateTimestamp() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}

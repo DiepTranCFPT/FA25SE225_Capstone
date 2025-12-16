@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.request.CommentRequest;
 import com.fa25se225.capstone.dto.request.PostUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.CommentResponse;
@@ -7,9 +8,12 @@ import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.service.CommentService;
 import com.fa25se225.capstone.service.PostService;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -39,6 +43,19 @@ public class PostController {
     public ApiResponse<String> updatePost(@PathVariable String postId, @RequestBody PostUpdateRequest request) {
         postService.updatePost(postId, request);
         return ApiResponse.success("Update Post successfully");
+    }
+
+    @PostMapping(value = "/{postId}/comments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<CommentResponse> createComment(@PathVariable String postId,
+                                                      @RequestParam(value = "content", required = false) String content,
+                                                      @RequestParam(value = "parenCommentId", required = false) String parenCommentId,
+                                                      @RequestParam(value = "image", required = false) MultipartFile image) {
+        return ApiResponse.success(commentService.createComment(CommentRequest.builder()
+                        .postId(postId)
+                        .content(content)
+                        .image(image)
+                        .parenCommentId(parenCommentId)
+                .build()));
     }
 
     @DeleteMapping("/{postId}")

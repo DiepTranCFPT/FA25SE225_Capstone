@@ -26,11 +26,6 @@ public class CommentController {
         return ApiResponse.success(commentService.getReplies(commentId, page, size));
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<CommentResponse> createComment(@ModelAttribute CommentRequest request) {
-        return ApiResponse.success(commentService.createComment(request));
-    }
-
     @DeleteMapping("/{commentId}")
     public ApiResponse<String> deleteComment(@PathVariable String commentId) {
         commentService.deleteComment(commentId);

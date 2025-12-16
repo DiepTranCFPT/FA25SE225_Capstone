@@ -12,6 +12,7 @@ import com.fa25se225.capstone.repository.CommunityRepository;
 import com.fa25se225.capstone.service.CommunityService;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -36,9 +37,12 @@ public class CommunityServiceImpl implements CommunityService {
     @Override
     public void updateCommunity(String communityId, CommunityUpdateRequest request) {
         Community community = communityRepository.findById(communityId).orElseThrow(() -> new AppException(ErrorCode.COMMUNITY_NOT_FOUND));
-        community.setName(request.getName());
-        community.setDescription(request.getDescription());
-
+        if(Strings.isNotBlank(request.getName())) {
+            community.setName(request.getName());
+        }
+        if(Strings.isNotBlank(request.getDescription())) {
+            community.setDescription(request.getDescription());
+        }
         String imgUrl = null;
         if (Objects.nonNull(request.getImage())) {
             imgUrl = cloudinaryService.uploadFile(request.getImage(), COMMUNITY_IMAGE_FOLDER);

@@ -44,6 +44,10 @@ public class CommentServiceImpl implements CommentService {
         Post post = postRepository.findById(request.getPostId())
                 .orElseThrow(() -> new AppException(ErrorCode.POST_NOT_FOUND));
 
+        if(Objects.isNull(request.getImage()) && Strings.isBlank(request.getContent())){
+            throw new AppException(ErrorCode.INVALID_COMMENT);
+        }
+
         Comment parentComment = null;
         User replyToUser = null;
 

@@ -90,7 +90,8 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(1078, "Comment not found", HttpStatus.BAD_REQUEST),
     COMMENT_NOT_SAME_THE_POST(1079,"Comment not in the same post" , HttpStatus.BAD_REQUEST),
     INVALID_VOTE_VALUE(1080,"Vote value must be 1 (Like), -1(DisLike) or 0(Nothing)" , HttpStatus.BAD_REQUEST ),
-    FLASHCARD_SET_NOT_FOUND(1081,"Flash card set not found" , HttpStatus.BAD_REQUEST );
+    FLASHCARD_SET_NOT_FOUND(1081,"Flash card set not found" , HttpStatus.BAD_REQUEST ),
+    INVALID_COMMENT(1082, "There are no content or image in comment", HttpStatus.BAD_REQUEST);
 
 
 

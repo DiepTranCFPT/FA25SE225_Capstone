@@ -25,4 +25,6 @@ public interface ExamV2Service {
     void requestReview(String attemptId, RequestReviewRequest request);
 
     PageResponse<List<ExamAttemptV2Response>> getAttemptsForTeacherReview(int pageNo, int pageSize, boolean includePending, boolean includeReviewRequested, String... sorts);
+
+    PageResponse<List<ExamAttemptV2Response>> getAllStudentExamAttempts(int pageNo, int pageSize, String[] sorts);
 }

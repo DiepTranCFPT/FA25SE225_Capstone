@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.repository.v2;
 
 import com.fa25se225.capstone.dto.response.TopExamAdminStat;
+import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import feign.Param;
@@ -19,6 +20,11 @@ import java.util.Optional;
 public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, String> {
 
     Page<ExamAttemptV2> findByUserId(String userId, Pageable pageable);
+
+    @Query("SELECT ea FROM ExamAttemptV2 ea " +
+            "LEFT JOIN FETCH ea.exam e " +
+            "WHERE e.belongTo = :teacher")
+    Page<ExamAttemptV2> findByTeacher(@Param("teacher") User teacher, Pageable pageable);
 
     Page<ExamAttemptV2> findBySourceTemplateIdAndRatingNotNull(String id, Pageable pageable);
 

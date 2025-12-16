@@ -110,4 +110,13 @@ public class ExamAttemptController {
         return ApiResponse.success(examV2Service.getAttemptsForTeacherReview(
                 pageNo, pageSize, includePending, includeReviewRequested, sorts));
     }
+
+    @GetMapping("/teacher/exam-attempts")
+    public ApiResponse<PageResponse<List<ExamAttemptV2Response>>> getAllMyE(
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(defaultValue = "createdAt:desc") String... sorts
+    ) {
+        return ApiResponse.success(examV2Service.getAllStudentExamAttempts(pageNo, pageSize, sorts));
+    }
 }

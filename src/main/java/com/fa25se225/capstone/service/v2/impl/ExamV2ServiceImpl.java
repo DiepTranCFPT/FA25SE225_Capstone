@@ -738,4 +738,26 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .items(items)
                 .build();
     }
+
+    @Override
+    public PageResponse<List<ExamAttemptV2Response>> getAllStudentExamAttempts(int pageNo, int pageSize, String[] sorts) {
+        User currentUser = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+
+        Page<ExamAttemptV2> page = attemptRepository.findByTeacher(currentUser, pageable);
+
+        List<ExamAttemptV2Response> responses = page.getContent().stream()
+                .map(examAttemptV2Mapper::toResponse)
+                .toList();
+
+        return PageResponse.<List<ExamAttemptV2Response>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(page.getTotalPages())
+                .totalElement(page.getTotalElements())
+                .sortBy(sorts)
+                .items(responses)
+                .build();
+    }
+
 }

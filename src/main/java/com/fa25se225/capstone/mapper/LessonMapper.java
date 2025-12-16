@@ -25,4 +25,7 @@ public interface LessonMapper {
     @Mapping(target = "question", ignore = true)
     @Mapping(target = "learningMaterial", ignore = true)
     void updateEntity(@MappingTarget Lesson entity, LessonUpdateRequest request);
+
+    @Mapping(target = "questionId", ignore = true)
+    LessonResponse toResponse(Lesson entity, Integer lastWatchedSecond);
 }

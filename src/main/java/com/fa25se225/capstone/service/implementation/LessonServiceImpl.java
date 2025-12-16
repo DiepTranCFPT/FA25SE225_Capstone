@@ -8,12 +8,14 @@ import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.QuestionV2;
+import com.fa25se225.capstone.entity.LessonVideoProgress;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.LessonMapper;
 import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.LessonRepository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
+import com.fa25se225.capstone.repository.LessonVideoProgressRepository;
 import com.fa25se225.capstone.service.LessonService;
 
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -28,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -42,6 +45,7 @@ public class LessonServiceImpl implements LessonService {
     private final PageHelper pageHelper;
     private final AccountUtil accountUtil;
     private final MinioServiceImpl minioClient;
+    private final LessonVideoProgressRepository lessonVideoProgressRepository;
 
     @Value("${minio.bucket.lesson}")
     private String bucketName;
@@ -103,7 +107,8 @@ public class LessonServiceImpl implements LessonService {
         if (!hasPermission) {
             throw new AccessDeniedException("You do not have permission: " + permissions);
         }
-        return lessonMapper.toResponse(lesson);
+        int lastWatchedSecond = getLessonVideoProgress(id);
+        return lessonMapper.toResponse(lesson, lastWatchedSecond);
     }
 
     @Override
@@ -227,5 +232,33 @@ public class LessonServiceImpl implements LessonService {
                 .sortBy(sorts)
                 .items(responses)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void saveLessonVideoProgress(String lessonId, int lastWatchedSecond) {
+        Lesson lesson = lessonRepository.findByIdNotDeleted(lessonId)
+                .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
+        User user = accountUtil.getCurrentUser();
+        LessonVideoProgress progress = lessonVideoProgressRepository.findByUserAndLesson(user, lesson)
+                .orElse(null);
+        if (progress == null) {
+            progress = new LessonVideoProgress();
+            progress.setUser(user);
+            progress.setLesson(lesson);
+        }
+        progress.setLastWatchedSecond(lastWatchedSecond);
+        progress.setUpdatedAt(LocalDateTime.now());
+        lessonVideoProgressRepository.save(progress);
+    }
+
+    @Override
+    public int getLessonVideoProgress(String lessonId) {
+        Lesson lesson = lessonRepository.findByIdNotDeleted(lessonId)
+                .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
+        User user = accountUtil.getCurrentUser();
+        return lessonVideoProgressRepository.findByUserAndLesson(user, lesson)
+                .map(LessonVideoProgress::getLastWatchedSecond)
+                .orElse(0);
     }
 }

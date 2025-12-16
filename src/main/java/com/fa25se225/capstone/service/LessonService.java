@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface LessonService {
-    LessonResponse create(LessonCreationRequest request,MultipartFile file, MultipartFile video);
+    LessonResponse create(LessonCreationRequest request, MultipartFile file, MultipartFile video);
 
     LessonResponse getById(String id);
 
@@ -20,4 +20,8 @@ public interface LessonService {
     void delete(String id);
 
     PageResponse<List<LessonResponse>> getLessonsByLearningMaterial(String learningMaterialId, int pageNo, int pageSize, String... sorts);
+
+    void saveLessonVideoProgress(String lessonId, int lastWatchedSecond);
+
+    int getLessonVideoProgress(String lessonIdd);
 }

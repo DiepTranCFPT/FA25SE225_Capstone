@@ -88,4 +88,23 @@ public class LessonController {
     ) {
         return ApiResponse.success(lessonService.getLessonsByLearningMaterial(learningMaterialId, pageNo, pageSize, sorts));
     }
+
+    @PutMapping("/{lessonId}/progress")
+    @Operation(summary = "Save lesson video progress", description = "Save the last watched second for the current user in a lesson video")
+    public ApiResponse<String> saveLessonVideoProgress(
+            @PathVariable String lessonId,
+            @RequestParam int lastWatchedSecond
+    ) {
+        lessonService.saveLessonVideoProgress(lessonId, lastWatchedSecond);
+        return ApiResponse.success("Progress saved");
+    }
+
+    @GetMapping("/{lessonId}/progress")
+    @Operation(summary = "Get lesson video progress", description = "Get the last watched second for the current user in a lesson video")
+    public ApiResponse<Integer> getLessonVideoProgress(
+            @PathVariable String lessonId
+    ) {
+        int progress = lessonService.getLessonVideoProgress(lessonId);
+        return ApiResponse.success(progress);
+    }
 }

@@ -16,5 +16,6 @@ public record LessonResponse(
     String learningMaterialId,
     String learningMaterialTitle,
     LocalDate createdAt,
-    LocalDate updatedAt
+    LocalDate updatedAt,
+    Integer lastWatchedSecond
 ) {}

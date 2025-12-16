@@ -5,6 +5,7 @@ import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.FlashcardSetDetailResponse;
 import com.fa25se225.capstone.dto.response.FlashcardSetResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
+import com.fa25se225.capstone.dto.response.QuizQuestionResponse;
 import com.fa25se225.capstone.service.FlashcardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,5 +47,10 @@ public class FlashcardController {
     public ApiResponse<String> deleteSet(@PathVariable String id) {
         flashcardService.deleteFlashcardSet(id);
         return ApiResponse.success("Delete Flashcard Set successfully");
+    }
+
+    @GetMapping("/{id}/quiz")
+    public ApiResponse<List<QuizQuestionResponse>> getQuiz(@PathVariable String id) {
+        return ApiResponse.success(flashcardService.generateQuiz(id));
     }
 }

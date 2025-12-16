@@ -6,6 +6,7 @@ import com.fa25se225.capstone.dto.response.FlashcardSetDetailResponse;
 import com.fa25se225.capstone.dto.response.FlashcardSetResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.PostResponse;
+import com.fa25se225.capstone.dto.response.QuizQuestionResponse;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.flashcard.Flashcard;
 import com.fa25se225.capstone.entity.flashcard.FlashcardSet;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -149,5 +151,42 @@ public class FlashcardServiceImpl implements FlashcardService {
         }
 
         flashcardSetRepository.delete(set);
+    }
+
+    @Override
+    public List<QuizQuestionResponse> generateQuiz(String setId) {
+        FlashcardSet set = flashcardSetRepository.findByIdWithCards(setId)
+                .orElseThrow(() -> new AppException(ErrorCode.FLASHCARD_SET_NOT_FOUND));
+
+        List<Flashcard> cards = set.getFlashcards();
+        if (cards.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<String> allTerms = cards.stream().map(Flashcard::getTerm).toList();
+
+        List<QuizQuestionResponse> quiz = new ArrayList<>();
+
+        for (Flashcard card : cards) {
+            List<String> distractors = new ArrayList<>(allTerms);
+            distractors.remove(card.getTerm());
+            Collections.shuffle(distractors);
+
+            List<String> options = new ArrayList<>(distractors.subList(0, Math.min(3, distractors.size())));
+            
+            options.add(card.getTerm());
+            
+            Collections.shuffle(options);
+
+            quiz.add(QuizQuestionResponse.builder()
+                    .flashcardId(card.getId())
+                    .question(card.getDefinition())
+                    .imageUrl(card.getImageUrl())
+                    .correctAnswer(card.getTerm())
+                    .options(options)
+                    .build());
+        }
+        
+        return quiz;
     }
 }

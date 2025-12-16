@@ -47,7 +47,7 @@ public class CommunityController {
         return ApiResponse.success(communityService.searchCommunity(keyword));
     }
 
-    @PutMapping("/{communityId}")
+    @PutMapping(value = "/{communityId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> updateCommunity(@PathVariable String communityId, @ModelAttribute CommunityUpdateRequest request) {
         communityService.updateCommunity(communityId, request);
 

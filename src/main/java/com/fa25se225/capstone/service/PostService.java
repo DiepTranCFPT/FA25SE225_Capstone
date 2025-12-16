@@ -17,4 +17,6 @@ public interface PostService {
 
     PageResponse<List<PostResponse>> getPostsByCommunityId(String communityId, int page, int size);
     void votePost(String postId, int value);
+
+    PageResponse<List<PostResponse>> getMyPost(int page, int size);
 }

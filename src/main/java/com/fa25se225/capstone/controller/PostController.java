@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.request.PostUpdateRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.CommentResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
+import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.service.CommentService;
 import com.fa25se225.capstone.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,13 @@ public class PostController {
     public ApiResponse<String> pinPost(@PathVariable String postId) {
         postService.togglePinPost(postId);
         return ApiResponse.success("Post pin status updated");
+    }
+
+    @GetMapping("/my-posts")
+    public ApiResponse<PageResponse<List<PostResponse>>>getMyPosts(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(postService.getMyPost(page, size));
     }
 
     @PutMapping("/{postId}")

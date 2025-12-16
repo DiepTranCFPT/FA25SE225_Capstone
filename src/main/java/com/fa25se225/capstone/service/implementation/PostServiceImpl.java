@@ -80,6 +80,38 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public PageResponse<List<PostResponse>> getMyPost(int page, int size) {
+        User currentUser = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(page, size, "createdAt:desc");
+        Page<Post> postsPage = postRepository.findAllByAuthor(currentUser, pageable);
+        List<Post> posts = postsPage.getContent();
+
+        Map<String, Integer> userVotesMap = new HashMap<>();
+        if (currentUser != null && !posts.isEmpty()) {
+            List<String> postIds = posts.stream().map(Post::getId).toList();
+            List<PostVote> votes = postVoteRepository.findAllByUserIdAndPostIds(currentUser.getId(), postIds);
+
+            for (PostVote v : votes) {
+                userVotesMap.put(v.getPost().getId(), v.getValue());
+            }
+        }
+
+        List<PostResponse> responseItems = posts.stream().map(post -> {
+            PostResponse res = postMapper.toResponse(post);
+            res.setUserVoteValue(userVotesMap.getOrDefault(post.getId(), 0));
+            return res;
+        }).toList();
+
+        return PageResponse.<List<PostResponse>>builder()
+                .pageNo(page)
+                .pageSize(size)
+                .totalPage(postsPage.getTotalPages())
+                .totalElement(postsPage.getTotalElements())
+                .items(responseItems)
+                .build();
+    }
+
+    @Override
     @Transactional
     public PostResponse createPost(String communityId, PostCreationRequest request) {
         User currentUser = accountUtil.getCurrentUser();

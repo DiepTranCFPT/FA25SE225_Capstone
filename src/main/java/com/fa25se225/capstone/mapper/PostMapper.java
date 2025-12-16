@@ -10,6 +10,7 @@ import org.mapstruct.*;
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         uses = {UserMapper.class})
 public interface PostMapper {
+    @Mapping(target = "communityId", source = "community.name")
     PostResponse toResponse(Post post);
     void updatePost(@MappingTarget Post post, PostUpdateRequest request);
 }

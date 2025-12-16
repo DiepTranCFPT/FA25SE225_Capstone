@@ -23,4 +23,5 @@ public class PostResponse {
     private int commentCount;
     private int voteCount;
     private int userVoteValue;
+    private String communityId;
 }

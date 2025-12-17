@@ -4,6 +4,7 @@ import com.fa25se225.capstone.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -52,6 +53,9 @@ public class ExamTemplateV2 {
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamRuleV2> rules = new ArrayList<>();
 
+    @Formula("(SELECT COALESCE(SUM(er.points_per_question * er.num_questions), 0) FROM exam_rules_v2 er WHERE er.template_id = id)")
+    private Double maxScore;
+
     @Column(name = "average_rating", columnDefinition = "DECIMAL(3,2) default 0.0")
     @Builder.Default
     private Double averageRating = 0.0;
@@ -68,4 +72,7 @@ public class ExamTemplateV2 {
     private LocalDateTime createAt;
     @UpdateTimestamp
     private LocalDateTime updateAt;
+
+    @Column(name = "score_mapping", columnDefinition = "TEXT")
+    private String scoreMapping;
 }

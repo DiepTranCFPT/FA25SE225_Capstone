@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.dto.v2.response;
 
+import com.fa25se225.capstone.dto.response.APResult;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
@@ -22,6 +23,7 @@ public class ExamAttemptV2Response {
     private String examId;
     private String doneBy;
     private Double score;
+    private APResult apResult;
     private Double passingScore;
     private LocalDateTime startTime;
     private LocalDateTime endTime;

@@ -51,6 +51,12 @@ public class FlashcardController {
         return ApiResponse.success(flashcardService.updateFlashcardSet(id, request));
     }
 
+    @PatchMapping("/{id}/visibility")
+    public ApiResponse<String> setVisibility(@PathVariable String id) {
+        flashcardService.setVisibility(id);
+        return ApiResponse.success("Visibility updated");
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<String> deleteSet(@PathVariable String id) {
         flashcardService.deleteFlashcardSet(id);

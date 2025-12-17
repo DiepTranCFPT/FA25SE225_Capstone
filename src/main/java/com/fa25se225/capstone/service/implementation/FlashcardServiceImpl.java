@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -93,9 +94,13 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Override
     public PageResponse<List<FlashcardSetResponse>> searchSets(String keyword, int page, int size) {
 
-        User user = accountUtil.getCurrentUser();
+        User currentUser = null;
+        try { currentUser = accountUtil.getCurrentUser(); }
+        catch (Exception e) {
+        }
+        String currentId = Objects.isNull(currentUser) ? "1" : currentUser.getId();
         Pageable pageable = pageHelper.pageEngine(page, size, "viewCount:desc", "createdAt:desc");
-        Page<FlashcardSet> fsPage = flashcardSetRepository.searchSets(keyword, user.getId(), pageable);
+        Page<FlashcardSet> fsPage = flashcardSetRepository.searchSets(keyword, currentId, pageable);
         List<FlashcardSetResponse> responseItems = fsPage.getContent().stream().map(flashCardSetMapper::toResponse).toList();
         return PageResponse.<List<FlashcardSetResponse>>builder()
                 .pageNo(page)
@@ -203,5 +208,14 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .totalElement(fsPage.getTotalElements())
                 .items(responseItems)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void setVisibility(String id) {
+        FlashcardSet set = flashcardSetRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.FLASHCARD_SET_NOT_FOUND));
+        set.setPublic(!set.isPublic());
+        flashcardSetRepository.save(set);
     }
 }

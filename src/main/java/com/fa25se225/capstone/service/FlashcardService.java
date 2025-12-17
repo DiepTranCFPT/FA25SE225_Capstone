@@ -20,4 +20,6 @@ public interface FlashcardService {
     List<QuizQuestionResponse> generateQuiz(String setId);
 
     PageResponse<List<FlashcardSetResponse>> getMySets(int page, int size);
+
+    void setVisibility(String id);
 }

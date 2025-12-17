@@ -41,6 +41,9 @@ public class ExamAttemptV2 {
     @Column(name = "score")
     private Double score;
 
+    @Column(name = "scale_score")
+    private Integer scaledScore;
+
     @OneToMany(mappedBy = "examAttempt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentAnswerV2> studentAnswers = new ArrayList<>();
 

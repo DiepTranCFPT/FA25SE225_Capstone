@@ -35,7 +35,7 @@ import java.util.HashSet;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS_POST = {"/users","/auth/**", "auth/token", "auth/introspect", "auth/logout","/payment/momo/**", "auth/refresh-token", "auth/reset-password/**", "test/**","/auth/verify-email","/auth/outbound/authentication"};
-    private final String[] PUBLIC_ENDPOINTS_GET = {"auth/forgot-password", "test/**", "learning-materials/public","/payment/momo/**", "exam-templates/browse", "exam-templates/ratings/**", "users/teachers", "/questions-v2/import/template"};
+    private final String[] PUBLIC_ENDPOINTS_GET = {"auth/forgot-password", "test/**", "learning-materials/public","/payment/momo/**", "exam-templates/browse", "exam-templates/ratings/**", "users/teachers", "/questions-v2/import/template", "/flashcard-sets"};
     private static final String[] SWAGGER_UI_PATHS = {
             "/v3/api-docs/**",
             "/swagger-ui/**",

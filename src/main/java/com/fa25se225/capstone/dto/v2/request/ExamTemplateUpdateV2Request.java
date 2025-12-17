@@ -1,5 +1,10 @@
 package com.fa25se225.capstone.dto.v2.request;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,8 +13,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -25,5 +32,6 @@ public class ExamTemplateUpdateV2Request {
     private BigDecimal tokenCost;
     private Boolean isActive = false;
     private List<ExamRuleV2Request> rules;
-}
+    private Map<String, ScoreRange> scoreMapping;
 
+}

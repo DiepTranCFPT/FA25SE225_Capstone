@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.request.CommunityCreationRequest;
 import com.fa25se225.capstone.dto.request.CommunityUpdateRequest;
 import com.fa25se225.capstone.dto.request.PostCreationRequest;
 import com.fa25se225.capstone.dto.response.ApiResponse;
@@ -12,6 +13,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,9 +59,26 @@ public class CommunityController {
         return ApiResponse.success(communityService.searchCommunity(keyword));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<CommunityResponse> createCommunity(
+                                               @RequestParam(value = "name") @NotBlank String name,
+                                               @RequestParam(value = "description") @NotBlank String description,
+                                               @RequestParam(value = "image", required = false) MultipartFile image,
+                                               @RequestParam(value = "subjectId", required = false) String subjectId) {
+        return ApiResponse.success(communityService.createCommunity(CommunityCreationRequest.builder()
+                .name(name)
+                .description(description)
+                .image(image)
+                .subjectId(subjectId)
+                .build()));
+
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(value = "/{communityId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<String> updateCommunity(@PathVariable String communityId,
-                                               @RequestParam(value = "name", required = false) String name,
+                                               @RequestParam(value = "name") String name,
                                                @RequestParam(value = "description", required = false) String description,
                                                @RequestParam(value = "image", required = false) MultipartFile image) {
         communityService.updateCommunity(communityId, CommunityUpdateRequest.builder()

@@ -21,11 +21,11 @@ public class ExamTemplateV2Response {
     private SubjectV2Response subject;
     private Integer duration;
     private Integer passingScore;
+    private Double maxScore;
     private Boolean isActive;
     private String createdBy;
     private List<ExamRuleV2Response> rules;
     private BigDecimal tokenCost;
-
     private Double averageRating;
     private Integer totalRatings;
     private Integer totalTakers;

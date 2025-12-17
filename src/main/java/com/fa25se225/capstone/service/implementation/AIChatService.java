@@ -3,6 +3,8 @@ package com.fa25se225.capstone.service.implementation;
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.entity.StudentProfile;
 import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.exception.AppException;
+import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.StudentProfileRepository;
 import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
 import com.fa25se225.capstone.service.StudentDashboardService;
@@ -20,10 +22,13 @@ import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @Slf4j
@@ -53,12 +58,22 @@ public class AIChatService {
     private StudentDashboardService studentDashboardService;
 
 
-//    private final ConcurrentHashMap<String, Integer> dailyRequestMap = new ConcurrentHashMap<>();
+    private static class UserRequestInfo {
+        final LocalDate date;
+        final AtomicInteger count;
 
-//    @Scheduled(cron = "0 0 0 * * ?")
-//    private void clearDailyRequests() {
-//        dailyRequestMap.clear();
-//    }
+        UserRequestInfo(LocalDate date) {
+            this.date = date;
+            this.count = new AtomicInteger(0);
+        }
+    }
+
+    private final ConcurrentHashMap<String, UserRequestInfo> dailyRequestMap = new ConcurrentHashMap<>();
+
+    @Scheduled(cron = "0 0 0 * * ?")
+    protected void clearDailyRequests() {
+        dailyRequestMap.clear();
+    }
 
 
     private Set<String> conversationIds = new HashSet<>();
@@ -132,8 +147,30 @@ public class AIChatService {
     }
 
     @CacheEvict(value = "student_exam_dashboard", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
-    public void createRecommendForCurrentStudent(){
+    public void createRecommendForCurrentStudent() {
         String userId = accountUtil.getCurrentUser().getId();
+        AtomicBoolean allowed = new AtomicBoolean(false);
+        LocalDate today = LocalDate.now();
+
+        dailyRequestMap.compute(userId, (k, info) -> {
+            if (info == null || !info.date.equals(today)) {
+                UserRequestInfo newInfo = new UserRequestInfo(today);
+                newInfo.count.incrementAndGet();
+                allowed.set(true);
+                return newInfo;
+            }
+            if (info.count.get() < 3) {
+                info.count.incrementAndGet();
+                allowed.set(true);
+            }
+            return info;
+        });
+
+        if (!allowed.get()) {
+            log.warn("Daily recommend limit reached for user {} (max 3 per day).", userId);
+            throw new AppException(ErrorCode.EXCEED_REQUEST);
+        }
+
         setRecommendOfStudentByAI(userId);
     }
 

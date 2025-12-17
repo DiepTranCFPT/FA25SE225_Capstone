@@ -34,6 +34,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,6 +124,12 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamV2Response response = examV2Mapper.toResponse(exam);
         response.setExamAttemptId(attempt.getId());
         response.setAttemptSessionToken(newSessionToken);
+
+        if (exam.getDuration() != null && exam.getDuration() > 0) {
+            LocalDateTime endTime = attempt.getStartTime().plusMinutes(exam.getDuration());
+            long remainSeconds = Duration.between(LocalDateTime.now(), endTime).getSeconds();
+            response.setRemainTime(Math.max(0, remainSeconds));
+        }
 
         List<StudentAnswerV2> savedAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attempt.getId());
 
@@ -270,12 +277,22 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         response.setExamAttemptId(attempt.getId());
         response.setAttemptSessionToken(newSessionToken);
 
+        if (savedExam.getDuration() != null && savedExam.getDuration() > 0) {
+            response.setRemainTime((long) savedExam.getDuration() * 60);
+        }
+
         response.getQuestions().forEach(examQuestion -> {
             var answers = examQuestion.getQuestion().getAnswers();
             if (Objects.nonNull(answers) && answers.size() == 1) {
                 examQuestion.getQuestion().setAnswers(null);
             }
         });
+
+        if (exam.getDuration() != null && exam.getDuration() > 0) {
+            LocalDateTime endTime = attempt.getStartTime().plusMinutes(exam.getDuration());
+            long remainSeconds = Duration.between(LocalDateTime.now(), endTime).getSeconds();
+            response.setRemainTime(Math.max(0, remainSeconds));
+        }
 
         return response;
     }

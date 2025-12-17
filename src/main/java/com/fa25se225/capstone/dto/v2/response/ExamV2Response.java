@@ -20,5 +20,6 @@ public class ExamV2Response {
     private Integer passingScore;
     private String belongTo;
     private String attemptSessionToken;
+    private Long remainTime;
     private List<ExamQuestionV2Response> questions;
 }

@@ -13,7 +13,7 @@ public class FlashcardSetDetailResponse {
     private String id;
     private String title;
     private String description;
-    private Boolean isPublic;
+    private boolean visible;
     private int cardCount;
     private int viewCount;
     private UserResponse author;

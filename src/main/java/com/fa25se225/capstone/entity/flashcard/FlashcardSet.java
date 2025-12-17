@@ -29,8 +29,8 @@ public class FlashcardSet {
     private String description;
 
     @Builder.Default
-    @Column(name = "is_public")
-    private boolean isPublic = true;
+    @Column(name = "is_visible")
+    private boolean visible = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)

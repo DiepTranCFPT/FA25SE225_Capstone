@@ -5,7 +5,6 @@ import com.fa25se225.capstone.dto.request.FlashcardSetRequest;
 import com.fa25se225.capstone.dto.response.FlashcardSetDetailResponse;
 import com.fa25se225.capstone.dto.response.FlashcardSetResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
-import com.fa25se225.capstone.dto.response.PostResponse;
 import com.fa25se225.capstone.dto.response.QuizQuestionResponse;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.flashcard.Flashcard;
@@ -45,7 +44,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         FlashcardSet set = FlashcardSet.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
-                .isPublic(request.isPublic())
+                .visible(request.isPublic())
                 .author(currentUser)
                 .cardCount(request.getCards().size())
                 .viewCount(0)
@@ -79,7 +78,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         }
 
-        if (!set.isPublic()) {
+        if (!set.isVisible()) {
             if (currentUser == null || !set.getAuthor().getId().equals(currentUser.getId())) {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
@@ -124,7 +123,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         set.setTitle(request.getTitle());
         set.setDescription(request.getDescription());
-        set.setPublic(request.isPublic());
+        set.setVisible(request.isPublic());
 
         set.getFlashcards().clear();
         
@@ -215,7 +214,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     public void setVisibility(String id) {
         FlashcardSet set = flashcardSetRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.FLASHCARD_SET_NOT_FOUND));
-        set.setPublic(!set.isPublic());
+        set.setVisible(!set.isVisible());
         flashcardSetRepository.save(set);
     }
 }

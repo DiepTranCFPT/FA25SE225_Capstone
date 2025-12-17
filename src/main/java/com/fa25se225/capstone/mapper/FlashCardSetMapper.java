@@ -14,6 +14,8 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.IGNORE,
         uses = {FlashCardMapper.class, UserMapper.class} )
 public interface FlashCardSetMapper {
+    @Mapping(target = "visible", source = "flashcardSet.visible")
     FlashcardSetResponse toResponse(FlashcardSet flashcardSet);
+    @Mapping(target = "visible", source = "flashcardSet.visible")
     FlashcardSetDetailResponse toDetailResponse(FlashcardSet flashcardSet);
 }

@@ -16,7 +16,7 @@ public interface FlashcardSetRepository extends JpaRepository<FlashcardSet, Stri
 
     @Query("SELECT fs FROM FlashcardSet fs WHERE " +
             "(fs.title LIKE %:keyword% OR fs.description LIKE %:keyword%) " +
-            "AND (fs.isPublic = true OR fs.author.id = :userId) " +
+            "AND (fs.visible = true OR fs.author.id = :userId) " +
             "ORDER BY fs.createdAt DESC")
     Page<FlashcardSet> searchSets(@Param("keyword") String keyword,
                                   @Param("userId") String userId,

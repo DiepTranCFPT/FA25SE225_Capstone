@@ -12,7 +12,7 @@ public class FlashcardSetRequest {
     @NotBlank
     private String title;
     private String description;
-    @JsonProperty("isPublic")
+    @JsonProperty("isVisible")
     private boolean isPublic;
 
     @NotEmpty

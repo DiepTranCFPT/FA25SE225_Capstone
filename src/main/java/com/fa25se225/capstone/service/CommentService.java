@@ -16,4 +16,6 @@ public interface CommentService {
     void deleteComment(String commentId);
 
     void updateComment(String id, String content);
+
+    void voteComment(String commentId, int value);
 }

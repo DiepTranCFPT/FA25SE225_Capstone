@@ -55,6 +55,10 @@ public class Comment {
     @Builder.Default
     private int replyCount = 0;
 
+    @Column(name = "vote_count")
+    @Builder.Default
+    private int voteCount = 0;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

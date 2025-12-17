@@ -22,6 +22,9 @@ public class CommentResponse {
     private int replyCount;
     private String replyToUserName;
 
+    private int voteCount;
+    private int userVoteValue;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

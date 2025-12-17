@@ -5,11 +5,13 @@ import com.fa25se225.capstone.dto.response.CommentResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.forum.Comment;
+import com.fa25se225.capstone.entity.forum.CommentVote;
 import com.fa25se225.capstone.entity.forum.Post;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.CommentMapper;
 import com.fa25se225.capstone.repository.CommentRepository;
+import com.fa25se225.capstone.repository.CommentVoteRepository;
 import com.fa25se225.capstone.repository.PostRepository;
 import com.fa25se225.capstone.service.CommentService;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -22,12 +24,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
+    private final CommentVoteRepository commentVoteRepository;
     private final PostRepository postRepository;
     private final AccountUtil accountUtil;
     private final CloudinaryService cloudinaryService;
@@ -128,10 +134,70 @@ public class CommentServiceImpl implements CommentService {
 
     }
 
+    @Override
+    @Transactional
+    public void voteComment(String commentId, int value) {
+        User currentUser = accountUtil.getCurrentUser();
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new AppException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (value != 1 && value != -1 && value != 0) {
+            throw new AppException(ErrorCode.INVALID_VOTE_VALUE);
+        }
+
+        Optional<CommentVote> existingVoteOpt = commentVoteRepository.findByUserAndComment(currentUser, comment);
+        int currentVoteCount = comment.getVoteCount();
+
+        if (existingVoteOpt.isPresent()) {
+            CommentVote existingVote = existingVoteOpt.get();
+            int oldValue = existingVote.getValue();
+
+            if (value == 0) {
+                commentVoteRepository.delete(existingVote);
+                comment.setVoteCount(currentVoteCount - oldValue);
+            } else if (oldValue != value) {
+                existingVote.setValue(value);
+                commentVoteRepository.save(existingVote);
+                comment.setVoteCount(currentVoteCount - oldValue + value);
+            }
+        } else {
+            if (value != 0) {
+                CommentVote newVote = CommentVote.builder()
+                        .user(currentUser)
+                        .comment(comment)
+                        .value(value)
+                        .build();
+                commentVoteRepository.save(newVote);
+                comment.setVoteCount(currentVoteCount + value);
+            }
+        }
+        commentRepository.save(comment);
+    }
 
     private PageResponse<List<CommentResponse>>buildPageResponse(Page<Comment> pageData, int page, int size) {
-        List<CommentResponse> items = pageData.getContent().stream()
-                .map(commentMapper::toResponse)
+        List<Comment> comments = pageData.getContent();
+        Map<String, Integer> userVotesMap = new HashMap<>();
+
+        try {
+            User currentUser = accountUtil.getCurrentUser();
+            if (currentUser != null && !comments.isEmpty()) {
+                List<String> commentIds = comments.stream().map(Comment::getId).toList();
+                List<CommentVote> votes = commentVoteRepository.findAllByUserIdAndCommentIds(currentUser.getId(), commentIds);
+                for (CommentVote v : votes) {
+                    userVotesMap.put(v.getComment().getId(), v.getValue());
+                }
+            }
+        } catch (Exception e) {
+            // User not logged in, ignore
+        }
+
+        List<CommentResponse> items = comments.stream()
+                .map(comment -> {
+                    CommentResponse res = commentMapper.toResponse(comment);
+                    res.setVoteCount(comment.getVoteCount());
+                    res.setUserVoteValue(userVotesMap.getOrDefault(comment.getId(), 0));
+                    return res;
+                })
                 .toList();
 
         return PageResponse.<List<CommentResponse>>builder()

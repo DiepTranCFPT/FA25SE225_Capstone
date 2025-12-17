@@ -37,4 +37,10 @@ public class CommentController {
         commentService.updateComment(commentId, content);
         return ApiResponse.success("Update comment successfully");
     }
+
+    @PostMapping("/{commentId}/vote")
+    public ApiResponse<Void> voteComment(@PathVariable String commentId, @RequestParam int value) {
+        commentService.voteComment(commentId, value);
+        return ApiResponse.success(null);
+    }
 }

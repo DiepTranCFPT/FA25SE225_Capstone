@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;
@@ -81,13 +82,15 @@ public class AIChatService {
     public Flux<String> examAsk(ExamAskingRequest request){
         String conversationId = request.getDoneBy().concat(request.getAttemptId());
         conversationIds.add(conversationId);
+        String questionContext = StringUtils.hasText(request.getQuestionContext()) ? request.getQuestionContext() : "";
         String userAsking = String.format(
                 """
+                        %s
                         Question : %s
                         Student answer : %s
                         Student asking : %s
                         """,
-                request.getQuestionContent(), request.getStudentAnswer(), request.getStudentAsking()
+                questionContext, request.getQuestionContent(), request.getStudentAnswer(), request.getStudentAsking()
         );
         String systemText = "You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)";
 

@@ -17,6 +17,8 @@ public class ExamAskingRequest {
     @NotEmpty(message = "Student asking is require")
     private String studentAsking;
 
+    private String questionContext;
+
     @NotEmpty(message = "Done By is require")
     private String doneBy;
 }

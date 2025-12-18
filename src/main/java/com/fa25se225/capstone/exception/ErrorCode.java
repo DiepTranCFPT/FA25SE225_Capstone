@@ -93,7 +93,8 @@ public enum ErrorCode {
     FLASHCARD_SET_NOT_FOUND(1081,"Flash card set not found" , HttpStatus.BAD_REQUEST ),
     INVALID_COMMENT(1082, "There are no content or image in comment", HttpStatus.BAD_REQUEST),
     EXCEED_REQUEST(1083, "You have used up all 3 requests for today." , HttpStatus.BAD_REQUEST),
-    INVALID_SCORE_RANGE(1084,"Invalid score range" , HttpStatus.BAD_REQUEST);
+    INVALID_SCORE_RANGE(1084,"Invalid score range" , HttpStatus.BAD_REQUEST),
+    QUESTION_CONTEXT_NOT_FOUND(1085,"Question Context not found" ,HttpStatus.BAD_REQUEST );
 
 
 

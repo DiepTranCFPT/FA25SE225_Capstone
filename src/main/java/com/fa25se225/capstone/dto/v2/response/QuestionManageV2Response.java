@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.dto.v2.response;
 
+import jakarta.persistence.Column;
 import lombok.*;
 
 import java.util.List;
@@ -19,4 +20,7 @@ public class QuestionManageV2Response {
     private String createdBy;
     private String topic;
     private List<AnswerV2Response> answers;
+    private String imageUrl;
+    private String audioUrl;
+    private QuestionContextV2Response context;
 }

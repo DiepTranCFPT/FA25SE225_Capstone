@@ -10,16 +10,15 @@ import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
-import com.fa25se225.capstone.entity.v2.AnswerV2;
-import com.fa25se225.capstone.entity.v2.QuestionDifficultyV2;
-import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
-import com.fa25se225.capstone.entity.v2.QuestionV2;
+import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.AnswerV2Mapper;
+import com.fa25se225.capstone.mapper.v2.QuestionContextMapper;
 import com.fa25se225.capstone.mapper.v2.QuestionV2Mapper;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.repository.v2.QuestionContextV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
@@ -57,8 +56,10 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     private final UserRepository userRepository;
     private final QuestionV2Mapper questionV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
+    private final QuestionContextMapper questionContextMapper;
     private final PageHelper pageHelper;
     private final QuestionImportService questionImportService;
+    private final QuestionContextV2Repository questionContextV2Repository;
 
     @Override
     @Transactional
@@ -84,6 +85,23 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         questionV2.setSubject(subject);
         questionV2.setDifficulty(difficulty);
         questionV2.setTopic(topic);
+
+        if (StringUtils.hasText(request.getContextId())) {
+            QuestionContextV2 context = questionContextV2Repository.findById(request.getContextId())
+                    .orElseThrow(() -> new AppException(ErrorCode.QUESTION_CONTEXT_NOT_FOUND));
+            questionV2.setContext(context);
+
+        } else if (request.getContext() != null) {
+
+//            QuestionContextV2 context = QuestionContextV2.builder()
+//                    .title(request.getContext().getTitle())
+//                    .content(request.getContext().getContent())
+//                    .imageUrl(request.getContext().getImageUrl())
+//                    .build();
+            QuestionContextV2 context = questionContextMapper.toEntity(request.getContext());
+            context = questionContextV2Repository.save(context);
+            questionV2.setContext(context);
+        }
 
         if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
             List<AnswerV2> answers = request.getAnswers().stream()

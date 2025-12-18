@@ -18,4 +18,7 @@ public class QuestionV2Response {
     private String createdBy;
     private String topic;
     private List<ExamAnswerV2Response> answers;
+    private String imageUrl;
+    private String audioUrl;
+    private QuestionContextV2Response questionContext;
 }

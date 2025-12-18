@@ -87,4 +87,11 @@ public class CommunityController {
                                                                             .image(image).build());
         return ApiResponse.success("Update Community Successfully");
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(value = "/{communityId}")
+    public ApiResponse<String> deleteCommunity(@PathVariable String communityId) {
+        communityService.deleteCommunity(communityId);
+        return ApiResponse.success("Delete Community Successfully");
+    }
 }

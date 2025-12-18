@@ -130,7 +130,7 @@ public class PostServiceImpl implements PostService {
                 .imageUrl(imgUrl)
                 .author(currentUser)
                 .community(community)
-                .isPinned(false)
+                .pinned(false)
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -173,7 +173,7 @@ public class PostServiceImpl implements PostService {
             throw new AppException(ErrorCode.COMMUNITY_NOT_FOUND);
         }
 
-        Pageable pageable = pageHelper.pageEngine(page, size, "isPinned:desc", "createdAt:desc");
+        Pageable pageable = pageHelper.pageEngine(page, size, "pinned:desc", "createdAt:desc");
         Page<Post> postsPage = postRepository.findAllByCommunityId(communityId, pageable);
         List<Post> posts = postsPage.getContent();
 

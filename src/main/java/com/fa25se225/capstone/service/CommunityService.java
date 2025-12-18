@@ -14,4 +14,6 @@ public interface CommunityService {
     List<CommunityResponse> searchCommunity(String keyword);
 
     CommunityResponse createCommunity(CommunityCreationRequest request);
+
+    void deleteCommunity(String communityId);
 }

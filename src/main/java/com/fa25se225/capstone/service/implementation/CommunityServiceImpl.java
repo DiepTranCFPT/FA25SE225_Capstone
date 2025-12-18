@@ -60,6 +60,11 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     @Override
+    public void deleteCommunity(String communityId) {
+        communityRepository.deleteById(communityId);
+    }
+
+    @Override
     public void updateCommunity(String communityId, CommunityUpdateRequest request) {
         Community community = communityRepository.findById(communityId).orElseThrow(() -> new AppException(ErrorCode.COMMUNITY_NOT_FOUND));
         if(Strings.isNotBlank(request.getName())) {

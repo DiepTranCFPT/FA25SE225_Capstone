@@ -16,7 +16,7 @@ public class PostResponse {
     private String title;
     private String content;
     private String imageUrl;
-    private boolean isPinned;
+    private boolean pinned;
     private UserResponse author;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

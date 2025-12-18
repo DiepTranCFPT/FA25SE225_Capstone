@@ -12,7 +12,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "posts")
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,8 +32,8 @@ public class Post {
     private String imageUrl;
 
     @Builder.Default
-    @Column(name = "is_pinned")
-    private boolean isPinned = false;
+    @Column(name = "pinned")
+    private boolean pinned = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
@@ -37,6 +41,7 @@ public class Post {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "community_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Community community;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -56,4 +61,5 @@ public class Post {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
 }

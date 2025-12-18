@@ -8,5 +8,9 @@ public record FrqGradingEvent(
         String attemptId,
         String modelAnswer,
         String studentAnswerText,
-        double maxPoints
+        double maxPoints,
+
+        String questionContent,
+        String contextTitle,
+        String contextContent
 ) {}

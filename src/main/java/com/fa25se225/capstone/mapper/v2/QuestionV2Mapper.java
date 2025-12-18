@@ -12,7 +12,7 @@ import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {QuestionDifficultyV2Mapper.class, SubjectV2Mapper.class, ExamAnswerV2Mapper.class, AnswerV2Mapper.class})
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {QuestionDifficultyV2Mapper.class, SubjectV2Mapper.class, ExamAnswerV2Mapper.class, AnswerV2Mapper.class, QuestionContextMapper.class})
 public interface QuestionV2Mapper {
     @Mapping(target = "type", source = "type.value")
     @Mapping(target = "subject", source = "subject")
@@ -43,6 +43,7 @@ public interface QuestionV2Mapper {
     @Mapping(target = "difficulty", ignore = true)
     @Mapping(target = "topic", ignore = true)
     @Mapping(target = "answers", source = "answers")
+    @Mapping(target = "context", ignore = true)
     QuestionV2 toEntity(QuestionCreationV2Request request);
 
     @Mapping(target = "type", source = "type.value")

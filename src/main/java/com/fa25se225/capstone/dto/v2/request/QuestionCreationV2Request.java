@@ -17,6 +17,11 @@ import java.util.List;
 @AllArgsConstructor
 public class QuestionCreationV2Request {
 
+    @Valid
+    private QuestionContextRequest context;
+
+    private String contextId;
+
     @NotBlank(message = "Content is required")
     private String content;
 
@@ -35,6 +40,12 @@ public class QuestionCreationV2Request {
     @NotEmpty
     @Valid
     private List<AnswerV2Request> answers;
+
+    private String imageUrl;
+    private String audioUrl;
+
+
+
 
 
 }

@@ -2,9 +2,11 @@ package com.fa25se225.capstone.controller.v2;
 
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
+import com.fa25se225.capstone.dto.v2.request.QuestionContextRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.response.QuestionContextV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
@@ -36,6 +38,16 @@ public class QuestionV2Controller {
     @PutMapping("/{id}")
     public ApiResponse<QuestionManageV2Response> updateQuestion(@PathVariable String id, @Valid @RequestBody QuestionUpdateV2Request request) {
         return ApiResponse.success(questionV2Service.updateQuestion(id, request));
+    }
+
+    @PostMapping("/context")
+    public ApiResponse<QuestionContextV2Response> createQuestionContext(@Valid @RequestBody QuestionContextRequest request) {
+        return ApiResponse.success(questionV2Service.createQuestionContext(request));
+    }
+
+    @PutMapping("/context/{id}")
+    public ApiResponse<QuestionContextV2Response> updateQuestionContext(@PathVariable String id, @RequestBody QuestionContextRequest request) {
+        return ApiResponse.success(questionV2Service.updateQuestionContext(id, request));
     }
 
     @GetMapping("/{id}")

@@ -66,7 +66,7 @@ public class FrqGradingConsumerService {
                 .orElse(null);
 
         if (studentAnswer == null) {
-            log.warn("StudentAnswerV2 not found id: {}. User might be committing transaction. Retrying...", event.studentAnswerId());
+            log.warn("StudentAnswerV2 not found id: {}. Retrying...", event.studentAnswerId());
             throw new RuntimeException("StudentAnswer not found, retrying...");
         }
 
@@ -74,6 +74,9 @@ public class FrqGradingConsumerService {
                 event.modelAnswer(),
                 event.studentAnswerText(),
                 event.maxPoints(),
+                event.questionContent(),
+                event.contextTitle(),
+                event.contextContent(),
                 studentAnswer
         );
 
@@ -83,38 +86,63 @@ public class FrqGradingConsumerService {
         checkIfAttemptIsFullyGraded(event.attemptId());
     }
 
-    private double gradeFrqWithAI(String modelAnswer, String studentAnswerText, double maxPoints, StudentAnswerV2 answerEntity) {
+    private double gradeFrqWithAI(String modelAnswer,
+                                  String studentAnswerText,
+                                  double maxPoints,
+                                  String questionContent,
+                                  String contextTitle,
+                                  String contextContent,
+                                  StudentAnswerV2 answerEntity) {
+
         if (!StringUtils.hasText(studentAnswerText)) {
             return 0.0;
         }
 
-        String systemPrompt = String.format(
-                """
-             You are a strict and impartial examiner grading an Advanced Placement (AP) exam.
-             Your goal is to grade the STUDENT ANSWER based EXCLUSIVELY on the MODEL ANSWER provided.
-             
-             --- INPUT DATA ---
+        StringBuilder promptBuilder = new StringBuilder();
+
+        promptBuilder.append("You are a strict and impartial examiner grading an Advanced Placement (AP) exam.\n");
+        promptBuilder.append("Your goal is to grade the STUDENT ANSWER based on the provided CONTEXT, QUESTION, and RUBRIC (MODEL ANSWER).\n\n");
+
+        if (StringUtils.hasText(contextContent)) {
+            promptBuilder.append("--- CONTEXT / PASSAGE ---\n");
+            if (StringUtils.hasText(contextTitle)) {
+                promptBuilder.append("Title: ").append(contextTitle).append("\n");
+            }
+            promptBuilder.append(contextContent).append("\n\n");
+        }
+
+        promptBuilder.append(questionContent != null ? questionContent : "No question content provided").append("\n\n");
+
+        promptBuilder.append("--- MODEL ANSWER (RUBRIC) ---\n");
+        promptBuilder.append(modelAnswer).append("\n\n");
+
+        promptBuilder.append(String.format("""
+             --- GRADING CONFIGURATION ---
              MAXIMUM POINTS: %.1f
-             MODEL ANSWER: %s
              
-             --- GRADING RULES (READ CAREFULLY) ---
-             1. **Relevance Check**: If the student's answer is irrelevant, off-topic, or is an admission of ignorance (e.g., "I don't know", "I skipped this", "I need to learn more", random characters), the SCORE MUST BE 0.
-             2. **Accuracy Check**: The student must demonstrate understanding of the specific concepts in the MODEL ANSWER. Do not give points for effort, politeness, or correct grammar if the core answer is wrong.
-             3. **Partial Credit**: Give partial credit only if parts of the reasoning match the MODEL ANSWER.
-             4. **Format**: Return the result in JSON format with 'point' (double) and 'feedback' (string).
+             --- GRADING RULES ---
+             1. **Context Adherence**: If a Context is provided, the answer MUST reference or be consistent with it.
+             2. **Relevance**: If the answer is off-topic, admits ignorance, or is random text -> SCORE 0.
+             3. **Accuracy**: Compare strictly against the MODEL ANSWER. Do not award points for fluff.
+             4. **Partial Credit**: Award partial points for partial correctness based on the logic of the Model Answer.
+             5. **Output**: Return strictly JSON: {"point": number, "feedback": "string"}.
              
-             Now, grade the following STUDENT ANSWER:
-             """, maxPoints, modelAnswer);
+             Now, grade the STUDENT ANSWER provided below.
+             """, maxPoints));
+
         try {
             var aiResponse = chatClient.prompt()
-                    .system(systemPrompt)
+                    .system(promptBuilder.toString())
                     .user(studentAnswerText)
-                    .call().entity(GradingUserAnswerAIResponse.class);
+                    .call()
+                    .entity(GradingUserAnswerAIResponse.class);
 
             answerEntity.setFeedback(aiResponse.getFeedback());
+
             return Math.min(aiResponse.getPoint(), maxPoints);
+
         } catch (Exception e) {
-            log.error("Failed to grade FRQ with AI for studentAnswerId: {}. Error: {}", answerEntity.getId(), e.getMessage());
+            log.error("AI Grading failed for answer {}: {}", answerEntity.getId(), e.getMessage());
             throw new RuntimeException("AI Service Unavailable: " + e.getMessage());
         }
     }

@@ -49,6 +49,17 @@ public class QuestionV2 {
     private User createdBy;
 
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "audio_url")
+    private String audioUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "context_id")
+    private QuestionContextV2 context;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id")
     private QuestionTopicV2 topic;

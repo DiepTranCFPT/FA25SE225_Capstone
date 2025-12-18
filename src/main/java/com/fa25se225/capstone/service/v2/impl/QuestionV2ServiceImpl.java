@@ -2,27 +2,25 @@ package com.fa25se225.capstone.service.v2.impl;
 
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.response.PageResponse;
-import com.fa25se225.capstone.dto.v2.request.AnswerV2Request;
-import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
-import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
-import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
+import com.fa25se225.capstone.dto.v2.request.*;
+import com.fa25se225.capstone.dto.v2.response.QuestionContextV2Response;
 import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.dto.v2.response.QuestionManageV2Response;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
-import com.fa25se225.capstone.entity.v2.AnswerV2;
-import com.fa25se225.capstone.entity.v2.QuestionDifficultyV2;
-import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
-import com.fa25se225.capstone.entity.v2.QuestionV2;
+import com.fa25se225.capstone.entity.v2.*;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.AnswerV2Mapper;
+import com.fa25se225.capstone.mapper.v2.QuestionContextMapper;
 import com.fa25se225.capstone.mapper.v2.QuestionV2Mapper;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.UserRepository;
+import com.fa25se225.capstone.repository.v2.QuestionContextV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
+import com.fa25se225.capstone.service.implementation.FileUploadService;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
 import com.fa25se225.capstone.service.v2.QuestionImportService;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -57,8 +55,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     private final UserRepository userRepository;
     private final QuestionV2Mapper questionV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
+    private final QuestionContextMapper questionContextMapper;
     private final PageHelper pageHelper;
     private final QuestionImportService questionImportService;
+    private final QuestionContextV2Repository questionContextV2Repository;
+    private final FileUploadService fileUploadService;
 
     @Override
     @Transactional
@@ -84,6 +85,32 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         questionV2.setSubject(subject);
         questionV2.setDifficulty(difficulty);
         questionV2.setTopic(topic);
+
+        if (request.getImageUrl() != null) {
+            questionV2.setImageUrl(request.getImageUrl());
+            fileUploadService.confirmFileUsage(request.getImageUrl());
+        }
+        if (request.getAudioUrl() != null) {
+            questionV2.setAudioUrl(request.getAudioUrl());
+            fileUploadService.confirmFileUsage(request.getAudioUrl());
+        }
+
+        if (StringUtils.hasText(request.getContextId())) {
+            QuestionContextV2 context = questionContextV2Repository.findById(request.getContextId())
+                    .orElseThrow(() -> new AppException(ErrorCode.QUESTION_CONTEXT_NOT_FOUND));
+            questionV2.setContext(context);
+
+        } else if (request.getContext() != null) {
+
+//            QuestionContextV2 context = QuestionContextV2.builder()
+//                    .title(request.getContext().getTitle())
+//                    .content(request.getContext().getContent())
+//                    .imageUrl(request.getContext().getImageUrl())
+//                    .build();
+            QuestionContextV2 context = questionContextMapper.toEntity(request.getContext());
+            context = questionContextV2Repository.save(context);
+            questionV2.setContext(context);
+        }
 
         if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
             List<AnswerV2> answers = request.getAnswers().stream()
@@ -113,6 +140,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 //    }
 
 
+
     @Override
     @Transactional
     @Caching(evict = {
@@ -133,6 +161,15 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(request.getTopicName())
                 .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
 
+        if (request.getImageUrl() != null) {
+            existingQuestion.setImageUrl(request.getImageUrl());
+            fileUploadService.confirmFileUsage(request.getImageUrl());
+        }
+        if (request.getAudioUrl() != null) {
+            existingQuestion.setAudioUrl(request.getAudioUrl());
+            fileUploadService.confirmFileUsage(request.getAudioUrl());
+        }
+
         // Update question properties
         if(StringUtils.hasText(request.getContent())) {
             existingQuestion.setContent(request.getContent());
@@ -143,6 +180,16 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
             }
         } catch (IllegalArgumentException e) {
             throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
+        }
+
+        if (request.getContextId() != null) {
+            if (request.getContextId().isEmpty()) {
+                existingQuestion.setContext(null);
+            } else {
+                QuestionContextV2 context = questionContextV2Repository.findById(request.getContextId())
+                        .orElseThrow(() -> new AppException(ErrorCode.QUESTION_CONTEXT_NOT_FOUND));
+                existingQuestion.setContext(context);
+            }
         }
 
 
@@ -335,6 +382,40 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     @Override
     public byte[] generateExampleTemplate() {
         return questionImportService.generateExampleTemplate();
+    }
+
+    @Override
+    public QuestionContextV2Response updateQuestionContext(String id, QuestionContextRequest request) {
+        var entity = questionContextV2Repository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.QUESTION_CONTEXT_NOT_FOUND));
+        questionContextMapper.updateQuestionContext(entity, request);
+
+        if (request.getImageUrl() != null) {
+            entity.setImageUrl(request.getImageUrl());
+            fileUploadService.confirmFileUsage(request.getImageUrl());
+        }
+        if (request.getAudioUrl() != null) {
+            entity.setAudioUrl(request.getAudioUrl());
+            fileUploadService.confirmFileUsage(request.getAudioUrl());
+        }
+        var savedEntity = questionContextV2Repository.save(entity);
+        return questionContextMapper.toResponse(savedEntity);
+    }
+
+    @Override
+    public QuestionContextV2Response createQuestionContext(QuestionContextRequest request) {
+        var entity = questionContextMapper.toEntity(request);
+        var savedEntity = questionContextV2Repository.save(entity);
+        if (request.getImageUrl() != null) {
+            entity.setImageUrl(request.getImageUrl());
+            fileUploadService.confirmFileUsage(request.getImageUrl());
+        }
+        if (request.getAudioUrl() != null) {
+            entity.setAudioUrl(request.getAudioUrl());
+            fileUploadService.confirmFileUsage(request.getAudioUrl());
+        }
+
+        return questionContextMapper.toResponse(savedEntity);
     }
 
     private void validateQuestionAnswersRequest(List<AnswerV2Request> answers, String type) {

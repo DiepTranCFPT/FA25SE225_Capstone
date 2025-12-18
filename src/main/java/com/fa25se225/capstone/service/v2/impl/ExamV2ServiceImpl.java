@@ -408,17 +408,34 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
 
         for (StudentAnswerV2 sa : savedAnswers) {
-            if (sa.getExamQuestion().getQuestion().getType() == QuestionType.FRQ) {
-                AnswerV2 modelAnswer = sa.getExamQuestion().getQuestion().getAnswers().stream()
-                        .filter(AnswerV2::getIsCorrect).findFirst().orElse(null);
+            QuestionV2 question = sa.getExamQuestion().getQuestion();
+
+            if (question.getType() == QuestionType.FRQ) {
+
+                AnswerV2 modelAnswer = question.getAnswers().stream()
+                        .filter(AnswerV2::getIsCorrect)
+                        .findFirst()
+                        .orElse(null);
 
                 if (modelAnswer != null) {
+                    String contextTitle = null;
+                    String contextContent = null;
+
+                    if (question.getContext() != null) {
+                        contextTitle = question.getContext().getTitle();
+                        contextContent = question.getContext().getContent();
+                    }
+
                     gradingTasks.add(FrqGradingEvent.builder()
                             .studentAnswerId(sa.getId())
                             .attemptId(attemptId)
                             .modelAnswer(modelAnswer.getContent())
                             .studentAnswerText(sa.getFrqAnswerText())
                             .maxPoints(sa.getExamQuestion().getPoints())
+
+                            .questionContent(question.getContent())
+                            .contextTitle(contextTitle)
+                            .contextContent(contextContent)
                             .build());
                 }
             }

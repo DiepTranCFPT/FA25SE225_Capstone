@@ -27,5 +27,11 @@ public class QuestionUpdateV2Request {
     @Valid
     private List<AnswerV2Request> answers;
 
+    private String imageUrl;
+
+    private String audioUrl;
+
+    private String contextId;
+
 
 }

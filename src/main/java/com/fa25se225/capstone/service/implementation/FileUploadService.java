@@ -37,9 +37,9 @@ public class FileUploadService {
     }
 
 
-    public void confirmFileUsage(String imageUrl) {
-        if (Strings.isNotBlank(imageUrl)) {
-            temporaryFileRepository.findByUrl(imageUrl)
+    public void confirmFileUsage(String url) {
+        if (Strings.isNotBlank(url)) {
+            temporaryFileRepository.findByUrl(url)
                     .ifPresent(temporaryFileRepository::delete);
         }
     }

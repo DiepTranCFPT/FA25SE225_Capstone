@@ -42,6 +42,7 @@ public interface QuestionV2Mapper {
     @Mapping(target = "subject", ignore = true)
     @Mapping(target = "difficulty", ignore = true)
     @Mapping(target = "topic", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "answers", source = "answers")
     QuestionV2 toEntity(QuestionCreationV2Request request);
 
@@ -53,6 +54,9 @@ public interface QuestionV2Mapper {
     @Mapping(target = "answers", source = "answers")
     QuestionManageV2Response toManageResponse(QuestionV2 questionV2);
 
+
+
+    List<QuestionManageV2Response> toManageListResponse(List<QuestionV2> questionV2s);
 
 
 }

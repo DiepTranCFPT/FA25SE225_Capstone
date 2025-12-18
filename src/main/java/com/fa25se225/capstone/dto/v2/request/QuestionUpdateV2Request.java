@@ -16,6 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 public class QuestionUpdateV2Request {
 
+    private String id;
+
     private String content;
 
     private String type;
@@ -24,8 +26,15 @@ public class QuestionUpdateV2Request {
 
     private String topicName;
 
+    private String imageUrl;
+
+    private String audioUrl;
+
     @Valid
     private List<AnswerV2Request> answers;
+
+    @Valid
+    private List<QuestionUpdateV2Request> subQuestions;
 
 
 }

@@ -40,6 +40,19 @@ public class QuestionV2 {
     @JoinColumn(name = "subject_id")
     private Subject subject;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "audio_url")
+    private String audioUrl;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private QuestionV2 parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<QuestionV2> subQuestions = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "difficulty_id")
     private QuestionDifficultyV2 difficulty;

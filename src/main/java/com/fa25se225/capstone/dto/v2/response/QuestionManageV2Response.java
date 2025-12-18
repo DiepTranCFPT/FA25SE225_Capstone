@@ -19,4 +19,5 @@ public class QuestionManageV2Response {
     private String createdBy;
     private String topic;
     private List<AnswerV2Response> answers;
+    private List<QuestionManageV2Response> subQuestions;
 }

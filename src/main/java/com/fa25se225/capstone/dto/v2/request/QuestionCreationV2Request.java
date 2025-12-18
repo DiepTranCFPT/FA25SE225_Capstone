@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,13 +27,19 @@ public class QuestionCreationV2Request {
     @NotBlank(message = "Subject ID is required")
     private String subjectId;
 
+    private String imageUrl;
+
+    private String audioUrl;
+
+    @Valid
+    private List<QuestionCreationV2Request> subQuestions;
+
     @NotBlank(message = "Difficulty name is required")
     private String difficultyName;
 
     @NotBlank(message = "Topic name is required")
     private String topicName;
 
-    @NotEmpty
     @Valid
     private List<AnswerV2Request> answers;
 

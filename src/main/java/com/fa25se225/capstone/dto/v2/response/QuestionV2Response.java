@@ -17,5 +17,7 @@ public class QuestionV2Response {
     private QuestionDifficultyV2Response difficulty;
     private String createdBy;
     private String topic;
+    private String imageUrl;
+    private List<QuestionV2Response> subQuestions;
     private List<ExamAnswerV2Response> answers;
 }

@@ -72,4 +72,15 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
     @Query("SELECT d.name, COUNT(q) FROM QuestionV2 q JOIN q.difficulty d WHERE q.deleted = false GROUP BY d.name")
     List<Object[]> countQuestionsByDifficulty();
 
+    @Query("SELECT q.id FROM QuestionV2 q " +
+            "WHERE q.createdBy.id = :userId " +
+            "AND q.deleted = false " +
+            "AND EXISTS (" +
+            "  SELECT 1 FROM QuestionV2 q2 " +
+            "  WHERE q2.createdBy.id = :userId " +
+            "  AND q2.deleted = false " +
+            "  AND q.content LIKE CONCAT(CONCAT('%', q2.content), '%') " +
+            "  AND (q2.createAt < q.createAt OR (q2.createAt = q.createAt AND q2.id < q.id))" +
+            ")")
+    List<String> findDuplicateQuestionIdsForUser(@Param("userId") String userId);
 }

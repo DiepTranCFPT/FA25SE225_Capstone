@@ -446,6 +446,18 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         return getContextPageResponse(pageNo, pageSize, sorts, page);
     }
 
+    @Override
+    public List<String> getDuplicateContextIdsForCurrentUser() {
+        User currentUser = accountUtil.getCurrentUser();
+        return questionContextV2Repository.findDuplicateContextIdsForUser(currentUser.getId());
+    }
+
+    @Override
+    public List<String> getDuplicateQuestionIdsForCurrentUser() {
+        User currentUser = accountUtil.getCurrentUser();
+        return questionV2Repository.findDuplicateQuestionIdsForUser(currentUser.getId());
+    }
+
     private PageResponse<List<QuestionContextV2Response>> getContextPageResponse(int pageNo, int pageSize, String[] sorts, Page<QuestionContextV2> page) {
         List<QuestionContextV2Response> items = page.getContent().stream()
                 .map(questionContextMapper::toResponse)

@@ -35,4 +35,8 @@ public interface QuestionV2Service {
 
     PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUser(int pageNo, int pageSize, String... sorts);
     PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUserAndSubject(String subjectId, int pageNo, int pageSize, String... sorts);
+
+
+    List<String> getDuplicateContextIdsForCurrentUser();
+    List<String> getDuplicateQuestionIdsForCurrentUser();
 }

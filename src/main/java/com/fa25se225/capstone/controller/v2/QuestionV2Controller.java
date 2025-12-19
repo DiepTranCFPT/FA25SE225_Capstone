@@ -89,6 +89,16 @@ public class QuestionV2Controller {
         return ApiResponse.success(questionV2Service.getQuestionsBySubject(subjectId, pageNo, pageSize, sorts));
     }
 
+    @GetMapping("/context/duplicates")
+    public ApiResponse<List<String>> getDuplicateContextsForCurrentUser() {
+        return ApiResponse.success(questionV2Service.getDuplicateContextIdsForCurrentUser());
+    }
+
+    @GetMapping("/duplicates")
+    public ApiResponse<List<String>> getDuplicateQuestionsForCurrentUser() {
+        return ApiResponse.success(questionV2Service.getDuplicateQuestionIdsForCurrentUser());
+    }
+
 
     @GetMapping("/topic/{topicId}")
     public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsByTopic(

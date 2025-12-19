@@ -1,12 +1,22 @@
 package com.fa25se225.capstone.service.implementation;
 
+import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
+import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
+import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.entity.StudentProfile;
+import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
+import com.fa25se225.capstone.entity.v2.QuestionDifficultyV2;
+import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.repository.StudentProfileRepository;
+import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
+import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
+import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
+import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.StudentDashboardService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +50,10 @@ public class AIChatService {
     private ChatClient primaryChatClient;
 
     @Autowired
+    @Qualifier("chatClientWithoutChatMemory")
+    private ChatClient primaryChatClientWithoutMemory;
+
+    @Autowired
     @Qualifier("chatClientWithChatInMemoryUsingLiteModel")
     private ChatClient secondaryChatClient;
 
@@ -57,6 +71,18 @@ public class AIChatService {
 
     @Autowired
     private StudentDashboardService studentDashboardService;
+
+    @Autowired
+    private SubjectRepository subjectRepository;
+
+    @Autowired
+    private QuestionTopicV2Repository questionTopicV2Repository;
+
+    @Autowired
+    private QuestionDifficultyV2Repository questionDifficultyV2Repository;
+
+    @Autowired
+    private QuestionV2Repository questionV2Repository;
 
 
     private static class UserRequestInfo {
@@ -78,6 +104,7 @@ public class AIChatService {
 
 
     private Set<String> conversationIds = new HashSet<>();
+
 
     public Flux<String> examAsk(ExamAskingRequest request){
         String conversationId = request.getDoneBy().concat(request.getAttemptId());
@@ -193,7 +220,7 @@ public class AIChatService {
                 If the student doesn't have a goal yet, still reply, but remind them to update their goal profile.
                 """;
 
-        String recommend =  primaryChatClient.prompt().system(systemText)
+        String recommend =  primaryChatClientWithoutMemory.prompt().system(systemText)
                                             .user(userText)
                                             .call()
                                             .content();
@@ -220,6 +247,145 @@ public class AIChatService {
     private boolean isRetryable(Throwable ex) {
         return ex instanceof WebClientResponseException wex
                 && (wex.getStatusCode().value() == 429 || wex.getStatusCode().is5xxServerError());
+    }
+
+
+
+
+    public String analyzeTemplateFeasibility(ExamTemplateV2Request request) {
+        User currentUser = accountUtil.getCurrentUser();
+
+        String subjectName = "Unknown";
+        if (StringUtils.hasText(request.getSubjectId())) {
+            subjectName = subjectRepository.findById(request.getSubjectId())
+                    .map(Subject::getName).orElse("Unknown Subject");
+        }
+
+        StringBuilder rulesAnalysisReport = new StringBuilder();
+
+        if (request.getRules() != null && !request.getRules().isEmpty()) {
+            int ruleIndex = 1;
+            for (ExamRuleV2Request rule : request.getRules()) {
+                String topicName;
+                String diffName;
+                try {
+                    topicName = getQuestionTopic(rule.getTopicName()).getName();
+                    diffName = getQuestionDifficulty(rule.getDifficultyName()).getName();
+                } catch (AppException e) {
+                    rulesAnalysisReport.append(String.format("- Rule #%d: Invalid Topic or Difficulty configuration.\n", ruleIndex++));
+                    continue;
+                }
+
+                QuestionType type = getQuestionType(rule.getQuestionType());
+                int requestedQty = rule.getNumberOfQuestions();
+                int requestedContexts = rule.getNumberOfContexts() != null ? rule.getNumberOfContexts() : 0;
+
+                long available;
+                String requirementDesc;
+                String status;
+
+                if (requestedContexts > 0) {
+                    available = questionV2Repository.countContextsAvailable(
+                            getQuestionTopic(rule.getTopicName()).getId(),
+                            getQuestionDifficulty(rule.getDifficultyName()).getId(),
+                            type,
+                            currentUser.getId()
+                    );
+                    requirementDesc = String.format("Need %d Reading Passages (Contexts)", requestedContexts);
+
+                    if (available < requestedContexts) {
+                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedContexts - available);
+                    } else {
+                        status = String.format("OK (Has: %d)", available);
+                    }
+                } else {
+                    available = questionV2Repository.countSingleQuestionsAvailable(
+                            getQuestionTopic(rule.getTopicName()).getId(),
+                            getQuestionDifficulty(rule.getDifficultyName()).getId(),
+                            type,
+                            currentUser.getId()
+                    );
+                    requirementDesc = String.format("Need %d Single Questions", requestedQty);
+
+                    if (available < requestedQty) {
+                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedQty - available);
+                    } else {
+                        status = String.format("OK (Has: %d)", available);
+                    }
+                }
+
+                rulesAnalysisReport.append(String.format("- Rule #%d [%s - %s - %s]: %s -> %s\n",
+                        ruleIndex++, topicName, diffName, type, requirementDesc, status));
+            }
+        } else {
+            rulesAnalysisReport.append("No rules defined in this template.\n");
+        }
+
+        String userContext = String.format("""
+            === EXAM TEMPLATE ANALYSIS REQUEST ===
+            
+            [1] EXAM METADATA
+            - Title: %s
+            - Subject: %s
+            - Duration: %d minutes
+            - Passing Score: %d
+            - Token Cost: %s
+            
+            [2] QUESTION BANK INVENTORY CHECK
+            %s
+            
+            Please analyze the feasibility of creating this exam based on the inventory check above.
+            """,
+                request.getTitle(),
+                subjectName,
+                request.getDuration(),
+                request.getPassingScore(),
+                request.getTokenCost() != null ? request.getTokenCost() : 0,
+                rulesAnalysisReport.toString()
+        );
+
+        String systemPrompt = """
+            You are an AI Exam Assistant for a teacher.
+            Based on the provided "EXAM TEMPLATE ANALYSIS REQUEST", generate a friendly but professional summary response in English.
+            
+            Structure of response:
+            1. **Overview**: Summarize the exam structure (Title, Subject, Time...).
+            2. **Inventory Check**: Detailed analysis of whether the question bank has enough questions for each rule based on the data provided.
+            3. **Recommendation**:
+               - If strictly NOT enough questions: Warn the teacher clearly and suggest importing more specific topics/types.
+               - If enough but barely (e.g., require 10, have 11): Suggest adding more for better randomization.
+               - If plenty: Confirm the exam will be high quality.
+            
+            Output as plain text or Markdown. Do not include JSON formatting.
+
+            """;
+
+        return primaryChatClientWithoutMemory.prompt()
+                .system(systemPrompt)
+                .user(userContext)
+                .call()
+                .content();
+    }
+
+
+
+
+    private QuestionTopicV2 getQuestionTopic(String name) {
+        return questionTopicV2Repository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
+    }
+
+    private QuestionDifficultyV2 getQuestionDifficulty(String name) {
+        return questionDifficultyV2Repository.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new AppException(ErrorCode.QUESTION_DIFFICULTY_V2_NOT_FOUND));
+    }
+
+    private QuestionType getQuestionType(String value) {
+        try {
+            return QuestionType.fromValue(value.toUpperCase());
+        } catch (Exception ex) {
+            throw new AppException(ErrorCode.INVALID_QUESTION_V2_TYPE);
+        }
     }
 
 

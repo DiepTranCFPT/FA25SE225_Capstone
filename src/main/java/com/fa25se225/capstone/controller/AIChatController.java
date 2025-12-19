@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
+import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.service.implementation.AIChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,11 @@ public class AIChatController {
                 );
 
         return sseEmitter;
+    }
+
+    @PostMapping("/analyze-template")
+    public String analyzeTemplate(@RequestBody ExamTemplateV2Request request) {
+        return aiChatService.analyzeTemplateFeasibility(request);
     }
 
     @PostMapping("/students/dashboard")

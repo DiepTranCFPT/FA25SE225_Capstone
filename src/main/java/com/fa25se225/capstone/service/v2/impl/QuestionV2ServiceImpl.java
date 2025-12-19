@@ -108,6 +108,8 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 //                    .imageUrl(request.getContext().getImageUrl())
 //                    .build();
             QuestionContextV2 context = questionContextMapper.toEntity(request.getContext());
+            context.setCreatedBy(currentUser);
+            context.setSubject(subject);
             context = questionContextV2Repository.save(context);
             questionV2.setContext(context);
         }
@@ -405,6 +407,14 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     @Override
     public QuestionContextV2Response createQuestionContext(QuestionContextRequest request) {
         var entity = questionContextMapper.toEntity(request);
+        entity.setCreatedBy(accountUtil.getCurrentUser());
+        
+        if (StringUtils.hasText(request.getSubjectId())) {
+            Subject subject = subjectRepository.findById(request.getSubjectId())
+                    .orElseThrow(() -> new AppException(ErrorCode.SUBJECT_NOT_FOUND));
+            entity.setSubject(subject);
+        }
+        
         var savedEntity = questionContextV2Repository.save(entity);
         if (request.getImageUrl() != null) {
             entity.setImageUrl(request.getImageUrl());
@@ -416,6 +426,38 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         }
 
         return questionContextMapper.toResponse(savedEntity);
+    }
+
+    @Override
+    public PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUser(int pageNo, int pageSize, String[] sorts) {
+        User currentUser = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<QuestionContextV2> page = questionContextV2Repository.findByCreatedById(currentUser.getId(), pageable);
+
+        return getContextPageResponse(pageNo, pageSize, sorts, page);
+    }
+
+    @Override
+    public PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUserAndSubject(String subjectId, int pageNo, int pageSize, String[] sorts) {
+        User currentUser = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<QuestionContextV2> page = questionContextV2Repository.findByCreatedByIdAndSubjectId(currentUser.getId(), subjectId, pageable);
+
+        return getContextPageResponse(pageNo, pageSize, sorts, page);
+    }
+
+    private PageResponse<List<QuestionContextV2Response>> getContextPageResponse(int pageNo, int pageSize, String[] sorts, Page<QuestionContextV2> page) {
+        List<QuestionContextV2Response> items = page.getContent().stream()
+                .map(questionContextMapper::toResponse)
+                .toList();
+        return PageResponse.<List<QuestionContextV2Response>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .sortBy(sorts)
+                .totalElement(page.getTotalElements())
+                .totalPage(page.getTotalPages())
+                .items(items)
+                .build();
     }
 
     private void validateQuestionAnswersRequest(List<AnswerV2Request> answers, String type) {

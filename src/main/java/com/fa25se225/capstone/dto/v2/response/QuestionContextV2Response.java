@@ -13,4 +13,6 @@ public class QuestionContextV2Response {
     private String content;
     private String imageUrl;
     private String audioUrl;
+    private String subjectId;
+    private String subjectName;
 }

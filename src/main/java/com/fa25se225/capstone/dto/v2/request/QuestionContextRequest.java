@@ -15,4 +15,6 @@ public class QuestionContextRequest {
     private String content;
     private String imageUrl;
     private String audioUrl;
+    @NotBlank(message = "Subject must be filled")
+    private String subjectId;
 }

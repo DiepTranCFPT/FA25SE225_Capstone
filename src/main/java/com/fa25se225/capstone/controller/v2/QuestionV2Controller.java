@@ -50,6 +50,23 @@ public class QuestionV2Controller {
         return ApiResponse.success(questionV2Service.updateQuestionContext(id, request));
     }
 
+    @GetMapping("/context/me")
+    public ApiResponse<PageResponse<List<QuestionContextV2Response>>> getContextsByCurrentUser(
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts) {
+        return ApiResponse.success(questionV2Service.getContextsByCurrentUser(pageNo, pageSize, sorts));
+    }
+
+    @GetMapping("/context/me/subject/{subjectId}")
+    public ApiResponse<PageResponse<List<QuestionContextV2Response>>> getContextsByCurrentUserAndSubject(
+            @PathVariable String subjectId,
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts) {
+        return ApiResponse.success(questionV2Service.getContextsByCurrentUserAndSubject(subjectId, pageNo, pageSize, sorts));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<QuestionManageV2Response> getQuestionById(@PathVariable String id) {
         return ApiResponse.success(questionV2Service.getQuestionById(id));

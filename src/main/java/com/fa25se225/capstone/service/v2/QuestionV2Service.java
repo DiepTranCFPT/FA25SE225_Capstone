@@ -32,4 +32,7 @@ public interface QuestionV2Service {
     QuestionContextV2Response updateQuestionContext(String id, @Valid QuestionContextRequest request);
 
     QuestionContextV2Response createQuestionContext(@Valid QuestionContextRequest request);
+
+    PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUser(int pageNo, int pageSize, String... sorts);
+    PageResponse<List<QuestionContextV2Response>> getContextsByCurrentUserAndSubject(String subjectId, int pageNo, int pageSize, String... sorts);
 }

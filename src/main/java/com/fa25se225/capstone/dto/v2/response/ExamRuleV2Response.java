@@ -15,6 +15,7 @@ public class ExamRuleV2Response {
     private String difficulty;
     private String questionType;
     private Integer numberOfQuestions;
+    private Integer numberOfContexts;
     private Double points;
 }
 

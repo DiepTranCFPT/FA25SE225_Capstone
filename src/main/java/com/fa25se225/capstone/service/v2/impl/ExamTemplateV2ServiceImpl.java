@@ -151,13 +151,17 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         QuestionType questionType = getQuestionType(request.getQuestionType());
         User teacher = template.getCreatedBy();
 
-        validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(), request.getNumberOfQuestions());
+        // Validate dựa trên số lượng context hoặc số lượng câu hỏi lẻ
+        validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(),
+                request.getNumberOfQuestions(), request.getNumberOfContexts());
+
         ExamRuleV2 rule = ExamRuleV2.builder()
                 .template(template)
-                .topic(getQuestionTopic(request.getTopicName()))
-                .difficulty(getQuestionDifficulty(request.getDifficultyName()))
+                .topic(topic)
+                .difficulty(difficulty)
                 .numberOfQuestions(request.getNumberOfQuestions())
-                .questionType(getQuestionType(request.getQuestionType()))
+                .numberOfContexts(request.getNumberOfContexts() != null ? request.getNumberOfContexts() : 0) // Map field mới
+                .questionType(questionType)
                 .points(request.getPoints())
                 .build();
         ExamRuleV2 saved = ruleRepository.save(rule);
@@ -188,18 +192,25 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         Integer numberOfQuestions = Objects.nonNull(request.getNumberOfQuestions()) ?
                 request.getNumberOfQuestions() : rule.getNumberOfQuestions();
 
+        // Logic update cho numberOfContexts (field mới)
+        Integer numberOfContexts = Objects.nonNull(request.getNumberOfContexts()) ?
+                request.getNumberOfContexts() : rule.getNumberOfContexts();
+
+        // Validate với data mới
         validateQuestionAvailability(
                 topic.getId(),
                 difficulty.getId(),
                 questionType,
                 teacher.getId(),
-                numberOfQuestions
+                numberOfQuestions,
+                numberOfContexts
         );
 
         rule.setTopic(topic);
         rule.setDifficulty(difficulty);
         rule.setQuestionType(questionType);
         rule.setNumberOfQuestions(numberOfQuestions);
+        rule.setNumberOfContexts(numberOfContexts); // Set value
 
         if (Objects.nonNull(request.getPoints())) {
             rule.setPoints(request.getPoints());
@@ -253,6 +264,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
                 .items(items)
                 .build();
     }
+
     @Override
     @Cacheable(value = "exam_templates", key = "'user_' + T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName() + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> getTemplatesByCurrentUser(
@@ -312,16 +324,25 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     }
 
 
+    private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedQuestions, Integer requestedContexts) {
+        log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requestedQ={}, requestedCtx={}",
+                topicId, difficultyId, type, creatorId, requestedQuestions, requestedContexts);
 
-    private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedCount) {
-        log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requested={}",
-                topicId, difficultyId, type, creatorId, requestedCount);
+        int contextCount = (requestedContexts != null) ? requestedContexts : 0;
 
-        long availableCount = questionV2Repository.countQuestionsByCriteria(topicId, difficultyId, type, creatorId);
+        if (contextCount > 0) {
+            long availableContexts = questionV2Repository.countContextsAvailable(topicId, difficultyId, type, creatorId);
+            if (availableContexts < contextCount) {
+                log.warn("Insufficient contexts. Available: {}, Requested: {}", availableContexts, contextCount);
+                throw new AppException(ErrorCode.INSUFFICIENT_CONTEXTS_IN_BANK);
+            }
+        } else {
+            long availableCount = questionV2Repository.countSingleQuestionsAvailable(topicId, difficultyId, type, creatorId);
 
-        if (availableCount < requestedCount) {
-            log.warn("Insufficient questions. Available: {}, Requested: {}", availableCount, requestedCount);
-            throw new AppException(ErrorCode.INSUFFICIENT_QUESTIONS_IN_BANK);
+            if (availableCount < requestedQuestions) {
+                log.warn("Insufficient single questions. Available: {}, Requested: {}", availableCount, requestedQuestions);
+                throw new AppException(ErrorCode.INSUFFICIENT_QUESTIONS_IN_BANK);
+            }
         }
     }
 
@@ -332,13 +353,21 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
             QuestionDifficultyV2 difficulty = getQuestionDifficulty(r.getDifficultyName());
             QuestionType questionType = getQuestionType(r.getQuestionType());
 
-            validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(), r.getNumberOfQuestions());
+            validateQuestionAvailability(topic.getId(), difficulty.getId(), questionType, teacher.getId(),
+                    r.getNumberOfQuestions(), r.getNumberOfContexts());
 
             ExamRuleV2 rule = ruleMapper.toEntity(r);
             rule.setTemplate(template);
             rule.setTopic(topic);
             rule.setDifficulty(difficulty);
             rule.setQuestionType(questionType);
+
+            if (r.getNumberOfContexts() != null) {
+                rule.setNumberOfContexts(r.getNumberOfContexts());
+            } else {
+                rule.setNumberOfContexts(0);
+            }
+
             return rule;
         }).toList();
     }

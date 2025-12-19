@@ -110,4 +110,32 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
             "  AND (q2.createAt < q.createAt OR (q2.createAt = q.createAt AND q2.id < q.id))" +
             ")")
     List<String> findDuplicateQuestionIdsForUser(@Param("userId") String userId);
+
+
+    @Query("SELECT COUNT(q) FROM QuestionV2 q WHERE " +
+            "q.topic.id = :topicId AND " +
+            "q.difficulty.id = :difficultyId AND " +
+            "q.type = :questionType AND " +
+            "q.createdBy.id = :creatorId AND " +
+            "q.deleted = false AND " +
+            "q.context IS NULL")
+    long countSingleQuestionsAvailable(
+            @Param("topicId") String topicId,
+            @Param("difficultyId") String difficultyId,
+            @Param("questionType") QuestionType questionType,
+            @Param("creatorId") String creatorId);
+
+    @Query("SELECT COUNT(DISTINCT c.id) FROM QuestionContextV2 c " +
+            "JOIN c.questions q " +
+            "WHERE q.topic.id = :topicId AND " +
+            "q.difficulty.id = :difficultyId AND " +
+            "q.type = :questionType AND " +
+            "q.createdBy.id = :creatorId AND " +
+            "q.deleted = false")
+    long countContextsAvailable(
+            @Param("topicId") String topicId,
+            @Param("difficultyId") String difficultyId,
+            @Param("questionType") QuestionType questionType,
+            @Param("creatorId") String creatorId
+    );
 }

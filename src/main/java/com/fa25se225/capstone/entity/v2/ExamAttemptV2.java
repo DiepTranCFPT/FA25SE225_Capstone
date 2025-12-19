@@ -87,4 +87,13 @@ public class ExamAttemptV2 {
     @Column(name = "is_late")
     private Boolean isLate;
 
+    @Column(name = "remaining_time")
+    private Long remainingTime;
+
+    @Column(name = "last_interaction_time")
+    private LocalDateTime lastInteractionTime;
+
+    @Column(name = "interaction_intervals")
+    private String interactionIntervals;
+
 }

@@ -128,9 +128,8 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         response.setAttemptSessionToken(newSessionToken);
 
         if (exam.getDuration() != null && exam.getDuration() > 0) {
-            LocalDateTime endTime = attempt.getStartTime().plusMinutes(exam.getDuration());
-            long remainSeconds = Duration.between(LocalDateTime.now(), endTime).getSeconds();
-            response.setRemainTime(Math.max(0, remainSeconds));
+            // Lấy thời gian còn lại từ DB (đã được đóng băng nếu offline)
+            response.setRemainTime(attempt.getRemainingTime() != null ? attempt.getRemainingTime() : 0L);
         }
 
         List<StudentAnswerV2> savedAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attempt.getId());
@@ -172,6 +171,17 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             log.info("Found an unfinished test (AttemptID: {}). Restoring...", existingAttempt.get().getId());
             attempt = existingAttempt.get();
             attempt.setAttemptSessionToken(newSessionToken);
+
+            // FIX: Xử lý tương thích cho dữ liệu cũ (khi remainingTime bị NULL)
+            if (attempt.getRemainingTime() == null && attempt.getExam().getDuration() != null && attempt.getExam().getDuration() > 0) {
+                long durationSeconds = attempt.getExam().getDuration() * 60L;
+                long elapsedSeconds = Duration.between(attempt.getStartTime(), LocalDateTime.now()).getSeconds();
+                attempt.setRemainingTime(Math.max(0, durationSeconds - elapsedSeconds));
+            }
+
+            // Cập nhật thời gian trôi qua (tính toán trừ thời gian theo logic đóng băng) trước khi reset session
+            updateTimeProgress(attempt);
+            
             attempt = attemptRepository.save(attempt);
             return resumeExam(attempt, newSessionToken);
         }
@@ -312,7 +322,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             }
         }
 
-        // FLATTEN)
+        // FLATTEN
         // Shuffle the order in block
         Collections.shuffle(questionBlocks);
 
@@ -346,6 +356,9 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .attemptSessionToken(newSessionToken)
                 .score(0.0)
                 .sourceTemplate(templates.get(0))
+                // Khởi tạo thời gian còn lại (đổi phút sang giây)
+                .remainingTime(savedExam.getDuration() != null ? savedExam.getDuration() * 60L : null)
+                .lastInteractionTime(LocalDateTime.now())
                 .build();
 
         attemptRepository.save(attempt);
@@ -363,9 +376,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
 
         if (savedExam.getDuration() != null && savedExam.getDuration() > 0) {
-            LocalDateTime endTime = attempt.getStartTime().plusMinutes(savedExam.getDuration());
-            long remainSeconds = Duration.between(LocalDateTime.now(), endTime).getSeconds();
-            response.setRemainTime(Math.max(0, remainSeconds));
+            response.setRemainTime(attempt.getRemainingTime());
         }
 
         return response;
@@ -390,18 +401,11 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         Integer durationMinutes = exam.getDuration();
 
         if (Objects.nonNull(durationMinutes) && durationMinutes > 0) {
-            LocalDateTime startTime = attempt.getStartTime();
-            LocalDateTime now = LocalDateTime.now();
-
-            LocalDateTime expectedEndTime = startTime.plusMinutes(durationMinutes);
-
-            int gracePeriodMinutes = 2;
-            LocalDateTime hardDeadline = expectedEndTime.plusMinutes(gracePeriodMinutes);
-
-            if (now.isAfter(hardDeadline)) {
-
-                log.warn("User submitted late! AttemptID: {}. Expected: {}, Actual: {}",
-                        attemptId, expectedEndTime, now);
+            //give 1 minute more to submit
+            long gracePeriodSeconds = 60;
+            
+            if (attempt.getRemainingTime() != null && attempt.getRemainingTime() < -gracePeriodSeconds) {
+                log.warn("User submitted late! AttemptID: {}. Remaining Time: {}", attemptId, attempt.getRemainingTime());
                 attempt.setIsLate(true);
             }
         }
@@ -675,6 +679,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         List<StudentAnswerV2> existingAnswers = studentAnswerRepository.findByExamAttemptIdWithDetails(attemptId);
         Map<String, StudentAnswerV2> answerMap = studentAnswersToMap(existingAnswers);
 
+        // --- LOGIC ADAPTIVE HEARTBEAT & FREEZE TIME ---
+        updateTimeProgress(attempt);
+        // --------------------------------------------------
+
         List<StudentAnswerV2> toSave = new ArrayList<>();
         for (StudentAnswerV2Request dto : request.getAnswers()) {
             StudentAnswerV2 answer = answerMap.get(dto.getExamQuestionId());
@@ -706,6 +714,68 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             log.warn("Concurrent save detected for attempt {}", attemptId);
         }
 
+    }
+
+    /**
+     * Hàm tính toán và trừ thời gian làm bài dựa trên khoảng cách giữa các lần tương tác.
+     * Hỗ trợ logic "Đóng băng thời gian" khi mất kết nối.
+     */
+    private void updateTimeProgress(ExamAttemptV2 attempt) {
+        if (attempt.getExam().getDuration() != null && attempt.getExam().getDuration() > 0) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime lastInteraction = attempt.getLastInteractionTime();
+
+            if (lastInteraction == null) {
+                lastInteraction = attempt.getStartTime();
+            }
+
+            long actualDuration = Duration.between(lastInteraction, now).getSeconds();
+            
+            // Nếu actualDuration quá nhỏ (ví dụ < 0 do đồng hồ hệ thống lệch), bỏ qua
+            if (actualDuration < 0) actualDuration = 0;
+
+            // 1. Parse lịch sử các khoảng thời gian trước đó
+            List<Long> intervals = new ArrayList<>();
+            if (StringUtils.hasText(attempt.getInteractionIntervals())) {
+                String[] parts = attempt.getInteractionIntervals().split(",");
+                for (String p : parts) {
+                    try {
+                        intervals.add(Long.parseLong(p));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            // 2. Tính trung bình động (Moving Average)
+            double averageInterval = 15.0; 
+            if (!intervals.isEmpty()) {
+                averageInterval = intervals.stream().mapToLong(val -> val).average().orElse(15.0);
+            }
+
+            // 3. Xác định ngưỡng (Threshold)
+            long threshold = (long) (averageInterval * 1.5) + 2;
+
+            long timeToDeduct;
+
+            if (actualDuration <= threshold) {
+                // Online bình thường
+                timeToDeduct = actualDuration;
+                
+                intervals.add(actualDuration);
+                if (intervals.size() > 5) intervals.remove(0);
+                attempt.setInteractionIntervals(intervals.stream().map(String::valueOf).collect(Collectors.joining(",")));
+            } else {
+                // Offline/Lag -> Đóng băng (chỉ trừ threshold)
+                timeToDeduct = threshold;
+            }
+
+            long currentRemaining = attempt.getRemainingTime() != null ? attempt.getRemainingTime() : 0;
+            attempt.setRemainingTime(Math.max(0, currentRemaining - timeToDeduct));
+            attempt.setLastInteractionTime(now);
+            
+            // Lưu ý: Hàm gọi (caller) sẽ chịu trách nhiệm save attempt vào DB
+            // Tuy nhiên để an toàn dữ liệu thời gian thực, ta có thể save ngay tại đây nếu cần, 
+            // nhưng ở context hiện tại caller (saveExamProgress/handleExamStart) đều có save sau đó.
+        }
     }
 
     private Map<String, StudentAnswerV2> studentAnswersToMap(List<StudentAnswerV2> answers) {

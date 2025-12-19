@@ -21,7 +21,7 @@ public interface QuestionV2Mapper {
     @Mapping(target = "topic", source = "topic.name")
 //    @Mapping(target = "answers", source = "answers", qualifiedByName = "conditionalAnswers")
     @Mapping(target = "answers", source = "answers")
-
+    @Mapping(target = "questionContext", source = "context")
     QuestionV2Response toResponse(QuestionV2 questionV2);
 
 

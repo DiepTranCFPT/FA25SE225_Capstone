@@ -11,13 +11,12 @@ spring:
 #      idleTimeout: 60000 # 1 minutes
 #      keepaliveTime: 15000
 #      validation-timeout: 3000
-      max-lifetime: 300000
+      max-lifetime: 150000
       idle-timeout: 120000
-      keepalive-time: 45000
-      connection-timeout: 30000
+      keepalive-time: 30000
+      connection-timeout: 60000
       maximum-pool-size: 10
-      minimum-idle: 2
-      connection-test-query: "SELECT 1"
+      minimum-idle: 1
       connectionInitSql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   data:
     redis:

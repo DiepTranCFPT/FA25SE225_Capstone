@@ -51,6 +51,33 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
                                                    @Param("difficultyId") String difficultyId, @Param("creatorId") String creatorId, @Param("count") int count);
 
 
+    @Query(value = "SELECT * FROM questions_v2 q " +
+            "WHERE q.topic_id = :topicId " +
+            "AND q.difficulty_id = :difficultyId " +
+            "AND q.question_type = :questionType " +
+            "AND q.created_by = :creatorId " +
+            "AND q.deleted = false " +
+            "AND q.context_id IS NULL " +
+            "ORDER BY RAND() LIMIT :limit", nativeQuery = true)
+    List<QuestionV2> findRandomSingleQuestions(@Param("topicId") String topicId,
+                                               @Param("questionType") String questionType,
+                                               @Param("difficultyId") String difficultyId,
+                                               @Param("creatorId") String creatorId,
+                                               @Param("limit") int limit);
+
+    @Query(value = "SELECT DISTINCT c.id FROM question_contexts_v2 c " +
+            "JOIN questions_v2 q ON q.context_id = c.id " +
+            "WHERE q.topic_id = :topicId " +
+            "AND q.difficulty_id = :difficultyId " +
+            "AND q.question_type = :questionType " +
+            "AND q.created_by = :creatorId " +
+            "AND q.deleted = false " +
+            "ORDER BY RAND() LIMIT :limit", nativeQuery = true)
+    List<String> findRandomContextIds(@Param("topicId") String topicId,
+                                      @Param("questionType") String questionType,
+                                      @Param("difficultyId") String difficultyId,
+                                      @Param("creatorId") String creatorId,
+                                      @Param("limit") int limit);
 
 
     @Query("SELECT COUNT(q) FROM QuestionV2 q WHERE " +

@@ -36,6 +36,9 @@ public class ExamRuleV2 {
     @Column(name = "num_questions", nullable = false)
     private Integer numberOfQuestions;
 
+    @Column(name = "number_of_contexts")
+    private Integer numberOfContexts;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "topic_id", nullable = false)
     private QuestionTopicV2 topic;

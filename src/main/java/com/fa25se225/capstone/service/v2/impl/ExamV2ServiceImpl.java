@@ -70,6 +70,8 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final TokenTransactionService tokenTransactionService;
     private final SecureRandom secureRandom;
 
+    private final QuestionContextV2Repository contextRepository;
+
 
     @Override
     @Transactional
@@ -178,32 +180,33 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         return generateExamAndAttempt(templates, newSessionToken);
     }
 
-    private ExamV2Response generateExamAndAttempt(List<ExamTemplateV2> templates, String newSessionToken) {
+    public ExamV2Response generateExamAndAttempt(List<ExamTemplateV2> templates, String newSessionToken) {
         User currentUser = accountUtil.getCurrentUser();
 
+        // 1. Metadata Exam
         String examTitle = templates.size() > 1 ? "Bài thi tổ hợp" : templates.get(0).getTitle();
         String examDescription = templates.stream().map(ExamTemplateV2::getTitle).collect(Collectors.joining(", "));
         int totalDuration = templates.stream().mapToInt(ExamTemplateV2::getDuration).sum();
         int totalPassingScore = templates.stream().mapToInt(ExamTemplateV2::getPassingScore).sum();
 
-
-
+        // 2. (Payment)
         for (ExamTemplateV2 template : templates) {
             BigDecimal templateCost = template.getTokenCost();
             User teacher = template.getCreatedBy();
-                if (templateCost != null && templateCost.compareTo(BigDecimal.ZERO) > 0) {
-                    if (!currentUser.getId().equals(teacher.getId())) {
-                        log.info("Processing exam payment for template '{}': user={}, teacher={}, amount={}",
-                                template.getTitle(), currentUser.getId(), teacher.getId(), templateCost);
-                        tokenTransactionService.processExamPayment(
-                                currentUser.getId(), teacher.getId(), templateCost, "Exam: " + template.getTitle());
-                    }
+            if (templateCost != null && templateCost.compareTo(BigDecimal.ZERO) > 0) {
+                if (!currentUser.getId().equals(teacher.getId())) {
+                    log.info("Processing exam payment for template '{}': user={}, teacher={}, amount={}",
+                            template.getTitle(), currentUser.getId(), teacher.getId(), templateCost);
+                    tokenTransactionService.processExamPayment(
+                            currentUser.getId(), teacher.getId(), templateCost, "Exam: " + template.getTitle());
                 }
-                }
+            }
+        }
 
         User teacher = templates.get(0).getCreatedBy();
         Subject subject = templates.get(0).getSubject();
 
+        // 3. Init Exam Shell
         ExamV2 exam = ExamV2.builder()
                 .title(examTitle)
                 .description(examDescription)
@@ -217,41 +220,115 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                 .flatMap(t -> t.getRules().stream())
                 .toList();
 
-        List<ExamQuestionV2> generatedQuestions = new ArrayList<>();
-        AtomicInteger order = new AtomicInteger(1);
+        // Dùng List<List> để gom nhóm câu hỏi nhằm mục đích shuffle theo khối
+        // List<ExamQuestionV2> bên trong là 1 khối (Block)
+        List<List<ExamQuestionV2>> questionBlocks = new ArrayList<>();
 
         for (ExamRuleV2 rule : allRules) {
-            List<QuestionV2> randomQuestions = questionRepository.findRandomQuestionsByCriteria(
-                    rule.getTopic().getId(),
-                    rule.getQuestionType().getValue(),
-                    rule.getDifficulty().getId(),
-                    rule.getTemplate().getCreatedBy().getId(),
-                    rule.getNumberOfQuestions()
-            );
+            double pointsPerQuestion = rule.getPoints();
 
-            if (randomQuestions.size() < rule.getNumberOfQuestions()) {
-                log.warn("Không đủ câu hỏi cho rule: topic={}, diff={}, need={}, found={}",
-                        rule.getTopic().getName(), rule.getDifficulty().getName(), rule.getNumberOfQuestions(), randomQuestions.size());
+            if (rule.getNumberOfContexts() != null && rule.getNumberOfContexts() > 0) {
+
+                // 1. Random ra danh sách Context ID (Candidate Contexts)
+                List<String> contextIds = questionRepository.findRandomContextIds(
+                        rule.getTopic().getId(),
+                        rule.getQuestionType().getValue(),
+                        rule.getDifficulty().getId(),
+                        rule.getTemplate().getCreatedBy().getId(),
+                        rule.getNumberOfContexts()
+                );
+
+                if (contextIds.size() < rule.getNumberOfContexts()) {
+                    log.warn("Không đủ bài đọc (Context) cho rule: Topic={}, Yêu cầu {}, tìm thấy {}",
+                            rule.getTopic().getName(), rule.getNumberOfContexts(), contextIds.size());
+                }
+
+                // 2. Duyệt từng Context để lấy câu hỏi bên trong
+                for (String ctxId : contextIds) {
+                    QuestionContextV2 context = contextRepository.findByIdWithQuestions(ctxId).orElse(null);
+
+                    if (context != null) {
+                        List<QuestionV2> validQuestions = context.getQuestions().stream()
+                                .filter(q -> !q.getDeleted())
+                                .filter(q -> q.getType() == rule.getQuestionType())
+                                .filter(q -> q.getDifficulty().getId().equals(rule.getDifficulty().getId()))
+                                .filter(q -> q.getTopic().getId().equals(rule.getTopic().getId()))
+                                .collect(Collectors.toList());
+
+                        if (validQuestions.isEmpty()) {
+                            continue;
+                        }
+
+                        // 3. Xử lý số lượng câu hỏi TRONG mỗi Context
+                        Collections.shuffle(validQuestions);
+
+                        int limitPerContext = rule.getNumberOfQuestions();
+                        List<QuestionV2> selectedQuestions = validQuestions.stream()
+                                .limit(limitPerContext)
+                                .toList();
+
+                        // 4. Map sang ExamQuestion và thêm thành 1 khối
+                        if (!selectedQuestions.isEmpty()) {
+                            List<ExamQuestionV2> block = new ArrayList<>();
+                            for (QuestionV2 q : selectedQuestions) {
+                                block.add(ExamQuestionV2.builder()
+                                        .exam(exam)
+                                        .question(q)
+                                        .points(pointsPerQuestion)
+                                        .build());
+                            }
+                            questionBlocks.add(block);
+                        }
+                    }
+                }
             }
 
-            for (QuestionV2 q : randomQuestions) {
-                generatedQuestions.add(ExamQuestionV2.builder()
-                        .exam(exam)
-                        .question(q)
-                        .orderNumber(order.getAndIncrement())
-                        .points(rule.getPoints())
-                        .build());
+            // (SINGLE)
+            else {
+                List<QuestionV2> randomSingles = questionRepository.findRandomSingleQuestions(
+                        rule.getTopic().getId(),
+                        rule.getQuestionType().getValue(),
+                        rule.getDifficulty().getId(),
+                        rule.getTemplate().getCreatedBy().getId(),
+                        rule.getNumberOfQuestions()
+                );
+
+                if (randomSingles.size() < rule.getNumberOfQuestions()) {
+                    log.warn("Không đủ câu đơn cho rule: topic={}, diff={}, need={}, found={}",
+                            rule.getTopic().getName(), rule.getDifficulty().getName(),
+                            rule.getNumberOfQuestions(), randomSingles.size());
+                }
+
+                // Every single question is a separate block
+                for (QuestionV2 q : randomSingles) {
+                    List<ExamQuestionV2> block = new ArrayList<>();
+                    block.add(ExamQuestionV2.builder()
+                            .exam(exam)
+                            .question(q)
+                            .points(pointsPerQuestion)
+                            .build());
+                    questionBlocks.add(block);
+                }
             }
         }
 
-        Collections.shuffle(generatedQuestions);
-        for (int i = 0; i < generatedQuestions.size(); i++) {
-            generatedQuestions.get(i).setOrderNumber(i + 1);
+        // FLATTEN)
+        // Shuffle the order in block
+        Collections.shuffle(questionBlocks);
+
+        List<ExamQuestionV2> finalQuestionsToSave = new ArrayList<>();
+        AtomicInteger order = new AtomicInteger(1);
+
+        for (List<ExamQuestionV2> block : questionBlocks) {
+            for (ExamQuestionV2 eq : block) {
+                eq.setOrderNumber(order.getAndIncrement());
+                finalQuestionsToSave.add(eq);
+            }
         }
 
-        exam.setQuestions(generatedQuestions);
+        exam.setQuestions(finalQuestionsToSave);
         ExamV2 savedExam = examRepository.save(exam);
-        log.info("Đã tạo ExamV2 (ID: {}) với {} câu hỏi", savedExam.getId(), savedExam.getQuestions().size());
+        log.info("Đã tạo ExamV2 (ID: {}) với {} câu hỏi từ {} blocks", savedExam.getId(), finalQuestionsToSave.size(), questionBlocks.size());
 
         Map<String, ExamTemplateV2> templateMap = templates.stream()
                 .collect(Collectors.toMap(ExamTemplateV2::getId, Function.identity(), (o1, o2) -> o1));
@@ -277,10 +354,6 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         response.setExamAttemptId(attempt.getId());
         response.setAttemptSessionToken(newSessionToken);
 
-        if (savedExam.getDuration() != null && savedExam.getDuration() > 0) {
-            response.setRemainTime((long) savedExam.getDuration() * 60);
-        }
-
         response.getQuestions().forEach(examQuestion -> {
             var answers = examQuestion.getQuestion().getAnswers();
             if (Objects.nonNull(answers) && answers.size() == 1) {
@@ -288,15 +361,15 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             }
         });
 
-        if (exam.getDuration() != null && exam.getDuration() > 0) {
-            LocalDateTime endTime = attempt.getStartTime().plusMinutes(exam.getDuration());
+
+        if (savedExam.getDuration() != null && savedExam.getDuration() > 0) {
+            LocalDateTime endTime = attempt.getStartTime().plusMinutes(savedExam.getDuration());
             long remainSeconds = Duration.between(LocalDateTime.now(), endTime).getSeconds();
             response.setRemainTime(Math.max(0, remainSeconds));
         }
 
         return response;
     }
-
 
     @Override
     @Transactional

@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface QuestionContextV2Repository extends JpaRepository<QuestionContextV2, String> {
@@ -26,4 +27,6 @@ public interface QuestionContextV2Repository extends JpaRepository<QuestionConte
                    ")")
     List<String> findDuplicateContextIdsForUser(@Param("userId") String userId);
 
+    @Query("SELECT c FROM QuestionContextV2 c LEFT JOIN FETCH c.questions WHERE c.id = :id")
+    Optional<QuestionContextV2> findByIdWithQuestions(@Param("id") String id);
 }

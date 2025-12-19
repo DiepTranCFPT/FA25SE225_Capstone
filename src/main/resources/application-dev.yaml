@@ -5,12 +5,18 @@ spring:
     password: ${pass}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
-      maximumPoolSize: 10
-      minimumIdle: 2
-      maxLifetime: 120000
-      idleTimeout: 60000 # 1 minutes
-      keepaliveTime: 15000
-      validation-timeout: 3000
+#      maximumPoolSize: 10
+#      minimumIdle: 2
+#      maxLifetime: 120000
+#      idleTimeout: 60000 # 1 minutes
+#      keepaliveTime: 15000
+#      validation-timeout: 3000
+      max-lifetime: 300000
+      idle-timeout: 120000
+      keepalive-time: 45000
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 2
       connection-test-query: "SELECT 1"
       connectionInitSql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   data:

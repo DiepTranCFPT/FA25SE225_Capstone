@@ -33,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -337,6 +338,7 @@ public class LessonServiceImpl implements LessonService {
                     .isNextToContinue(isNext)
                     .build());
         }
+        result.sort(Comparator.comparing(LessonProgressResponse::name));
         return result;
     }
 }

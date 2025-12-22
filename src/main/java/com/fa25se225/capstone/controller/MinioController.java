@@ -23,12 +23,10 @@ public class MinioController {
     private String materialsBucket;
 
     private final MinioService minioService;
-    private final HelperTypeFile helperTypeFile;
 
     @Autowired
     public MinioController(MinioService minioService, HelperTypeFile helperTypeFile) {
         this.minioService = minioService;
-        this.helperTypeFile = helperTypeFile;
     }
 
     @GetMapping("/minio/file/lesson")

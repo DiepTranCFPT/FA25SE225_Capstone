@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.repository;
 
 import com.fa25se225.capstone.entity.StudentProfile;
+import com.fa25se225.capstone.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,4 +14,6 @@ public interface StudentProfileRepository extends JpaRepository<StudentProfile, 
     Optional<StudentProfile> findByUserEmail(String email);
 
     Optional<StudentProfile> findByUserId(String userId);
+
+    StudentProfile findAllByUser(User user);
 }

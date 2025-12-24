@@ -10,6 +10,7 @@ import com.fa25se225.capstone.mapper.LearningMaterialRatingMapper;
 import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.service.CertificateService;
 import com.fa25se225.capstone.service.LearningMaterialRatingService;
+import com.fa25se225.capstone.service.NotificationService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -31,6 +33,10 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
     private final LearningMaterialRatingMapper ratingMapper;
     private final AccountUtil accountUtil;
     private final CertificateService certificateService;
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    private final StudentProfileRepository studentProfile;
+    private final ParentProfileRepository parentProfileRepository;
 
     @Override
     @Transactional
@@ -59,6 +65,14 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         
         certificateService.createCertificate(currentUser, material.getAuthor(), material.getId());
 
+        String message = currentUser.getFirstName() + " " + currentUser.getLastName() + "is complete learning material " + rating.getLearningMaterial().getTitle();
+        notificationService.sendNotify(currentUser.getEmail(),"COMPLETE LEARNING",message);
+        StudentProfile student = studentProfile.findAllByUser(currentUser);
+
+        List<ParentProfile> parent = parentProfileRepository.findAllByChildren(List.of(student));
+        for (ParentProfile parentProfile : parent) {
+            notificationService.sendNotify(parentProfile.getUser().getEmail(),"COMPLETE LEARNING",message);
+        }
         updateMaterialRatingCache(material.getId());
         
         return ratingMapper.toResponse(rating);

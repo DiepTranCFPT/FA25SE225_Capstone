@@ -36,6 +36,7 @@ public class CertificateServiceImpl implements CertificateService {
                 .issueDate(LocalDate.now())
                 .isValid(true)
                 .deleted(false)
+                .materialId(materialId)
                 .build();
         certificateRepository.save(certificate);
     }
@@ -70,6 +71,7 @@ public class CertificateServiceImpl implements CertificateService {
         dto.setIssueDate(entity.getIssueDate());
         dto.setIsValid(entity.getIsValid());
         dto.setCertificateUrl(entity.getCertificateUrl());
+        dto.setMaterialId(entity.getMaterialId());
         return dto;
     }
 }

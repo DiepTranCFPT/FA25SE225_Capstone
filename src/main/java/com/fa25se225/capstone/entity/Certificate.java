@@ -26,6 +26,9 @@ public class Certificate {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "material_id")
+    private String materialId;
+
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "exam_id")
 //    private Exam exam;

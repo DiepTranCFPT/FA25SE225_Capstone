@@ -12,5 +12,6 @@ public class CertificateDTO {
     private LocalDate issueDate;
     private Boolean isValid;
     private String certificateUrl;
+    private String materialId;
 }
 

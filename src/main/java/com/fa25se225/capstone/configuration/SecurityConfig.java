@@ -92,6 +92,8 @@ public class SecurityConfig {
 
         JwtAuthenticationConverter customConverter = new JwtAuthenticationConverter();
 
+        customConverter.setPrincipalClaimName("email");
+
         customConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
             String email = jwt.getSubject();
             if (email == null) {

@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.exception;
 
 import lombok.Getter;
+import org.checkerframework.checker.units.qual.N;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 
@@ -95,7 +96,8 @@ public enum ErrorCode {
     EXCEED_REQUEST(1083, "You have used up all 3 requests for today." , HttpStatus.BAD_REQUEST),
     INVALID_SCORE_RANGE(1084,"Invalid score range" , HttpStatus.BAD_REQUEST),
     QUESTION_CONTEXT_NOT_FOUND(1085,"Question Context not found" ,HttpStatus.BAD_REQUEST ),
-    INSUFFICIENT_CONTEXTS_IN_BANK(1086,"Insufficient contexts in bank" ,HttpStatus.BAD_REQUEST );
+    INSUFFICIENT_CONTEXTS_IN_BANK(1086,"Insufficient contexts in bank" ,HttpStatus.BAD_REQUEST ),
+    NOTIFICATION_NOT_FOUND(1087,"Notification not found",HttpStatus.BAD_REQUEST);
 
 
 

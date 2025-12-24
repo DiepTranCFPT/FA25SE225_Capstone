@@ -28,6 +28,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -50,7 +51,10 @@ public class SecurityConfig {
                     .cors(cors -> cors.configurationSource(request -> {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowCredentials(true);
-                        config.addAllowedOriginPattern("*");
+                        config.setAllowedOriginPatterns(List.of(
+                                "http://localhost:5173",
+                                "https://www.ap-learning.online"
+                        ));
                         config.addAllowedHeader("*");
                         config.addAllowedMethod("*");
                         config.setMaxAge(3600L);

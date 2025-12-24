@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.ArrayList;
@@ -35,6 +36,9 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final AccountUtil accountUtil;
     private final FlashCardSetMapper flashCardSetMapper;
     private final PageHelper pageHelper;
+    private final FileUploadService fileUploadService;
+    private final CloudinaryService cloudinaryService;
+    private final ImageMigrationProducerService imageMigrationProducerService;
 
     @Override
     @Transactional
@@ -53,17 +57,28 @@ public class FlashcardServiceImpl implements FlashcardService {
         List<Flashcard> cards = new ArrayList<>();
         for (int i = 0; i < request.getCards().size(); i++) {
             FlashcardItemRequest item = request.getCards().get(i);
+            String rawUrl = item.getImageUrl();
             cards.add(Flashcard.builder()
                     .term(item.getTerm())
                     .definition(item.getDefinition())
-                    .imageUrl(item.getImageUrl())
+                    .imageUrl(rawUrl)
                     .displayOrder(i + 1)
                     .flashcardSet(set)
                     .build());
+
+            if (rawUrl != null && rawUrl.contains("cloudinary")) {
+                fileUploadService.confirmFileUsage(rawUrl);
+            }
         }
         set.setFlashcards(cards);
 
         FlashcardSet savedSet = flashcardSetRepository.save(set);
+
+        savedSet.getFlashcards().forEach(card -> {
+            if (StringUtils.hasText(card.getImageUrl()) && !card.getImageUrl().contains("cloudinary")) {
+                imageMigrationProducerService.sendMigrationTask(card.getId(), card.getImageUrl());
+            }
+        });
         return flashCardSetMapper.toDetailResponse(savedSet);
     }
 
@@ -129,19 +144,32 @@ public class FlashcardServiceImpl implements FlashcardService {
         
         for (int i = 0; i < request.getCards().size(); i++) {
             FlashcardItemRequest item = request.getCards().get(i);
+            String rawUrl = item.getImageUrl();
             set.getFlashcards().add(Flashcard.builder()
                     .term(item.getTerm())
                     .definition(item.getDefinition())
-                    .imageUrl(item.getImageUrl())
+                    .imageUrl(rawUrl)
                     .displayOrder(i + 1)
                     .flashcardSet(set)
                     .build());
+
+            if (rawUrl != null && rawUrl.contains("cloudinary")) {
+                fileUploadService.confirmFileUsage(rawUrl);
+            }
+
+
         }
         set.setCardCount(set.getFlashcards().size());
 
         FlashcardSet savedSet = flashcardSetRepository.save(set);
+        savedSet.getFlashcards().forEach(card -> {
+            if (StringUtils.hasText(card.getImageUrl()) && !card.getImageUrl().contains("cloudinary")) {
+                imageMigrationProducerService.sendMigrationTask(card.getId(), card.getImageUrl());
+            }
+        });
         return flashCardSetMapper.toDetailResponse(savedSet);
     }
+
 
     @Override
     @Transactional

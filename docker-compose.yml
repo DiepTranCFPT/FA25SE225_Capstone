@@ -15,6 +15,8 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    volumes:
+      - kafka_data:/bitnami/kafka
   redis:
     image: 'redis:7.2-alpine'
     container_name: ap-eml-redis
@@ -23,73 +25,77 @@ services:
     ports:
       - '6379:6379'
     command: redis-server --requirepass supersecretpassword
-  mysql:
-    image: 'mysql:8.0.36-debian'
-    container_name: ap-eml-mysql
-    hostname: mysql
-    restart: unless-stopped
-    ports:
-      - '3306:3306'
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=FA25SE225_Capstone
     volumes:
-      - db_data:/var/lib/mysql
+      - redis_data:/data
+#  mysql:
+#    image: 'mysql:8.0.36-debian'
+#    container_name: ap-eml-mysql
+#    hostname: mysql
+#    restart: unless-stopped
+#    ports:
+#      - '3306:3306'
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=root
+#      - MYSQL_DATABASE=FA25SE225_Capstone
+#    volumes:
+#      - db_data:/var/lib/mysql
 
-  minio:
-    image: minio/minio:latest
-    container_name: ap-eml-minio
-    hostname: minio
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    command: server /data --console-address ":9001"
-    volumes:
-      - minio_data:/data
-
-  backend:
-    build: .
-    container_name: ap-eml-backend
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-      - redis
-      - kafka
-      - minio
-    environment:
-      # Database Config
-      - url=jdbc:mysql://mysql:3306/FA25SE225_Capstone?useSSL=false&allowPublicKeyRetrieval=true
-      - usr=root
-      - pass=root
-      # Redis Config
-      - REDIS_URL=redis://:supersecretpassword@redis:6379
-      # Kafka Config
-      - KAFKA_SERVERS=kafka:9092
-      # MinIO Config
-      - url-minio=http://minio:9000
-      - access-key=minioadmin
-      - secret-key=minioadmin
-      # External APIs (Bạn cần điền các key thực tế vào đây hoặc dùng file .env)
-      - OPENAI_API_KEY=
-      - BREVO_API_KEY=
-      - OAUTH2_CLIENT_ID=
-      - OAUTH2_CLIENT_SECRET=
-      - OAUTH2_REDIRECT_URI=
-      - JWT_SIGNER_KEY=
-      - cloud=
-      - API_KEY=
-      - secret=
-      - MOMO_PARTNER_CODE=
-      - MOMO_ACCESS_KEY=
-      - MOMO_SECRET_KEY=
-
-
+#  minio:
+#    image: minio/minio:latest
+#    container_name: ap-eml-minio
+#    hostname: minio
+#    restart: unless-stopped
+#    ports:
+#      - "9000:9000"
+#      - "9001:9001"
+#    environment:
+#      - MINIO_ROOT_USER=minioadmin
+#      - MINIO_ROOT_PASSWORD=minioadmin
+#    command: server /data --console-address ":9001"
+#    volumes:
+#      - minio_data:/data
+#
+#  backend:
+#    build: .
+#    container_name: ap-eml-backend
+#    restart: unless-stopped
+#    ports:
+#      - "8080:8080"
+#    depends_on:
+#      - mysql
+#      - redis
+#      - kafka
+#      - minio
+#    environment:
+#      # Database Config
+#      - url=jdbc:mysql://mysql:3306/FA25SE225_Capstone?useSSL=false&allowPublicKeyRetrieval=true
+#      - usr=root
+#      - pass=root
+#      # Redis Config
+#      - REDIS_URL=redis://:supersecretpassword@redis:6379
+#      # Kafka Config
+#      - KAFKA_SERVERS=kafka:9092
+#      # MinIO Config
+#      - url-minio=http://minio:9000
+#      - access-key=minioadmin
+#      - secret-key=minioadmin
+#      # External APIs (Bạn cần điền các key thực tế vào đây hoặc dùng file .env)
+#      - OPENAI_API_KEY=
+#      - BREVO_API_KEY=
+#      - OAUTH2_CLIENT_ID=
+#      - OAUTH2_CLIENT_SECRET=
+#      - OAUTH2_REDIRECT_URI=
+#      - JWT_SIGNER_KEY=
+#      - cloud=
+#      - API_KEY=
+#      - secret=
+#      - MOMO_PARTNER_CODE=
+#      - MOMO_ACCESS_KEY=
+#      - MOMO_SECRET_KEY=
+#
+#
 volumes:
-  db_data:
-  minio_data:
+  kafka_data:
+  redis_data:
+#  db_data:
+#  minio_data:

@@ -121,3 +121,10 @@ momo:
   ipn-url: https://fa25se225capstone-production.up.railway.app/edcare/api/v1/payment/momo/ipn
 
 
+logging:
+  level:
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN
+    org.apache.kafka.clients.NetworkClient: WARN
+    org.apache.kafka.clients.consumer.internals.ConsumerCoordinator: WARN

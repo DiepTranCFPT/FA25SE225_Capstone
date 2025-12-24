@@ -22,6 +22,7 @@ public class FileUploadService {
     private final CloudinaryService cloudinaryService;
     private final TemporaryFileRepository temporaryFileRepository;
     private final static String QUESTION_IMAGES_FOLDER = "question_images_posts";
+    private final static String FLASHCARD_IMAGES_FOLDER = "flashcard_images_posts";
 
     public String uploadQuestionFile(MultipartFile file){
         String url = cloudinaryService.uploadFile(file, QUESTION_IMAGES_FOLDER);
@@ -35,6 +36,20 @@ public class FileUploadService {
         }
         return url;
     }
+
+    public String uploadFlashcardFile(MultipartFile file){
+        String url = cloudinaryService.uploadFile(file, FLASHCARD_IMAGES_FOLDER);
+        String publicId = cloudinaryService.getPublicIdFromUrl(url);
+        if (Objects.nonNull(publicId)) {
+            TemporaryFile temp = TemporaryFile.builder()
+                    .url(url)
+                    .publicId(publicId)
+                    .build();
+            temporaryFileRepository.save(temp);
+        }
+        return url;
+    }
+
 
 
     public void confirmFileUsage(String url) {

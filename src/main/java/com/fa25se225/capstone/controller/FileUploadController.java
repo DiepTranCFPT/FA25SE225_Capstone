@@ -19,7 +19,12 @@ public class FileUploadController {
     private final FileUploadService fileUploadService;
 
     @PostMapping(value = "/upload/questions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<String> uploadQuestionFile(@RequestParam("file") MultipartFile file) {
         return ApiResponse.success(fileUploadService.uploadQuestionFile(file));
+    }
+
+    @PostMapping(value = "/upload/flashcard", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<String> uploadFlashcardFile(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(fileUploadService.uploadFlashcardFile(file));
     }
 }

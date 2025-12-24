@@ -42,6 +42,20 @@ public class CloudinaryService {
         }
     }
 
+    public String uploadFileFromUrl(String imageUrl, String folderName) {
+        try {
+            Map uploadResult = cloudinary.uploader().upload(imageUrl, ObjectUtils.asMap(
+                    "folder", folderName,
+                    "resource_type", "auto"
+            ));
+
+            return (String) uploadResult.get("secure_url");
+        } catch (IOException e) {
+            log.error("Failed to upload image from URL: {} to folder: {}", imageUrl, folderName, e);
+            throw new AppException(ErrorCode.UNCATEGORIZED_EXCEPTION);
+        }
+    }
+
     public String getPublicIdFromUrl(String url){
         // https://res.cloudinary.com/demo/image/upload/v1583225224/user_avatars/my_avatar.jpg
 

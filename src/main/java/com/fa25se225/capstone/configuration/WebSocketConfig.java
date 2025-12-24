@@ -21,7 +21,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*")
                 .setAllowedOriginPatterns("http://localhost:5173",
-                        "https://www.ap-learning.online");
+                        "https://www.ap-learning.online")
+                .withSockJS();;
     }
 }
 

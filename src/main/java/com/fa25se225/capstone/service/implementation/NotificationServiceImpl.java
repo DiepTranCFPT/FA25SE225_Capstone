@@ -44,7 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
         e.setRead(false);
         repo.save(e);
 
-        if (Objects.isNull(onlineUserService)|| onlineUserService.isOnline(email)) {
+        if (onlineUserService.isOnline(email)) {
             NotificationPayload payload = new NotificationPayload(e.getId(),type, e.getMessage(),e.getCreatedAt(), false);
             template.convertAndSendToUser(email, "/queue/notifications", payload);
         }

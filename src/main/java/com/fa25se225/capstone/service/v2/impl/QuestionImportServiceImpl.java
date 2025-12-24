@@ -3,6 +3,7 @@ package com.fa25se225.capstone.service.v2.impl;
 import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.v2.request.AnswerV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionContextRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.response.QuestionImportResponse;
 import com.fa25se225.capstone.entity.Subject;
@@ -11,6 +12,7 @@ import com.fa25se225.capstone.entity.v2.AnswerV2;
 import com.fa25se225.capstone.entity.v2.QuestionDifficultyV2;
 import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
 import com.fa25se225.capstone.entity.v2.QuestionV2;
+import com.fa25se225.capstone.entity.v2.QuestionContextV2;
 import com.fa25se225.capstone.exception.AppException;
 import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.v2.AnswerV2Mapper;
@@ -19,6 +21,7 @@ import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
+import com.fa25se225.capstone.repository.v2.QuestionContextV2Repository;
 import com.fa25se225.capstone.service.v2.QuestionImportService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +35,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,6 +49,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
     private final SubjectRepository subjectRepository;
     private final QuestionDifficultyV2Repository questionDifficultyV2Repository;
     private final QuestionTopicV2Repository questionTopicV2Repository;
+    private final QuestionContextV2Repository questionContextV2Repository;
     private final QuestionV2Mapper questionV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
     private final AccountUtil accountUtil;
@@ -68,6 +73,9 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         List<String> successQuestionIds = new ArrayList<>();
         int totalProcessed = 0;
 
+        // Cache map: key = contextTitle, value = QuestionContextV2
+        Map<String, QuestionContextV2> contextCache = new HashMap<>();
+
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
             Sheet sheet = workbook.getSheetAt(0);
 
@@ -80,7 +88,25 @@ public class QuestionImportServiceImpl implements QuestionImportService {
 
                 try {
                     QuestionCreationV2Request questionRequest = parseRowToQuestionRequest(row, request.getSubjectId());
-                    QuestionV2 savedQuestion = createQuestionFromRequest(questionRequest, subject, currentUser);
+
+                    // Handle context if exists
+                    QuestionContextV2 context = null;
+                    if (questionRequest.getContext() != null) {
+                        String contextTitle = questionRequest.getContext().getTitle();
+
+                        // Check in cache first
+                        if (contextCache.containsKey(contextTitle)) {
+                            context = contextCache.get(contextTitle);
+                            log.debug("Using cached context: {}", contextTitle);
+                        } else {
+                            // Try to find in DB by title and current user
+                            context = findOrCreateContext(questionRequest.getContext(), subject, currentUser);
+                            contextCache.put(contextTitle, context);
+                            log.debug("Context cached: {} with ID: {}", contextTitle, context.getId());
+                        }
+                    }
+
+                    QuestionV2 savedQuestion = createQuestionFromRequest(questionRequest, subject, currentUser, context);
                     successQuestionIds.add(savedQuestion.getId());
                     log.debug("Successfully imported question at row {}: {}", i + 1, savedQuestion.getId());
                 } catch (Exception e) {
@@ -99,6 +125,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             throw new AppException(ErrorCode.VALIDATION_ERROR);
         }
 
+        log.info("Import completed. Total: {}, Success: {}, Errors: {}", totalProcessed, successQuestionIds.size(), errorMessages.size());
+
         return QuestionImportResponse.builder()
                 .totalProcessed(totalProcessed)
                 .successCount(successQuestionIds.size())
@@ -109,7 +137,10 @@ public class QuestionImportServiceImpl implements QuestionImportService {
     }
 
     private QuestionCreationV2Request parseRowToQuestionRequest(Row row, String subjectId) {
-        // Expected columns: Content, Type, DifficultyName, TopicName, Answer1, IsCorrect1, Answer2, IsCorrect2, Answer3, IsCorrect3, Answer4, IsCorrect4, Explanation
+        // Expected columns:
+        // Content, Type, DifficultyName, TopicName,
+        // Answer1, IsCorrect1, Answer2, IsCorrect2, Answer3, IsCorrect3, Answer4, IsCorrect4,
+        // ContextTitle, ContextContent, ContextImageUrl, ContextAudioUrl
 
         String content = getCellValueAsString(row, 0);
         String type = getCellValueAsString(row, 1);
@@ -140,7 +171,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
                 answers.add(AnswerV2Request.builder()
                         .content(answerContent.trim())
                         .isCorrect(isCorrect)
-                        .explanation(null) // Can add explanation parsing if needed
+                        .explanation(null)
                         .build());
             }
         }
@@ -149,7 +180,30 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             throw new RuntimeException("At least one answer is required");
         }
 
+        // Parse context fields (optional) - 4 columns at the end
+        String contextTitle = getCellValueAsString(row, 12);
+        String contextContent = getCellValueAsString(row, 13);
+        String contextImageUrl = getCellValueAsString(row, 14);
+        String contextAudioUrl = getCellValueAsString(row, 15);
+
+        // Build QuestionContextRequest if context title exists
+        QuestionContextRequest contextRequest = null;
+        if (contextTitle != null && !contextTitle.trim().isEmpty()) {
+            if (contextContent == null || contextContent.trim().isEmpty()) {
+                throw new RuntimeException("Context content is required when context title is provided");
+            }
+
+            contextRequest = new QuestionContextRequest(
+                    contextTitle.trim(),
+                    contextContent.trim(),
+                    contextImageUrl != null && !contextImageUrl.trim().isEmpty() ? contextImageUrl.trim() : null,
+                    contextAudioUrl != null && !contextAudioUrl.trim().isEmpty() ? contextAudioUrl.trim() : null,
+                    subjectId
+            );
+        }
+
         return QuestionCreationV2Request.builder()
+                .context(contextRequest)
                 .content(content.trim())
                 .type(type.trim())
                 .subjectId(subjectId)
@@ -179,7 +233,42 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         }
     }
 
-    private QuestionV2 createQuestionFromRequest(QuestionCreationV2Request request, Subject subject, User currentUser) {
+    /**
+     * Find existing context in DB by title and user, or create new one
+     */
+    private QuestionContextV2 findOrCreateContext(QuestionContextRequest contextRequest, Subject subject, User currentUser) {
+        // Try to find existing context by title and current user
+        List<QuestionContextV2> existingContexts = questionContextV2Repository
+                .findByCreatedByIdAndSubjectId(currentUser.getId(), subject.getId());
+
+        // Find by title match
+        QuestionContextV2 existingContext = existingContexts.stream()
+                .filter(ctx -> ctx.getTitle().equals(contextRequest.getTitle()))
+                .findFirst()
+                .orElse(null);
+
+        if (existingContext != null) {
+            log.debug("Found existing context in DB: {} (ID: {})", contextRequest.getTitle(), existingContext.getId());
+            return existingContext;
+        }
+
+        // Create new context
+        QuestionContextV2 newContext = QuestionContextV2.builder()
+                .title(contextRequest.getTitle())
+                .content(contextRequest.getContent())
+                .imageUrl(contextRequest.getImageUrl())
+                .audioUrl(contextRequest.getAudioUrl())
+                .subject(subject)
+                .createdBy(currentUser)
+                .build();
+
+        QuestionContextV2 savedContext = questionContextV2Repository.save(newContext);
+        log.debug("Created new context: {} (ID: {})", contextRequest.getTitle(), savedContext.getId());
+
+        return savedContext;
+    }
+
+    private QuestionV2 createQuestionFromRequest(QuestionCreationV2Request request, Subject subject, User currentUser, QuestionContextV2 context) {
         // Validate question type
         try {
             QuestionType.fromValue(request.getType().toUpperCase());
@@ -187,11 +276,11 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             throw new RuntimeException("Invalid question type: " + request.getType());
         }
 
-        // Find or create difficulty
+        // Find difficulty
         QuestionDifficultyV2 difficulty = questionDifficultyV2Repository.findByNameIgnoreCase(request.getDifficultyName())
                 .orElseThrow(() -> new RuntimeException("Difficulty not found: " + request.getDifficultyName()));
 
-        // Find or create topic
+        // Find topic
         QuestionTopicV2 topic = questionTopicV2Repository.findByNameIgnoreCase(request.getTopicName())
                 .orElseThrow(() -> new RuntimeException("Topic not found: " + request.getTopicName()));
 
@@ -203,6 +292,11 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         question.setSubject(subject);
         question.setDifficulty(difficulty);
         question.setTopic(topic);
+
+        // Link to context if provided
+        if (context != null) {
+            question.setContext(context);
+        }
 
         if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {
             List<AnswerV2> answers = request.getAnswers().stream()
@@ -248,7 +342,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             String[] headers = {
                 "Content", "Type", "DifficultyName", "TopicName",
                 "Answer1", "IsCorrect1", "Answer2", "IsCorrect2",
-                "Answer3", "IsCorrect3", "Answer4", "IsCorrect4"
+                "Answer3", "IsCorrect3", "Answer4", "IsCorrect4",
+                "ContextTitle", "ContextContent", "ContextImageUrl", "ContextAudioUrl"
             };
 
             for (int i = 0; i < headers.length; i++) {
@@ -256,28 +351,62 @@ public class QuestionImportServiceImpl implements QuestionImportService {
                 cell.setCellValue(headers[i]);
             }
 
-            // Create example rows
+            // Example 1: Question with context (IELTS Reading)
             Row exampleRow1 = sheet.createRow(1);
-            exampleRow1.createCell(0).setCellValue("What is 2 + 2?");
+            exampleRow1.createCell(0).setCellValue("What is the main topic of the passage?");
             exampleRow1.createCell(1).setCellValue("MCQ");
-            exampleRow1.createCell(2).setCellValue("Easy");
-            exampleRow1.createCell(3).setCellValue("Basic Math");
-            exampleRow1.createCell(4).setCellValue("3");
-            exampleRow1.createCell(5).setCellValue("false");
-            exampleRow1.createCell(6).setCellValue("4");
-            exampleRow1.createCell(7).setCellValue("true");
-            exampleRow1.createCell(8).setCellValue("5");
+            exampleRow1.createCell(2).setCellValue("Medium");
+            exampleRow1.createCell(3).setCellValue("Reading Comprehension");
+            exampleRow1.createCell(4).setCellValue("Climate change");
+            exampleRow1.createCell(5).setCellValue("true");
+            exampleRow1.createCell(6).setCellValue("Weather patterns");
+            exampleRow1.createCell(7).setCellValue("false");
+            exampleRow1.createCell(8).setCellValue("Global warming");
             exampleRow1.createCell(9).setCellValue("false");
-            exampleRow1.createCell(10).setCellValue("6");
+            exampleRow1.createCell(10).setCellValue("Temperature");
             exampleRow1.createCell(11).setCellValue("false");
+            exampleRow1.createCell(12).setCellValue("IELTS Reading Passage - Climate Change");
+            exampleRow1.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
+            exampleRow1.createCell(14).setCellValue(""); // ContextImageUrl
+            exampleRow1.createCell(15).setCellValue(""); // ContextAudioUrl
 
+            // Example 2: Another question in the same context
             Row exampleRow2 = sheet.createRow(2);
-            exampleRow2.createCell(0).setCellValue("Explain the concept of gravity");
-            exampleRow2.createCell(1).setCellValue("FRQ");
+            exampleRow2.createCell(0).setCellValue("According to the passage, what have scientists documented?");
+            exampleRow2.createCell(1).setCellValue("MCQ");
             exampleRow2.createCell(2).setCellValue("Medium");
-            exampleRow2.createCell(3).setCellValue("Physics");
-            exampleRow2.createCell(4).setCellValue("Gravity is a fundamental force");
+            exampleRow2.createCell(3).setCellValue("Reading Comprehension");
+            exampleRow2.createCell(4).setCellValue("Rising temperatures");
             exampleRow2.createCell(5).setCellValue("true");
+            exampleRow2.createCell(6).setCellValue("Falling temperatures");
+            exampleRow2.createCell(7).setCellValue("false");
+            exampleRow2.createCell(8).setCellValue("Climate change");
+            exampleRow2.createCell(9).setCellValue("false");
+            exampleRow2.createCell(10).setCellValue("Human");
+            exampleRow2.createCell(11).setCellValue("false");
+            exampleRow2.createCell(12).setCellValue("IELTS Reading Passage - Climate Change"); // Same context title
+            exampleRow2.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
+            exampleRow2.createCell(14).setCellValue("");
+            exampleRow2.createCell(15).setCellValue("");
+
+            // Example 3: Standalone question without context
+            Row exampleRow3 = sheet.createRow(3);
+            exampleRow3.createCell(0).setCellValue("What is 2 + 2?");
+            exampleRow3.createCell(1).setCellValue("MCQ");
+            exampleRow3.createCell(2).setCellValue("Easy");
+            exampleRow3.createCell(3).setCellValue("Basic Math");
+            exampleRow3.createCell(4).setCellValue("3");
+            exampleRow3.createCell(5).setCellValue("false");
+            exampleRow3.createCell(6).setCellValue("4");
+            exampleRow3.createCell(7).setCellValue("true");
+            exampleRow3.createCell(8).setCellValue("5");
+            exampleRow3.createCell(9).setCellValue("false");
+            exampleRow3.createCell(10).setCellValue("6");
+            exampleRow3.createCell(11).setCellValue("false");
+            exampleRow3.createCell(12).setCellValue(""); // No context
+            exampleRow3.createCell(13).setCellValue("");
+            exampleRow3.createCell(14).setCellValue("");
+            exampleRow3.createCell(15).setCellValue("");
 
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {

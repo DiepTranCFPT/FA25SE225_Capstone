@@ -65,7 +65,7 @@ public class LearningMaterialRatingServiceImpl implements LearningMaterialRating
         
         certificateService.createCertificate(currentUser, material.getAuthor(), material.getId());
 
-        String message = currentUser.getFirstName() + " " + currentUser.getLastName() + "is complete learning material " + rating.getLearningMaterial().getTitle();
+        String message = currentUser.getFirstName() + " " + currentUser.getLastName() + " is complete learning material " + rating.getLearningMaterial().getTitle();
         notificationService.sendNotify(currentUser.getEmail(),"COMPLETE LEARNING",message);
         StudentProfile student = studentProfile.findAllByUser(currentUser);
 

@@ -99,4 +99,25 @@ public class NotificationServiceImpl implements NotificationService {
         repo.saveAll(list);
     }
 
+    @Override
+    public void sentNotifyAllUser(String message) {
+        String email = accountUtil.getAccountAdmin().getEmail();
+        Notification e = new Notification();
+        e.setReceiverEmail(email);
+        e.setMessage(message);
+        e.setCreatedAt(Instant.now());
+        e.setRead(true);
+        repo.save(e);
+    }
+
+    @Override
+    public List<Notification> getAllNotificationsPublic() {
+        return repo.findAllByReceiverEmail(accountUtil.getAccountAdmin().getEmail());
+    }
+
+    @Override
+    public Notification getNotificationPublicNew() {
+        return repo.findByReceiverEmailOrderByCreatedAtDesc(accountUtil.getAccountAdmin().getEmail()).get(0);
+    }
+
 }

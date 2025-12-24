@@ -10,4 +10,9 @@ public interface NotificationService {
     Notification getNotification(String id);
     void markRead(String id);
     void readAll();
+    void sentNotifyAllUser(String message);
+
+    List<Notification> getAllNotificationsPublic();
+    Notification getNotificationPublicNew();
+
 }

@@ -14,6 +14,7 @@ import com.fa25se225.capstone.repository.CommentRepository;
 import com.fa25se225.capstone.repository.CommentVoteRepository;
 import com.fa25se225.capstone.repository.PostRepository;
 import com.fa25se225.capstone.service.CommentService;
+import com.fa25se225.capstone.service.NotificationService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentMapper commentMapper;
     private final PageHelper pageHelper;
     private static final String COMMENT_IMAGE_FOLDER = "comment_images";
+    private final NotificationService notificationService;
 
 
     @Override
@@ -92,6 +94,12 @@ public class CommentServiceImpl implements CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(comment);
+
+        if(!comment.getAuthor().equals(post.getAuthor())) {
+            String type = comment.getAuthor().getFirstName() + " "+comment.getAuthor().getLastName()+ "is comment in your post";
+            notificationService.sendNotify(post.getAuthor().getEmail(),type, request.getPostId());
+        }
+
         return commentMapper.toResponse(savedComment);
     }
 

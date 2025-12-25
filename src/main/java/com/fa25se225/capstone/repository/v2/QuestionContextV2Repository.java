@@ -19,6 +19,8 @@ public interface QuestionContextV2Repository extends JpaRepository<QuestionConte
 
     List<QuestionContextV2> findByCreatedByIdAndSubjectId(String userId, String subjectId);
 
+    Optional<QuestionContextV2> findFirstByTitleAndContentAndCreatedById(String title, String content, String userId);
+
    @Query("SELECT c.id FROM QuestionContextV2 c " +
                    "WHERE c.createdBy.id = :userId " +
                    "AND EXISTS (" +

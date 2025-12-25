@@ -102,15 +102,18 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
 
         } else if (request.getContext() != null) {
 
-//            QuestionContextV2 context = QuestionContextV2.builder()
-//                    .title(request.getContext().getTitle())
-//                    .content(request.getContext().getContent())
-//                    .imageUrl(request.getContext().getImageUrl())
-//                    .build();
-            QuestionContextV2 context = questionContextMapper.toEntity(request.getContext());
-            context.setCreatedBy(currentUser);
-            context.setSubject(subject);
-            context = questionContextV2Repository.save(context);
+            // Check if context exists to reuse
+            QuestionContextV2 context = questionContextV2Repository
+                    .findFirstByTitleAndContentAndCreatedById(
+                            request.getContext().getTitle(),
+                            request.getContext().getContent(),
+                            currentUser.getId())
+                    .orElseGet(() -> {
+                        QuestionContextV2 newContext = questionContextMapper.toEntity(request.getContext());
+                        newContext.setCreatedBy(currentUser);
+                        newContext.setSubject(subject);
+                        return questionContextV2Repository.save(newContext);
+                    });
             questionV2.setContext(context);
         }
 

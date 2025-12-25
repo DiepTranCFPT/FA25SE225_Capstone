@@ -143,6 +143,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         // Content, Type, DifficultyName, TopicName,
         // Answer1, IsCorrect1, Answer2, IsCorrect2, Answer3, IsCorrect3, Answer4, IsCorrect4,
         // ContextTitle, ContextContent, ContextImageUrl, ContextAudioUrl
+        // QuestionImageUrl, QuestionAudioUrl
 
         String content = getCellValueAsString(row, 0);
         String type = getCellValueAsString(row, 1);
@@ -182,11 +183,15 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             throw new RuntimeException("At least one answer is required");
         }
 
-        // Parse context fields (optional) - 4 columns at the end
+        // Parse context fields (optional)
         String contextTitle = getCellValueAsString(row, 12);
         String contextContent = getCellValueAsString(row, 13);
         String contextImageUrl = getCellValueAsString(row, 14);
         String contextAudioUrl = getCellValueAsString(row, 15);
+
+        // Parse question media fields (optional)
+        String questionImageUrl = getCellValueAsString(row, 16);
+        String questionAudioUrl = getCellValueAsString(row, 17);
 
         // Build QuestionContextRequest if context title exists
         QuestionContextRequest contextRequest = null;
@@ -212,6 +217,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
                 .difficultyName(difficultyName.trim())
                 .topicName(topicName.trim())
                 .answers(answers)
+                .imageUrl(questionImageUrl != null && !questionImageUrl.trim().isEmpty() ? questionImageUrl.trim() : null)
+                .audioUrl(questionAudioUrl != null && !questionAudioUrl.trim().isEmpty() ? questionAudioUrl.trim() : null)
                 .build();
     }
 
@@ -362,7 +369,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
                 "Content", "Type", "DifficultyName", "TopicName",
                 "Answer1", "IsCorrect1", "Answer2", "IsCorrect2",
                 "Answer3", "IsCorrect3", "Answer4", "IsCorrect4",
-                "ContextTitle", "ContextContent", "ContextImageUrl", "ContextAudioUrl"
+                "ContextTitle", "ContextContent", "ContextImageUrl", "ContextAudioUrl",
+                "QuestionImageUrl", "QuestionAudioUrl"
             };
 
             for (int i = 0; i < headers.length; i++) {
@@ -388,6 +396,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow1.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
             exampleRow1.createCell(14).setCellValue(""); // ContextImageUrl
             exampleRow1.createCell(15).setCellValue(""); // ContextAudioUrl
+            exampleRow1.createCell(16).setCellValue(""); // QuestionImageUrl
+            exampleRow1.createCell(17).setCellValue(""); // QuestionAudioUrl
 
             // Example 2: Another question in the same context
             Row exampleRow2 = sheet.createRow(2);
@@ -407,6 +417,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow2.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
             exampleRow2.createCell(14).setCellValue("");
             exampleRow2.createCell(15).setCellValue("");
+            exampleRow2.createCell(16).setCellValue("");
+            exampleRow2.createCell(17).setCellValue("");
 
             // Example 3: Standalone question without context
             Row exampleRow3 = sheet.createRow(3);
@@ -426,6 +438,8 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow3.createCell(13).setCellValue("");
             exampleRow3.createCell(14).setCellValue("");
             exampleRow3.createCell(15).setCellValue("");
+            exampleRow3.createCell(16).setCellValue("");
+            exampleRow3.createCell(17).setCellValue("");
 
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {

@@ -39,10 +39,10 @@ public class NotificationController {
     }
 
     @PostMapping("/public")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createNotifyPublic(@RequestBody String message) {
         service.sentNotifyAllUser(message);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("create successfully");
     }
     @GetMapping("/public")
     public ResponseEntity<Notification> markReadPublic() {
@@ -53,7 +53,6 @@ public class NotificationController {
     public ResponseEntity<List<Notification>> listPublic() {
         return ResponseEntity.ok(service.getAllNotificationsPublic());
     }
-
 
 }
 

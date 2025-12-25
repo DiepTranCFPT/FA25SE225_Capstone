@@ -106,6 +106,7 @@ public class NotificationServiceImpl implements NotificationService {
         e.setReceiverEmail(email);
         e.setMessage(message);
         e.setCreatedAt(Instant.now());
+        e.setType("NOTIFICATION SYSTEM");
         e.setRead(true);
         repo.save(e);
     }
@@ -116,8 +117,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public Notification getNotificationPublicNew() {
-        return repo.findByReceiverEmailOrderByCreatedAtDesc(accountUtil.getAccountAdmin().getEmail()).get(0);
-    }
+    public Notification getNotificationPublicNew() throws AppException {
+        List<Notification> notifications = repo.findByReceiverEmailOrderByCreatedAtDesc(accountUtil.getAccountAdmin().getEmail());
+
+        if (notifications.isEmpty()) {
+            throw new AppException(ErrorCode.NOTIFICATION_NOT_FOUND);
+        }
+
+        return notifications.get(0);    }
 
 }

@@ -771,10 +771,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
             long currentRemaining = attempt.getRemainingTime() != null ? attempt.getRemainingTime() : 0;
             attempt.setRemainingTime(Math.max(0, currentRemaining - timeToDeduct));
             attempt.setLastInteractionTime(now);
-            
-            // Lưu ý: Hàm gọi (caller) sẽ chịu trách nhiệm save attempt vào DB
-            // Tuy nhiên để an toàn dữ liệu thời gian thực, ta có thể save ngay tại đây nếu cần, 
-            // nhưng ở context hiện tại caller (saveExamProgress/handleExamStart) đều có save sau đó.
+
         }
     }
 

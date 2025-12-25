@@ -141,7 +141,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
     private QuestionCreationV2Request parseRowToQuestionRequest(Row row, String subjectId) {
         // Expected columns:
         // Content, Type, DifficultyName, TopicName,
-        // Answer1, IsCorrect1, Answer2, IsCorrect2, Answer3, IsCorrect3, Answer4, IsCorrect4,
+        // Answer1, IsCorrect1, Answer2, IsCorrect2, Answer3, IsCorrect3, Answer4, IsCorrect4, Answer5, IsCorrect5
         // ContextTitle, ContextContent, ContextImageUrl, ContextAudioUrl
         // QuestionImageUrl, QuestionAudioUrl
 
@@ -163,9 +163,9 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             throw new RuntimeException("Topic name is required");
         }
 
-        // Parse answers (up to 4 answers)
+        // Parse answers (up to 5 answers)
         List<AnswerV2Request> answers = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             String answerContent = getCellValueAsString(row, 4 + (i * 2));
             String isCorrectStr = getCellValueAsString(row, 5 + (i * 2));
 
@@ -184,14 +184,14 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         }
 
         // Parse context fields (optional)
-        String contextTitle = getCellValueAsString(row, 12);
-        String contextContent = getCellValueAsString(row, 13);
-        String contextImageUrl = getCellValueAsString(row, 14);
-        String contextAudioUrl = getCellValueAsString(row, 15);
+        String contextTitle = getCellValueAsString(row, 14);
+        String contextContent = getCellValueAsString(row, 15);
+        String contextImageUrl = getCellValueAsString(row, 16);
+        String contextAudioUrl = getCellValueAsString(row, 17);
 
         // Parse question media fields (optional)
-        String questionImageUrl = getCellValueAsString(row, 16);
-        String questionAudioUrl = getCellValueAsString(row, 17);
+        String questionImageUrl = getCellValueAsString(row, 18);
+        String questionAudioUrl = getCellValueAsString(row, 19);
 
         // Build QuestionContextRequest if context title exists
         QuestionContextRequest contextRequest = null;
@@ -368,7 +368,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             String[] headers = {
                 "Content", "Type", "DifficultyName", "TopicName",
                 "Answer1", "IsCorrect1", "Answer2", "IsCorrect2",
-                "Answer3", "IsCorrect3", "Answer4", "IsCorrect4",
+                "Answer3", "IsCorrect3", "Answer4", "IsCorrect4", "Answer5", "IsCorrect5",
                 "ContextTitle", "ContextContent", "ContextImageUrl", "ContextAudioUrl",
                 "QuestionImageUrl", "QuestionAudioUrl"
             };
@@ -392,12 +392,14 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow1.createCell(9).setCellValue("false");
             exampleRow1.createCell(10).setCellValue("Temperature");
             exampleRow1.createCell(11).setCellValue("false");
-            exampleRow1.createCell(12).setCellValue("IELTS Reading Passage - Climate Change");
-            exampleRow1.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
-            exampleRow1.createCell(14).setCellValue(""); // ContextImageUrl
-            exampleRow1.createCell(15).setCellValue(""); // ContextAudioUrl
-            exampleRow1.createCell(16).setCellValue(""); // QuestionImageUrl
-            exampleRow1.createCell(17).setCellValue(""); // QuestionAudioUrl
+            exampleRow1.createCell(12).setCellValue(""); // Answer5
+            exampleRow1.createCell(13).setCellValue("false"); // IsCorrect5
+            exampleRow1.createCell(14).setCellValue("IELTS Reading Passage - Climate Change");
+            exampleRow1.createCell(15).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
+            exampleRow1.createCell(16).setCellValue(""); // ContextImageUrl
+            exampleRow1.createCell(17).setCellValue(""); // ContextAudioUrl
+            exampleRow1.createCell(18).setCellValue(""); // QuestionImageUrl
+            exampleRow1.createCell(19).setCellValue(""); // QuestionAudioUrl
 
             // Example 2: Another question in the same context
             Row exampleRow2 = sheet.createRow(2);
@@ -413,12 +415,14 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow2.createCell(9).setCellValue("false");
             exampleRow2.createCell(10).setCellValue("Human");
             exampleRow2.createCell(11).setCellValue("false");
-            exampleRow2.createCell(12).setCellValue("IELTS Reading Passage - Climate Change"); // Same context title
-            exampleRow2.createCell(13).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
-            exampleRow2.createCell(14).setCellValue("");
-            exampleRow2.createCell(15).setCellValue("");
+            exampleRow2.createCell(12).setCellValue(""); // Answer5
+            exampleRow2.createCell(13).setCellValue("false"); // IsCorrect5
+            exampleRow2.createCell(14).setCellValue("IELTS Reading Passage - Climate Change"); // Same context title
+            exampleRow2.createCell(15).setCellValue("Climate change is one of the most pressing issues of our time. Scientists worldwide have documented rising temperatures and changing weather patterns...");
             exampleRow2.createCell(16).setCellValue("");
             exampleRow2.createCell(17).setCellValue("");
+            exampleRow2.createCell(18).setCellValue("");
+            exampleRow2.createCell(19).setCellValue("");
 
             // Example 3: Standalone question without context
             Row exampleRow3 = sheet.createRow(3);
@@ -434,12 +438,14 @@ public class QuestionImportServiceImpl implements QuestionImportService {
             exampleRow3.createCell(9).setCellValue("false");
             exampleRow3.createCell(10).setCellValue("6");
             exampleRow3.createCell(11).setCellValue("false");
-            exampleRow3.createCell(12).setCellValue(""); // No context
-            exampleRow3.createCell(13).setCellValue("");
-            exampleRow3.createCell(14).setCellValue("");
+            exampleRow3.createCell(12).setCellValue("7"); // Answer5
+            exampleRow3.createCell(13).setCellValue("false"); // IsCorrect5
+            exampleRow3.createCell(14).setCellValue(""); // No context
             exampleRow3.createCell(15).setCellValue("");
             exampleRow3.createCell(16).setCellValue("");
             exampleRow3.createCell(17).setCellValue("");
+            exampleRow3.createCell(18).setCellValue("");
+            exampleRow3.createCell(19).setCellValue("");
 
             // Auto-size columns
             for (int i = 0; i < headers.length; i++) {

@@ -22,6 +22,7 @@ import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionContextV2Repository;
+import com.fa25se225.capstone.service.implementation.FileUploadService;
 import com.fa25se225.capstone.service.v2.QuestionImportService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +54,7 @@ public class QuestionImportServiceImpl implements QuestionImportService {
     private final QuestionV2Mapper questionV2Mapper;
     private final AnswerV2Mapper answerV2Mapper;
     private final AccountUtil accountUtil;
+    private final FileUploadService fileUploadService;
 
     @Override
     @Transactional
@@ -263,6 +265,15 @@ public class QuestionImportServiceImpl implements QuestionImportService {
                 .build();
 
         QuestionContextV2 savedContext = questionContextV2Repository.save(newContext);
+        
+        // Confirm file usage for context images/audio
+        if (savedContext.getImageUrl() != null) {
+            fileUploadService.confirmFileUsage(savedContext.getImageUrl());
+        }
+        if (savedContext.getAudioUrl() != null) {
+            fileUploadService.confirmFileUsage(savedContext.getAudioUrl());
+        }
+        
         log.debug("Created new context: {} (ID: {})", contextRequest.getTitle(), savedContext.getId());
 
         return savedContext;
@@ -296,6 +307,14 @@ public class QuestionImportServiceImpl implements QuestionImportService {
         // Link to context if provided
         if (context != null) {
             question.setContext(context);
+        }
+        
+        // Confirm file usage for question images/audio
+        if (question.getImageUrl() != null) {
+            fileUploadService.confirmFileUsage(question.getImageUrl());
+        }
+        if (question.getAudioUrl() != null) {
+            fileUploadService.confirmFileUsage(question.getAudioUrl());
         }
 
         if (request.getAnswers() != null && !request.getAnswers().isEmpty()) {

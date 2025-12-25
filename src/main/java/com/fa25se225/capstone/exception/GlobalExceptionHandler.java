@@ -3,6 +3,7 @@ package com.fa25se225.capstone.exception;
 
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,24 @@ public class GlobalExceptionHandler {
         exception.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+        ApiResponse<Map<String, String>> apiResponse = ApiResponse.<Map<String, String>>builder()
+                .code(ErrorCode.VALIDATION_ERROR.getCode())
+                .message(ErrorCode.VALIDATION_ERROR.getMessage())
+                .data(errors)
+                .build();
+
+        return ResponseEntity.status(ErrorCode.VALIDATION_ERROR.getStatusCode()).body(apiResponse);
+    }
+
+    @ExceptionHandler(value = ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handlingConstraintViolation(ConstraintViolationException exception) {
+        Map<String, String> errors = new HashMap<>();
+
+        exception.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            String errorMessage = violation.getMessage();
             errors.put(fieldName, errorMessage);
         });
         ApiResponse<Map<String, String>> apiResponse = ApiResponse.<Map<String, String>>builder()

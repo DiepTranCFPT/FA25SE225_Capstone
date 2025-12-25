@@ -131,6 +131,17 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
         return questionV2Mapper.toManageResponse(savedQuestion);
     }
 
+    @Override
+    @Transactional
+    @CacheEvict(value = "questions", allEntries = true)
+    public List<QuestionManageV2Response> createQuestions(List<QuestionCreationV2Request> requests) {
+        log.info("Creating batch of {} questions V2", requests.size());
+
+        return requests.stream()
+                .map(this::createQuestion)
+                .collect(Collectors.toList());
+    }
+
 //    private Subject getSubjectByNameOrElseCreateTheNewOne(String name){
 //        return subjectRepository.findByNameIgnoreCase(name)
 //                .orElse(subjectRepository.save(Subject.builder().name(name).build()));

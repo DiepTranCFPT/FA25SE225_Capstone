@@ -2,6 +2,7 @@ package com.fa25se225.capstone.controller;
 
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.service.implementation.AIChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -47,6 +49,11 @@ public class AIChatController {
     @PostMapping("/analyze-template")
     public String analyzeTemplate(@RequestBody ExamTemplateV2Request request) {
         return aiChatService.analyzeTemplateFeasibility(request);
+    }
+
+    @PostMapping("/generate-questions/{subjectId}")
+    public List<QuestionCreationV2Request> generateQuestions(@PathVariable String subjectId, @RequestBody String rawText) {
+        return aiChatService.parseRawTextToQuestionJson(subjectId, rawText);
     }
 
     @PostMapping("/students/dashboard")

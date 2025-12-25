@@ -17,6 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,6 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/questions-v2")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Question Management")
 public class QuestionV2Controller {
 
@@ -33,6 +35,11 @@ public class QuestionV2Controller {
     @PostMapping
     public ApiResponse<QuestionManageV2Response> createQuestion(@Valid @RequestBody QuestionCreationV2Request request) {
         return ApiResponse.success(questionV2Service.createQuestion(request));
+    }
+
+    @PostMapping("/batch-create")
+    public ApiResponse<List<QuestionManageV2Response>> createQuestions(@Valid @RequestBody List<QuestionCreationV2Request> requests) {
+        return ApiResponse.success(questionV2Service.createQuestions(requests));
     }
 
     @PutMapping("/{id}")

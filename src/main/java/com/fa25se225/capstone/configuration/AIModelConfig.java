@@ -7,12 +7,27 @@ import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.boot.web.client.ClientHttpRequestFactories;
+import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
+import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.time.Duration;
+
 @Configuration
 public class AIModelConfig {
+
+    @Bean
+    public RestClientCustomizer restClientCustomizer() {
+        return restClientBuilder -> restClientBuilder
+                .requestFactory(ClientHttpRequestFactories.get(ClientHttpRequestFactorySettings.DEFAULTS
+                        .withReadTimeout(Duration.ofSeconds(120))
+                        .withConnectTimeout(Duration.ofSeconds(60))
+                ));
+    }
+
 
     @Bean(name = "chatClientWithoutChatMemory")
     public ChatClient chatClientWithoutChatMemory(ChatClient.Builder chatClientBuilder){

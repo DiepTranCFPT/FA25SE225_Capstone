@@ -4,6 +4,7 @@ import com.fa25se225.capstone.constant.QuestionType;
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.entity.StudentProfile;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
@@ -25,6 +26,7 @@ import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -202,6 +204,56 @@ public class AIChatService {
         }
 
         setRecommendOfStudentByAI(userId);
+    }
+
+    public List<QuestionCreationV2Request> parseRawTextToQuestionJson(String subjectId, String rawText) {
+        String prompt = """
+        You are an educational AI assistant. Your task is to parse the provided raw text containing exam questions into a structured JSON format.
+        
+        **INPUT TEXT:**
+        %s
+        
+        **REQUIREMENTS:**
+        1. **Structure**: Output a JSON object containing a list of questions under the key "questions".
+        2. **Schema**: Each question must match this Java DTO structure:
+           - content (String): The question text.
+           - type (String): "MCQ/FRQ" (if the question has only 1 answer and this answer is correct. it's FRQ).
+           - subjectId (String): Use provided "%s".
+           - answers (List): List of objects { "content": "...", "isCorrect": boolean, "explanation": "..." }.
+           - context (Object): If the question belongs to a reading passage/scenario (e.g., "Questions 1-3 refer to..."), create this object with fields: "content" (the passage text), "title" (optional).
+           - difficultyName (String): Infer difficulty (EASY/MEDIUM/HARD) (Default MEDIUM).
+        
+        **CRITICAL RULES:**
+        1. **Context Parsing**: You MUST identify reading passages or group descriptions (e.g., "Questions 1-3 refer to the following information"). Extract that text into the `context.content` field for ALL questions in that group
+        (If context do not have title, generate brief, simple title for it).
+        2. **Answer Detection**: 
+           - Look for markers like asterisk (*), bolding, or an answer key at the end. 
+           - **IF NO CORRECT ANSWER IS INDICATED**: Set `isCorrect` to `false` for ALL options. 
+           - If the user doesn't provide an explanation for the answer, you don't need to generate it yourself; leave it as is.
+        3. **Output Format**: return ONLY valid JSON. Do not include markdown formatting (```json).
+        
+        **EXAMPLE JSON:**
+        {
+          "questions": [
+             {
+               "content": "Which of the following...",
+               "context": { "content": "I will be no man's tributary..." },
+               "answers": [ ... ]
+             }
+          ]
+        }
+        """;
+
+        List<QuestionCreationV2Request> response = primaryChatClientWithoutMemory.prompt()
+                .system(String.format(prompt, rawText, subjectId))
+                .call()
+                .entity(new ParameterizedTypeReference<List<QuestionCreationV2Request>>() {
+                });
+        response.forEach(question -> {
+            question.setSubjectId(subjectId);
+            question.getContext().setSubjectId(subjectId);
+        });
+        return response;
     }
 
 

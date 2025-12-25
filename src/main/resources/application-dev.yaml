@@ -35,6 +35,8 @@ spring:
       chat:
         options:
           model: gemini-2.5-flash
+          reasoning-effort: medium
+
       embedding:
         options:
           model: text-embedding-004
@@ -43,6 +45,12 @@ spring:
         index: faq_idx
         prefix: faq
     retry:
+      max-attempts: 5
+      backoff:
+        initial-interval: 2000ms
+        multiplier: 2
+        max-interval: 60000ms
+
 
   main:
     allow-bean-definition-overriding: true

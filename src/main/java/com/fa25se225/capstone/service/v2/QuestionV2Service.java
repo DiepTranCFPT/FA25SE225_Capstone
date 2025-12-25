@@ -15,6 +15,7 @@ import java.util.List;
 
 public interface QuestionV2Service {
     QuestionManageV2Response createQuestion(QuestionCreationV2Request request);
+    List<QuestionManageV2Response> createQuestions(List<QuestionCreationV2Request> requests);
     QuestionManageV2Response updateQuestion(String id, QuestionUpdateV2Request request);
     QuestionManageV2Response getQuestionById(String id);
     PageResponse<List<QuestionManageV2Response>> getAllQuestions(int pageNo, int pageSize, String... sorts);

@@ -35,7 +35,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('TEACHER')")
-    @CacheEvict(value = "user", key = "#result.userId")
+    @CacheEvict(value = "user", key = "#result.userid")
     public TeacherProfileResponse createProfile(TeacherProfileRequest request) {
         validateAge(request.getDateOfBirth());
         User user = accountUtil.getCurrentUser();

@@ -29,6 +29,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -293,6 +294,9 @@ public class MomoPaymentService {
     public List<TransactionDTO> getCurrentUserTransactions() {
         User user = accountUtil.getCurrentUser();
         List<Transaction> transactions = transactionRepository.findByPayment_User(user);
-        return transactionMapper.toDTOList(transactions);
+        return transactions.stream()
+                .sorted(Comparator.comparing(Transaction::getCreatedAt).reversed())
+                .map(transactionMapper::toDTO)
+                .toList();
     }
 }

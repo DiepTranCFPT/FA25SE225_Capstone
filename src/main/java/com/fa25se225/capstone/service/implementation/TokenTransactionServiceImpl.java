@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -178,7 +179,10 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
     public List<TokenTransactionDTO> getAllByUserId() {
         User user = accountUtil.getCurrentUser();
         List<TokenTransaction> transactions = tokenTransactionRepository.findAllByUser(user);
-        return transactions.stream().map(this::toDTO).toList();
+        return transactions.stream()
+                .sorted(Comparator.comparing(TokenTransaction::getCreatedAt).reversed())
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override

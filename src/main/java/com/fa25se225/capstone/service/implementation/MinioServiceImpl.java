@@ -106,7 +106,7 @@ public class MinioServiceImpl implements MinioService {
                             .bucket(bucketName)
                             .object(objectName)
                             .method(Method.GET)
-                            .expiry(3, TimeUnit.DAYS)
+                            .expiry(30, TimeUnit.MINUTES)
                             .build()
             );
         } catch (Exception e) {

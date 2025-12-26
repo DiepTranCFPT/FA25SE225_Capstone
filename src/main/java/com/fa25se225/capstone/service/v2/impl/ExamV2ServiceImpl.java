@@ -14,6 +14,7 @@ import com.fa25se225.capstone.mapper.v2.*;
 import com.fa25se225.capstone.repository.v2.*;
 import com.fa25se225.capstone.service.TokenTransactionService;
 import com.fa25se225.capstone.service.v2.ExamV2Service;
+import com.fa25se225.capstone.service.NotificationService;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +72,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
     private final SecureRandom secureRandom;
 
     private final QuestionContextV2Repository contextRepository;
+    private final NotificationService notificationService;
 
 
     @Override
@@ -852,6 +854,10 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         }
 
         ExamAttemptV2 savedAttempt = attemptRepository.save(attempt);
+
+        String message = "Your exam attempt has been graded successfully.";
+        notificationService.sendNotify(savedAttempt.getUser().getEmail(), message, savedAttempt.getExam().getTitle());
+
         return examAttemptV2Mapper.toResponse(savedAttempt);
     }
 
@@ -877,6 +883,13 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         attempt.setStatus(AttemptStatusV2.REVIEW_REQUESTED);
         attempt.setReviewReason(request.getReason());
         attemptRepository.save(attempt);
+
+        if (attempt.getSourceTemplate() != null) {
+            User teacher = attempt.getSourceTemplate().getCreatedBy();
+            String message = String.format("Student %s %s has requested a review for exam: %s",
+                    currentUser.getFirstName(), currentUser.getLastName(), attempt.getExam().getTitle());
+            notificationService.sendNotify(teacher.getEmail(), message, attemptId);
+        }
     }
 
     @Override

@@ -62,7 +62,6 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     }
 
     @Override
-    @Cacheable(value = "teacher_profile", key = "#userId")
     public TeacherProfileResponse getProfileByUserId(String userId) {
         return teacherProfileRepository.findByUserId(userId)
             .map(teacherProfileMapper::toResponse)

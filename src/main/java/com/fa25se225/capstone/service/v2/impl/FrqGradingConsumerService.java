@@ -11,6 +11,7 @@ import com.fa25se225.capstone.mapper.v2.ExamAttemptV2Mapper;
 import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
 import com.fa25se225.capstone.repository.v2.ExamQuestionV2Repository;
 import com.fa25se225.capstone.repository.v2.StudentAnswerV2Repository;
+import com.fa25se225.capstone.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class FrqGradingConsumerService {
     private final ExamAttemptV2Mapper attemptMapper;
 
     private final ExamQuestionV2Repository examQuestionRepository;
+    private final NotificationService notificationService;
 
     @RetryableTopic(
             attempts = "4",
@@ -194,6 +196,9 @@ public class FrqGradingConsumerService {
 
             ExamAttemptV2Response responseDTO = attemptMapper.toResponse(savedAttempt);
             sseService.sendGradingCompleteNotification(attemptId, responseDTO);
+            String message = "Your exam attempt has been graded successfully.";
+            notificationService.sendNotify(savedAttempt.getUser().getEmail(), message, savedAttempt.getExam().getTitle());
+
         }
     }
 

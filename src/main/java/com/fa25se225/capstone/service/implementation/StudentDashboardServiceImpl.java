@@ -62,9 +62,9 @@ public class StudentDashboardServiceImpl implements StudentDashboardService {
         long total = attemptRepository.countByUserIdAndStatus(studentId, AttemptStatusV2.COMPLETED);
         Double avgScore = attemptRepository.getAverageScoreByUserId(studentId);
         String recommend = "";
-        StudentProfile studentProfile = studentProfileRepository.findByUserId(studentId).get();
-        if(Strings.isNotBlank(studentProfile.getRecommend())){
-            recommend = studentProfile.getRecommend();
+        Optional<StudentProfile> studentProfileOpt = studentProfileRepository.findByUserId(studentId);
+        if(studentProfileOpt.isPresent() && Strings.isNotBlank(studentProfileOpt.get().getRecommend())){
+            recommend = studentProfileOpt.get().getRecommend();
         }
 
         long inProgress = 0;

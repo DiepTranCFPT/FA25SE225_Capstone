@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.constant.QuestionType;
+import com.fa25se225.capstone.dto.request.AIGenerateQuestionRequest;
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.dto.v2.request.ExamRuleV2Request;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
@@ -219,7 +220,8 @@ public class AIChatService {
         setRecommendOfStudentByAI(userId);
     }
 
-    public List<QuestionCreationV2Request> parseRawTextToQuestionJson(String subjectId, String rawText) {
+    public List<QuestionCreationV2Request> parseRawTextToQuestionJson(String subjectId, AIGenerateQuestionRequest request) {
+        questionTopicV2Repository.findByNameIgnoreCase(request.getTopicName()).orElseThrow(() -> new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND));
         String prompt = """
         You are an educational AI assistant. Your task is to parse the provided raw text containing exam questions into a structured JSON format.
         
@@ -261,13 +263,14 @@ public class AIChatService {
         """;
 
         List<QuestionCreationV2Request> response = primaryChatClientWithoutMemory.prompt()
-                .system(String.format(prompt, rawText, subjectId))
+                .system(String.format(prompt, request.getRawText(), subjectId))
                 .call()
                 .entity(new ParameterizedTypeReference<List<QuestionCreationV2Request>>() {
                 });
         response.forEach(question -> {
             question.setSubjectId(subjectId);
             question.getContext().setSubjectId(subjectId);
+            question.setTopicName(request.getTopicName());
         });
         return response;
     }

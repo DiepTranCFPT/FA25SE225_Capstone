@@ -1,9 +1,11 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.request.AIGenerateQuestionRequest;
 import com.fa25se225.capstone.dto.request.ExamAskingRequest;
 import com.fa25se225.capstone.dto.v2.request.ExamTemplateV2Request;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
 import com.fa25se225.capstone.service.implementation.AIChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +54,8 @@ public class AIChatController {
     }
 
     @PostMapping("/generate-questions/{subjectId}")
-    public List<QuestionCreationV2Request> generateQuestions(@PathVariable String subjectId, @RequestBody String rawText) {
-        return aiChatService.parseRawTextToQuestionJson(subjectId, rawText);
+    public List<QuestionCreationV2Request> generateQuestions(@PathVariable String subjectId, @Valid @RequestBody AIGenerateQuestionRequest request) {
+        return aiChatService.parseRawTextToQuestionJson(subjectId, request);
     }
 
     @PostMapping("/students/dashboard")

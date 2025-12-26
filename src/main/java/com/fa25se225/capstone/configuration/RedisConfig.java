@@ -51,19 +51,19 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(getJsonSerializer()));
 
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-        Duration fiveMinutesTtl = Duration.ofMinutes(5);
+        Duration twoMinutesTtl = Duration.ofMinutes(2);
 
-        cacheConfigurations.put("student_exam_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("children_exam_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("student_financial_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("children_financial_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("student_overall_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("teacher_exam_dashboard", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("admin_user_overview", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("admin_exam_analytics", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("admin_revenue", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("child_exam_history", config.entryTtl(fiveMinutesTtl));
-        cacheConfigurations.put("children_overview", config.entryTtl(fiveMinutesTtl));
+        cacheConfigurations.put("student_exam_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("children_exam_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("student_financial_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("children_financial_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("student_overall_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("teacher_exam_dashboard", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("admin_user_overview", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("admin_exam_analytics", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("admin_revenue", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("child_exam_history", config.entryTtl(twoMinutesTtl));
+        cacheConfigurations.put("children_overview", config.entryTtl(twoMinutesTtl));
 
 
         cacheConfigurations.put("unverified_teachers", config.entryTtl(Duration.ofMinutes(30)));

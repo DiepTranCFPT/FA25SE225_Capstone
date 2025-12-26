@@ -98,7 +98,10 @@ public enum ErrorCode {
     QUESTION_CONTEXT_NOT_FOUND(1085,"Question Context not found" ,HttpStatus.BAD_REQUEST ),
     INSUFFICIENT_CONTEXTS_IN_BANK(1086,"Insufficient contexts in bank" ,HttpStatus.BAD_REQUEST ),
     NOTIFICATION_NOT_FOUND(1087,"Notification not found",HttpStatus.BAD_REQUEST),
-    HAVING_REQUEST(1088,"You have request is pending in system",HttpStatus.BAD_REQUEST );
+    HAVING_REQUEST(1088,"You have request is pending in system",HttpStatus.BAD_REQUEST ),
+    HAVING_NOTIFY_REQUEST(1089,"You dont have request in system",HttpStatus.BAD_REQUEST ),
+    REQUEST_IS_EMPTY(1090,"Don't have request",HttpStatus.BAD_REQUEST ),;
+
 
 
 

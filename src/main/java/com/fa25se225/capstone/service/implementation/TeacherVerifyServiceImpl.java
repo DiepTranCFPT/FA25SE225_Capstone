@@ -3,7 +3,6 @@ package com.fa25se225.capstone.service.implementation;
 import com.fa25se225.capstone.constant.VerificationStatus;
 import com.fa25se225.capstone.dto.TeacherVerificationRequestDto;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
-import com.fa25se225.capstone.dto.response.TeacherReviewResponse;
 import com.fa25se225.capstone.entity.TeacherVerificationRequest;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.exception.AppException;
@@ -40,6 +39,15 @@ public class TeacherVerifyServiceImpl implements TeacherVerifyService {
         return convertToDTO(teacherVerifyRepository.save(request));
     }
 
+    @Override
+    public List<TeacherVerificationRequestDto> getAllRequestTeacherVerification() {
+        User user = accountUtil.getCurrentUser();
+        List<TeacherVerificationRequest> requests = teacherVerifyRepository.findByUserOrderByCreatedAtDesc(user);
+            if(requests.isEmpty()){
+                throw new AppException(ErrorCode.HAVING_NOTIFY_REQUEST);
+            }
+        return requests.stream().map(this::convertToDTO).toList();
+    }
 
 
     private TeacherVerificationRequestDto convertToDTO(TeacherVerificationRequest teacherVerificationRequest) {

@@ -68,4 +68,10 @@ public class TeacherProfileController {
     public ApiResponse<TeacherVerificationRequestDto> createRequestTeacherVerification() {
         return ApiResponse.success(teacherVerifyService.createRequestTeacherVerify());
     }
+
+    @GetMapping("/request/current")
+    public ApiResponse<List<TeacherVerificationRequestDto>> getCurrentUser() {
+        return ApiResponse.success(teacherVerifyService.getAllRequestTeacherVerification());
+    }
+
 }

@@ -16,6 +16,7 @@ import com.fa25se225.capstone.exception.ErrorCode;
 import com.fa25se225.capstone.mapper.UserMapper;
 import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.repository.specs.UserSpecification;
+import com.fa25se225.capstone.service.NotificationService;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.service.TeacherReviewService;
@@ -62,6 +63,7 @@ public class UserServiceImpl implements UserService {
     TeacherProfileRepository teacherProfileRepository;
     TeacherReviewService teacherReviewService;
     TeacherVerificationRequestRepository teacherVerificationRequestRepository;
+    NotificationService notificationService;
 
 
     @Override
@@ -226,18 +228,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = "user", key = "#userId"),
-            @CacheEvict(value = "unverified_teachers", allEntries = true),
-            @CacheEvict(value = "users_list", allEntries = true)
-    })
     public UserResponse verifyTeacher(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         TeacherProfile teacherProfile1 = teacherProfileRepository.findByUserId(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         teacherProfile1.setIsVerified(true);
-        teacherProfileRepository.save(teacherProfile1);
+        teacherProfileRepository.saveAndFlush(teacherProfile1);
+
         TeacherProfileResponse teacherProfile = teacherProfileService.getProfileByUserId(user.getId());
+        TeacherVerificationRequest teacherVerificationRequest = teacherVerificationRequestRepository.findByUserAndStatus(user,VerificationStatus.PENDING).orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
+        teacherVerificationRequest.setStatus(VerificationStatus.APPROVED);
+        teacherVerificationRequest.setNote("Approved");
+        teacherVerificationRequestRepository.saveAndFlush(teacherVerificationRequest);
+
+        String message = user.getEmail() + " is approved verify by the system";
+        notificationService.sendNotify(user.getEmail(),"VERIFY IS APPROVE", message);
+
         return userMapper.toResponse(user, teacherProfile);
     }
 
@@ -348,10 +354,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-//    @Cacheable("unverified_teachers")
     public List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersForAdmin() {
         List<AdminUnverifiedTeacherResponse> out = new ArrayList<>();
         List<TeacherVerificationRequest> list = teacherVerificationRequestRepository.findByStatusOrderByCreatedAtAsc(VerificationStatus.PENDING);
+        if(list.isEmpty()){
+            throw new AppException(ErrorCode.REQUEST_IS_EMPTY);
+        }
         for (TeacherVerificationRequest teacher : list) {
             TeacherProfileResponse profile = teacherProfileService.getProfileByUserId(teacher.getUser().getId());
             if (Boolean.FALSE.equals(profile.getIsVerified())) {

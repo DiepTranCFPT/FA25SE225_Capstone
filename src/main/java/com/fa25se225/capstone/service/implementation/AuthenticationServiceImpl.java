@@ -154,7 +154,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .emailVerified(true)
                 .build();
         System.out.println("========= " + user.getEmail());
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        createWallet(savedUser);
+        return savedUser;
     }
 
     private void sendTemporaryPasswordEmail(String email, String firstName, String password) {

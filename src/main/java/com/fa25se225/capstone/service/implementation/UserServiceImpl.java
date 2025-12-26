@@ -357,9 +357,7 @@ public class UserServiceImpl implements UserService {
     public List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersForAdmin() {
         List<AdminUnverifiedTeacherResponse> out = new ArrayList<>();
         List<TeacherVerificationRequest> list = teacherVerificationRequestRepository.findByStatusOrderByCreatedAtAsc(VerificationStatus.PENDING);
-        if(list.isEmpty()){
-            throw new AppException(ErrorCode.REQUEST_IS_EMPTY);
-        }
+
         for (TeacherVerificationRequest teacher : list) {
             TeacherProfileResponse profile = teacherProfileService.getProfileByUserId(teacher.getUser().getId());
             if (Boolean.FALSE.equals(profile.getIsVerified())) {

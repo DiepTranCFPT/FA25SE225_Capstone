@@ -43,9 +43,6 @@ public class TeacherVerifyServiceImpl implements TeacherVerifyService {
     public List<TeacherVerificationRequestDto> getAllRequestTeacherVerification() {
         User user = accountUtil.getCurrentUser();
         List<TeacherVerificationRequest> requests = teacherVerifyRepository.findByUserOrderByCreatedAtDesc(user);
-            if(requests.isEmpty()){
-                throw new AppException(ErrorCode.HAVING_NOTIFY_REQUEST);
-            }
         return requests.stream().map(this::convertToDTO).toList();
     }
 

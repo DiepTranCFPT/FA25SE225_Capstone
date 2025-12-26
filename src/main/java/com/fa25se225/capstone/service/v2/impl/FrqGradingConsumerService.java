@@ -126,6 +126,7 @@ public class FrqGradingConsumerService {
              3. **Accuracy**: Compare strictly against the MODEL ANSWER. Do not award points for fluff.
              4. **Partial Credit**: Award partial points for partial correctness based on the logic of the Model Answer.
              5. **Output**: Return strictly JSON: {"point": number, "feedback": "string"}.
+             6. **Formatting**: If using LaTeX math (like \\pi, \\frac), you MUST double-escape backslashes (e.g., \\\\pi, \\\\frac) so the JSON remains valid.
              
              Now, grade the STUDENT ANSWER provided below.
              """, maxPoints));
@@ -184,7 +185,8 @@ public class FrqGradingConsumerService {
             }
             attempt.setScore(totalScore);
 
-            String aiComment = generateOverallCommentWithAI(allQuestions, answerMap);
+            String studentName = attempt.getUser().getFirstName() + " " + attempt.getUser().getLastName();
+            String aiComment = generateOverallCommentWithAI(allQuestions, answerMap, studentName);
             attempt.setComment(aiComment);
 
             attempt.setStatus(AttemptStatusV2.COMPLETED);
@@ -197,7 +199,7 @@ public class FrqGradingConsumerService {
 
 
 
-    private String generateOverallCommentWithAI(List<ExamQuestionV2> allQuestions, Map<String, StudentAnswerV2> answerMap) {
+    private String generateOverallCommentWithAI(List<ExamQuestionV2> allQuestions, Map<String, StudentAnswerV2> answerMap, String studentName) {
         StringBuilder summaryBuilder = new StringBuilder();
         summaryBuilder.append("Detailed results list:\n");
 
@@ -241,6 +243,7 @@ public class FrqGradingConsumerService {
                 """
                 You are a professional and caring AP (Advanced Placement) academic advisor.
                 Based on the student's detailed test results below, write a summary review (about 100-150 words) to comment on student's work..
+                Student Name: %s
                 Content should include:
                 1. Strengths: What knowledge does the student have mastered?
                 2. Weaknesses: Where is the student having difficulty (what topic, what type of test)?
@@ -248,7 +251,7 @@ public class FrqGradingConsumerService {
                 4. Tone: Positive, encouraging but straightforward.
                 (Caution** If a student SKIPS a lot of questions, remind them about time management or confidence, don't just praise the ones they get right.
                                    Distinguish between 'Doing it wrong' (gaps in knowledge) and 'Skipping' (maybe because they didn't make it on time).)
-                %s""", summaryBuilder
+                %s""", studentName, summaryBuilder
         );
 
         try {

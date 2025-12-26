@@ -55,15 +55,6 @@ public class Subject {
         if (code == null || code.isEmpty()) {
             code = CodeGenerator.generateCodeFromName(name);
         }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDate.now();
-    }
-
-    @PostPersist
-    protected void onPostPersist() {
         if (this.community == null) {
             this.community = Community.builder()
                     .name(this.name)
@@ -73,6 +64,8 @@ public class Subject {
         }
     }
 
-
-
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDate.now();
+    }
 }

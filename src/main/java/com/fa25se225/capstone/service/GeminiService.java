@@ -1,5 +1,7 @@
 package com.fa25se225.capstone.service;
 
+import com.fa25se225.capstone.dto.TeacherAiJson;
+import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.entity.ConversationAI;
 import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.Lesson;
@@ -46,8 +48,7 @@ public class GeminiService {
 
     private final ConversationAIRepository aiRepository;
     private final AccountUtil accountUtil;
-    @Autowired(required = false)
-    private VectorStore vectorStore;
+
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final UserRepository userRepository;
@@ -164,25 +165,69 @@ public class GeminiService {
         return sb.toString();
     }
 
+    public TeacherAiJson reviewTeacherProfileForVerification(TeacherProfileResponse profile) {
+        String system = """
+                You are an AP teacher quality reviewer.
+                Output ONLY valid JSON. No extra text.
+                Language: English.
+                """;
 
+        String user = """
+                Evaluate the following teacher profile using 4 criteria scored from 1 to 5:
+                - syllabusAlignment: fit for teaching AP based on qualification/specialization
+                - conceptAccuracy: knowledge credibility based on qualification + certificates
+                - difficultyFit: ability to design appropriate AP-level practice based on experience
+                - explanationQuality: ability to explain clearly based on biography + experience
+                
+                The field "recommendation" must be exactly one of:
+                "Qualified" | "Partially qualified" | "Not qualified"
+                
+                Return valid JSON exactly in this schema:
+                {
+                  "syllabusAlignment": 1,
+                  "conceptAccuracy": 1,
+                  "difficultyFit": 1,
+                  "explanationQuality": 1,
+                  "recommendation": "Qualified|Partially qualified|Not qualified",
+                  "feedback": "short bullet-like feedback"
+                }
+                
+                TeacherProfile JSON:
+                %s
+                """.formatted(safeJson(profile));
 
-    private void upsert(String text) {
-        if (vectorStore == null) return;
-        Document doc = new Document(text);
-        vectorStore.add(List.of(doc));
+        Prompt prompt = new Prompt(new SystemMessage(system), new UserMessage(user));
+        String raw = chatClient.prompt(prompt).call().content();
+
+        return parseTeacherAiJson(raw);
     }
 
-    private void upsertMany(List<String> texts) {
-        if (vectorStore == null) return;
-        List<Document> docs = texts.stream()
-                .map(Document::new)
-                .toList();
-        vectorStore.add(docs);
+
+    private String safeJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            return "{}";
+        }
     }
+
+    private TeacherAiJson parseTeacherAiJson(String raw) {
+        int start = raw.indexOf('{');
+        int end = raw.lastIndexOf('}');
+        if (start < 0 || end < 0 || end <= start) {
+            throw new IllegalArgumentException("AI response missing JSON object");
+        }
+        String json = raw.substring(start, end + 1);
+        try {
+            return objectMapper.readValue(json, TeacherAiJson.class);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot parse AI JSON: " + e.getMessage(), e);
+        }
+    }
+
     private List<LearningMaterial> getLearningMaterials() {
         return learningMaterialRepository.findAll();
     }
-
 
 
 }

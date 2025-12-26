@@ -97,7 +97,8 @@ public enum ErrorCode {
     INVALID_SCORE_RANGE(1084,"Invalid score range" , HttpStatus.BAD_REQUEST),
     QUESTION_CONTEXT_NOT_FOUND(1085,"Question Context not found" ,HttpStatus.BAD_REQUEST ),
     INSUFFICIENT_CONTEXTS_IN_BANK(1086,"Insufficient contexts in bank" ,HttpStatus.BAD_REQUEST ),
-    NOTIFICATION_NOT_FOUND(1087,"Notification not found",HttpStatus.BAD_REQUEST);
+    NOTIFICATION_NOT_FOUND(1087,"Notification not found",HttpStatus.BAD_REQUEST),
+    HAVING_REQUEST(1088,"You have request is pending in system",HttpStatus.BAD_REQUEST );
 
 
 

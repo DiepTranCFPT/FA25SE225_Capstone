@@ -66,7 +66,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     public TeacherProfileResponse getProfileByUserId(String userId) {
         return teacherProfileRepository.findByUserId(userId)
             .map(teacherProfileMapper::toResponse)
-            .orElse(null);
+            .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
     }
     private void validateAge(LocalDate dateOfBirth) {
         if (dateOfBirth == null || ChronoUnit.YEARS.between(dateOfBirth, LocalDate.now()) < 23) {

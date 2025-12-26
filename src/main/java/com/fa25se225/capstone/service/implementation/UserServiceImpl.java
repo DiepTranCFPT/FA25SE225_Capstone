@@ -1,10 +1,14 @@
 package com.fa25se225.capstone.service.implementation;
 
 import com.fa25se225.capstone.constant.PredefinedSystemRole;
+import com.fa25se225.capstone.constant.VerificationStatus;
+import com.fa25se225.capstone.dto.TeacherVerificationRequestDto;
 import com.fa25se225.capstone.dto.kafka.NotificationEvent;
 import com.fa25se225.capstone.dto.request.*;
+import com.fa25se225.capstone.dto.response.AdminUnverifiedTeacherResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
+import com.fa25se225.capstone.dto.response.TeacherReviewResponse;
 import com.fa25se225.capstone.dto.response.UserResponse;
 import com.fa25se225.capstone.entity.*;
 import com.fa25se225.capstone.exception.AppException;
@@ -14,6 +18,7 @@ import com.fa25se225.capstone.repository.*;
 import com.fa25se225.capstone.repository.specs.UserSpecification;
 import com.fa25se225.capstone.service.PermissionService;
 import com.fa25se225.capstone.service.TeacherProfileService;
+import com.fa25se225.capstone.service.TeacherReviewService;
 import com.fa25se225.capstone.service.UserService;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.AccessLevel;
@@ -55,6 +60,8 @@ public class UserServiceImpl implements UserService {
     StudentProfileRepository studentProfileRepository;
     ParentProfileRepository parentProfileRepository;
     TeacherProfileRepository teacherProfileRepository;
+    TeacherReviewService teacherReviewService;
+    TeacherVerificationRequestRepository teacherVerificationRequestRepository;
 
 
     @Override
@@ -339,6 +346,23 @@ public class UserServiceImpl implements UserService {
                 .items(items)
                 .build();
     }
+
+    @Override
+    @Cacheable("unverified_teachers")
+    public List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersForAdmin() {
+        List<AdminUnverifiedTeacherResponse> out = new ArrayList<>();
+        List<TeacherVerificationRequest> list = teacherVerificationRequestRepository.findByStatusOrderByCreatedAtAsc(VerificationStatus.PENDING);
+        for (TeacherVerificationRequest teacher : list) {
+            TeacherProfileResponse profile = teacherProfileService.getProfileByUserId(teacher.getUser().getId());
+            if (Boolean.FALSE.equals(profile.getIsVerified())) {
+                UserResponse userResp = userMapper.toResponse(teacher.getUser(), profile);
+                TeacherReviewResponse review = teacherReviewService.getLatestReviewByUserId(teacher.getUser().getId());
+                out.add(new AdminUnverifiedTeacherResponse(userResp, review));
+            }
+        }
+        return out;
+    }
+
 
 
 }

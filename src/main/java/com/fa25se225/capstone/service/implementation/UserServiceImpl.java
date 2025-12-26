@@ -228,10 +228,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @Caching(evict = {
+/*    @Caching(evict = {
             @CacheEvict(value = "teacher_profile", key = "#userId"),
             @CacheEvict(value = "userId", key = "#userId")
-    })
+    })*/
     public UserResponse verifyTeacher(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

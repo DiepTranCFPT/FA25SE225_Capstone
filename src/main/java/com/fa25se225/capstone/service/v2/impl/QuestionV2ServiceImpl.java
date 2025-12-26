@@ -21,6 +21,7 @@ import com.fa25se225.capstone.repository.v2.QuestionDifficultyV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionTopicV2Repository;
 import com.fa25se225.capstone.repository.v2.QuestionV2Repository;
 import com.fa25se225.capstone.service.implementation.FileUploadService;
+import com.fa25se225.capstone.service.v2.QuestionExportService;
 import com.fa25se225.capstone.service.v2.QuestionV2Service;
 import com.fa25se225.capstone.service.v2.QuestionImportService;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -58,6 +59,7 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     private final QuestionContextMapper questionContextMapper;
     private final PageHelper pageHelper;
     private final QuestionImportService questionImportService;
+    private final QuestionExportService questionExportService;
     private final QuestionContextV2Repository questionContextV2Repository;
     private final FileUploadService fileUploadService;
 
@@ -398,6 +400,11 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     @Override
     public byte[] generateExampleTemplate() {
         return questionImportService.generateExampleTemplate();
+    }
+
+    @Override
+    public byte[] exportQuestionsToExcel(QuestionExportRequest request) {
+        return questionExportService.exportQuestionsToExcel(request);
     }
 
     @Override

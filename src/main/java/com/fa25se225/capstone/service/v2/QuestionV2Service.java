@@ -3,6 +3,7 @@ package com.fa25se225.capstone.service.v2;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionContextRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionExportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.response.QuestionContextV2Response;
@@ -29,6 +30,9 @@ public interface QuestionV2Service {
     // Import functionality
     QuestionImportResponse importQuestionsFromExcel(MultipartFile file, QuestionImportRequest request);
     byte[] generateExampleTemplate();
+
+    // Export functionality
+    byte[] exportQuestionsToExcel(QuestionExportRequest request);
 
     QuestionContextV2Response updateQuestionContext(String id, @Valid QuestionContextRequest request);
 

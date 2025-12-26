@@ -4,6 +4,7 @@ import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.v2.request.QuestionContextRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionCreationV2Request;
+import com.fa25se225.capstone.dto.v2.request.QuestionExportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionImportRequest;
 import com.fa25se225.capstone.dto.v2.request.QuestionUpdateV2Request;
 import com.fa25se225.capstone.dto.v2.response.QuestionContextV2Response;
@@ -171,6 +172,21 @@ public class QuestionV2Controller {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(template);
+    }
+
+    @PostMapping("/export")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
+    public ResponseEntity<byte[]> exportQuestions(@Valid @RequestBody QuestionExportRequest request) {
+        byte[] exportData = questionV2Service.exportQuestionsToExcel(request);
+
+        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", "questions_export.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(exportData);
     }
 
 }

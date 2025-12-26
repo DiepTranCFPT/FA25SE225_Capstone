@@ -33,6 +33,8 @@ import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
 import com.fa25se225.capstone.service.MinioService;
+import com.fa25se225.capstone.service.TeacherProfileService;
+import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.utils.AccountUtil;
 import com.fa25se225.capstone.utils.PageHelper;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -73,6 +76,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
     private final UserMapper userMapper;
     private final PaymentStatusRepository paymentStatus;
+    private final TeacherProfileService teacherProfileService;
 
     @Value("${minio.bucket.materials}")
     private String bucketName;
@@ -209,8 +213,18 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<LearningMaterial> page = learningMaterialRepository.findAllPublicNotDeleted(pageable);
 
-        List<LearningMaterialResponse> responses = page.getContent()
-                .stream()
+        List<LearningMaterial> materials = new ArrayList<>(page.getContent());
+        // Sort: teacher with isVerified profile on top
+        materials.sort((a, b) -> {
+            TeacherProfileResponse aProfile = teacherProfileService.getProfileByUserId(a.getAuthor().getId());
+            TeacherProfileResponse bProfile = teacherProfileService.getProfileByUserId(b.getAuthor().getId());
+            boolean aVerified = aProfile != null && Boolean.TRUE.equals(aProfile.getIsVerified());
+            boolean bVerified = bProfile != null && Boolean.TRUE.equals(bProfile.getIsVerified());
+            if (aVerified == bVerified) return 0;
+            return aVerified ? -1 : 1;
+        });
+
+        List<LearningMaterialResponse> responses = materials.stream()
                 .map(learningMaterialMapper::toResponse)
                 .toList();
 

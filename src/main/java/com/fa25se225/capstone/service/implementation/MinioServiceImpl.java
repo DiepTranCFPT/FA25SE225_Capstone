@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -101,12 +103,17 @@ public class MinioServiceImpl implements MinioService {
     @Override
     public String getVideoUrl(String objectName) {
         try {
+            Map<String, String> params = new HashMap<>();
+            params.put("response-content-type", "video/mp4");
+            params.put("response-cache-control", "public, max-age=86400");
+
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .bucket(bucketName)
                             .object(objectName)
                             .method(Method.GET)
-                            .expiry(30, TimeUnit.MINUTES)
+                            .expiry(1, TimeUnit.HOURS)
+                            .extraQueryParams(params)
                             .build()
             );
         } catch (Exception e) {

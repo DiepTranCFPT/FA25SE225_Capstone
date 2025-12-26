@@ -124,11 +124,6 @@ public class AIChatService {
         );
         String systemText = """
                         You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)
-                        **Special Characters**:
-                        Return strictly valid JSON object.
-                        - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
-                        - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
-                        Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
                 """;
 
         return callChatClient(primaryChatClient, systemText, userAsking, conversationId)
@@ -158,11 +153,6 @@ public class AIChatService {
                         Student information : %s
                         Student asking : %s
                         
-                        **Special Characters**:
-                        Return strictly valid JSON object.
-                        - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
-                        - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
-                        Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
                         """,
                 studentProfile.getGoal(), studentInfo, prompt
         );

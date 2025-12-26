@@ -348,7 +348,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Cacheable("unverified_teachers")
+//    @Cacheable("unverified_teachers")
     public List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersForAdmin() {
         List<AdminUnverifiedTeacherResponse> out = new ArrayList<>();
         List<TeacherVerificationRequest> list = teacherVerificationRequestRepository.findByStatusOrderByCreatedAtAsc(VerificationStatus.PENDING);

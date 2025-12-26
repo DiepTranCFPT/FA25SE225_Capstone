@@ -60,8 +60,8 @@ public class TeacherProfileController {
     }
 
     @GetMapping("/teacher/unverify")
-    public List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersByAdmin() {
-        return userService.getUnverifiedTeachersForAdmin();
+    public ApiResponse<List<AdminUnverifiedTeacherResponse>> getUnverifiedTeachersByAdmin() {
+        return ApiResponse.success(userService.getUnverifiedTeachersForAdmin());
     }
 
     @PostMapping("/request/verify/teacher")

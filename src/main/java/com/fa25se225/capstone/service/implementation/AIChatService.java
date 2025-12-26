@@ -121,7 +121,14 @@ public class AIChatService {
                         """,
                 questionContext, request.getQuestionContent(), request.getStudentAnswer(), request.getStudentAsking()
         );
-        String systemText = "You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)";
+        String systemText = """
+                        You are an expert at answering AP exam questions. (Only answer questions that are related to the questions and answers students produce.)
+                        **Special Characters**:
+                        Return strictly valid JSON object.
+                        - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
+                        - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
+                        Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
+                """;
 
         return callChatClient(primaryChatClient, systemText, userAsking, conversationId)
                 .onErrorResume(e -> {
@@ -149,6 +156,12 @@ public class AIChatService {
                         Student Goal : %s
                         Student information : %s
                         Student asking : %s
+                        
+                        **Special Characters**:
+                        Return strictly valid JSON object.
+                        - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
+                        - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
+                        Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
                         """,
                 studentProfile.getGoal(), studentInfo, prompt
         );
@@ -214,7 +227,7 @@ public class AIChatService {
         %s
         
         **REQUIREMENTS:**
-        1. **Structure**: Output a JSON object containing a list of questions under the key "questions".
+        1. **Structure**: Output a JSON Array containing a list of questions.
         2. **Schema**: Each question must match this Java DTO structure:
            - content (String): The question text.
            - type (String): "MCQ/FRQ" (if the question has only 1 answer and this answer is correct. it's FRQ).
@@ -231,17 +244,20 @@ public class AIChatService {
            - **IF NO CORRECT ANSWER IS INDICATED**: Set `isCorrect` to `false` for ALL options. 
            - If the user doesn't provide an explanation for the answer, you don't need to generate it yourself; leave it as is.
         3. **Output Format**: return ONLY valid JSON. Do not include markdown formatting (```json).
+        4. **Special Characters**:
+            Return strictly valid JSON object.
+            - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
+            - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
+            Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
         
         **EXAMPLE JSON:**
-        {
-          "questions": [
-             {
-               "content": "Which of the following...",
-               "context": { "content": "I will be no man's tributary..." },
-               "answers": [ ... ]
-             }
-          ]
-        }
+        [
+           {
+             "content": "Which of the following...",
+             "context": { "content": "I will be no man's tributary..." },
+             "answers": [ ... ]
+           }
+        ]
         """;
 
         List<QuestionCreationV2Request> response = primaryChatClientWithoutMemory.prompt()
@@ -270,6 +286,7 @@ public class AIChatService {
         String systemText = """
                 You are an AP exam expert. Analyze and guide students based on their information. (~100 words)
                 If the student doesn't have a goal yet, still reply, but remind them to update their goal profile.
+              
                 """;
 
         String recommend =  primaryChatClientWithoutMemory.prompt().system(systemText)

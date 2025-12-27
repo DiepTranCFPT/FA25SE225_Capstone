@@ -53,7 +53,8 @@ public class SecurityConfig {
                         config.setAllowCredentials(true);
                         config.setAllowedOriginPatterns(List.of(
                                 "http://localhost:5173",
-                                "https://www.ap-learning.online"
+                                "https://www.ap-learning.online",
+                                "http://localhost:8081"
                         ));
                         config.addAllowedHeader("*");
                         config.addAllowedMethod("*");

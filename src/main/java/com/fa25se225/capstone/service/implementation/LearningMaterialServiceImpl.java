@@ -54,6 +54,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -225,14 +226,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
         List<LearningMaterial> materials = new ArrayList<>(page.getContent());
         // Sort: teacher with isVerified profile on top
-        materials.sort((a, b) -> {
-            TeacherProfileResponse aProfile = teacherProfileService.getProfileByUserId(a.getAuthor().getId());
-            TeacherProfileResponse bProfile = teacherProfileService.getProfileByUserId(b.getAuthor().getId());
-            boolean aVerified = aProfile != null && Boolean.TRUE.equals(aProfile.getIsVerified());
-            boolean bVerified = bProfile != null && Boolean.TRUE.equals(bProfile.getIsVerified());
-            if (aVerified == bVerified) return 0;
-            return aVerified ? -1 : 1;
-        });
+        materials.sort(
+                Comparator.<LearningMaterial, Boolean>comparing(m -> {
+                            TeacherProfileResponse p = teacherProfileService.getProfileByUserId(m.getAuthor().getId());
+                            return p != null && Boolean.TRUE.equals(p.getIsVerified());
+                        }).reversed()
+                        .thenComparing(m -> m.getAverageRating() == null ? 0.0 : m.getAverageRating(), Comparator.reverseOrder())
+        );
+
 
         List<LearningMaterialResponse> responses = materials.stream()
                 .map(learningMaterialMapper::toResponse)

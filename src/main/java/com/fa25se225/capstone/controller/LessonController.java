@@ -94,9 +94,10 @@ public class LessonController {
     @Operation(summary = "Save lesson video progress", description = "Save the last watched second for the current user in a lesson video")
     public ApiResponse<String> saveLessonVideoProgress(
             @PathVariable String lessonId,
-            @RequestParam int lastWatchedSecond
+            @RequestParam int lastWatchedSecond,
+            @RequestParam boolean completed
     ) {
-        lessonService.saveLessonVideoProgress(lessonId, lastWatchedSecond);
+        lessonService.saveLessonVideoProgress(lessonId, lastWatchedSecond,completed);
         return ApiResponse.success("Progress saved");
     }
     @GetMapping("/progress/by-learning-material/{learningMaterialId}")

@@ -241,7 +241,7 @@ public class LessonServiceImpl implements LessonService {
 
     @Override
     @Transactional
-    public void saveLessonVideoProgress(String lessonId, int lastWatchedSecond) {
+    public void saveLessonVideoProgress(String lessonId, int lastWatchedSecond, boolean complete) {
         Lesson lesson = lessonRepository.findByIdNotDeleted(lessonId)
                 .orElseThrow(() -> new AppException(ErrorCode.LESSON_NOT_FOUND));
         User user = accountUtil.getCurrentUser();
@@ -254,6 +254,7 @@ public class LessonServiceImpl implements LessonService {
         }
         progress.setLastWatchedSecond(lastWatchedSecond);
         progress.setUpdatedAt(LocalDateTime.now());
+        if(complete) progress.setCompleted(true);
         lessonVideoProgressRepository.save(progress);
     }
 

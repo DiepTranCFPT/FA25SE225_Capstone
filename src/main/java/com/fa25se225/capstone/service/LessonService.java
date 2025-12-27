@@ -22,7 +22,7 @@ public interface LessonService {
 
     PageResponse<List<LessonResponse>> getLessonsByLearningMaterial(String learningMaterialId, int pageNo, int pageSize, String... sorts);
 
-    void saveLessonVideoProgress(String lessonId, int lastWatchedSecond);
+    void saveLessonVideoProgress(String lessonId, int lastWatchedSecond, boolean complete);
 
     int getLessonVideoProgress(String lessonIdd);
 

@@ -219,35 +219,57 @@ public class AIChatService {
         %s
         
         **REQUIREMENTS:**
-        1. **Structure**: Output a JSON Array containing a list of questions.
-        2. **Schema**: Each question must match this Java DTO structure:
-           - content (String): The question text.
-           - type (String): "MCQ/FRQ" (if the question has only 1 answer and this answer is correct. it's FRQ).
-           - subjectId (String): Use provided "%s".
-           - answers (List): List of objects { "content": "...", "isCorrect": boolean, "explanation": "..." }.
-           - context (Object): If the question belongs to a reading passage/scenario (e.g., "Questions 1-3 refer to..."), create this object with fields: "content" (the passage text), "title" (optional).
-           - difficultyName (String): Infer difficulty (EASY/MEDIUM/HARD) (Default MEDIUM).
+        1. **Subject**: Use provided "%s".
+        2. **Structure**: Output a JSON Array containing a list of questions.
+        3. **Difficulty**: Infer difficulty (EASY/MEDIUM/HARD) (Default MEDIUM).
         
-        **CRITICAL RULES:**
-        1. **Context Parsing**: You MUST identify reading passages or group descriptions (e.g., "Questions 1-3 refer to the following information"). Extract that text into the `context.content` field for ALL questions in that group
-        (If context do not have title, generate brief, simple title for it).
-        2. **Answer Detection**: 
-           - Look for markers like asterisk (*), bolding, or an answer key at the end. 
-           - **IF NO CORRECT ANSWER IS INDICATED**: Set `isCorrect` to `false` for ALL options. 
-           - If the user doesn't provide an explanation for the answer, you don't need to generate it yourself; leave it as is.
-        3. **Output Format**: return ONLY valid JSON. Do not include markdown formatting (```json).
-        4. **Special Characters**:
-            Return strictly valid JSON object.
-            - **LaTeX**: If the text contains LaTeX formulas (e.g., `\\frac`), ensure backslashes are escaped (e.g., `\\\\frac`).
-            - **Escaping**: Ensure all JSON strings are valid (escape double quotes `\\"` and backslashes `\\\\`), 
-            Escape all special characters (", \\, newlines, tabs). Do NOT use trailing commas or unescaped line breaks..
+        **CRITICAL RULES FOR PARSING (READ CAREFULLY):**
         
-        **EXAMPLE JSON:**
+        1. **DETECT QUESTION TYPE & STRUCTURE:**
+           - **CASE A: MULTIPLE CHOICE (MCQ)**:
+             - Identify: A question text followed by options labeled (A), (B), (C), (D) or A., B., C., D.
+             - **Action**: Create **ONE** Question Object.
+             - Put the options into the `answers` list.
+             - Set `type` to "MCQ".
+             - Determine the correct answer from markers (*, bold) or answer keys.
+        
+           - **CASE B: COMPOUND FRQ (Free Response - e.g., AP History style)**:
+             - Identify: A numbered stimulus (1, 2, 3) followed by sub-tasks labeled **(a)**, **(b)**, **(c)** that start with action verbs (e.g., "Describe...", "Explain...", "Identify...").
+             - **Action**: **DECOMPOSE/SPLIT** parts (a), (b), (c) into **SEPARATE Question Objects**.
+             - **DO NOT** create a single question for "1.".
+             - Set `type` to "FRQ".
+        
+        2. **CONTEXT HANDLING (For Compound FRQ)**:
+           - If parsing **CASE B**, extract the stimulus text/image description appearing before sub-questions (a).
+           - Insert this text into the `context` object for **EACH** split question (a), (b), and (c).
+           - If the context is an image URL, put it in `context.imageUrl`.
+        
+        3. **ANSWER MAPPING**:
+           - **For MCQ**: `answers` array must contain all options. Set `isCorrect: true` for the right one.
+           - **For FRQ**: Check if there is a "Correct Answer" or "Scoring Guidelines" section. Extract the specific explanation for part (a) and map it ONLY to Question (a). Do the same for (b) and (c).
+        
+        4. **OUTPUT FORMAT**: 
+           - Return ONLY valid JSON. 
+           - **Escape all special characters** (double quotes `\\"`, newlines `\\n`). 
+           - No markdown formatting.
+        
+        **EXAMPLE JSON OUTPUT:**
         [
+           // Example of MCQ
            {
-             "content": "Which of the following...",
-             "context": { "content": "I will be no man's tributary..." },
-             "answers": [ ... ]
+             "content": "Which of the following is true?",
+             "type": "MCQ",
+             "answers": [ 
+                {"content": "Option A...", "isCorrect": false},
+                {"content": "Option B...", "isCorrect": true}
+             ]
+           },
+           // Example of Split FRQ
+           {
+             "content": "Briefly describe ONE difference...", // Derived from (a)
+             "type": "FRQ",
+             "context": { "content": "The stimulus text here..." },
+             "answers": [ {"content": "Correct answer for part a...", "isCorrect": true} ]
            }
         ]
         """;

@@ -314,6 +314,121 @@ public class AIChatService {
 
 
 
+//    public String analyzeTemplateFeasibility(ExamTemplateV2Request request) {
+//        User currentUser = accountUtil.getCurrentUser();
+//
+//        String subjectName = "Unknown";
+//        if (StringUtils.hasText(request.getSubjectId())) {
+//            subjectName = subjectRepository.findById(request.getSubjectId())
+//                    .map(Subject::getName).orElse("Unknown Subject");
+//        }
+//
+//        StringBuilder rulesAnalysisReport = new StringBuilder();
+//
+//        if (request.getRules() != null && !request.getRules().isEmpty()) {
+//            int ruleIndex = 1;
+//            for (ExamRuleV2Request rule : request.getRules()) {
+//                String topicName;
+//                String diffName;
+//                try {
+//                    topicName = getQuestionTopic(rule.getTopicName()).getName();
+//                    diffName = getQuestionDifficulty(rule.getDifficultyName()).getName();
+//                } catch (AppException e) {
+//                    rulesAnalysisReport.append(String.format("- Rule #%d: Invalid Topic or Difficulty configuration.\n", ruleIndex++));
+//                    continue;
+//                }
+//
+//                QuestionType type = getQuestionType(rule.getQuestionType());
+//                int requestedQty = rule.getNumberOfQuestions();
+//                int requestedContexts = rule.getNumberOfContexts() != null ? rule.getNumberOfContexts() : 0;
+//
+//                long available;
+//                String requirementDesc;
+//                String status;
+//
+//                if (requestedContexts > 0) {
+//                    available = questionV2Repository.countContextsAvailable(
+//                            getQuestionTopic(rule.getTopicName()).getId(),
+//                            getQuestionDifficulty(rule.getDifficultyName()).getId(),
+//                            type,
+//                            currentUser.getId()
+//                    );
+//                    requirementDesc = String.format("Need %d Reading Passages (Contexts)", requestedContexts);
+//
+//                    if (available < requestedContexts) {
+//                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedContexts - available);
+//                    } else {
+//                        status = String.format("OK (Has: %d)", available);
+//                    }
+//                } else {
+//                    available = questionV2Repository.countSingleQuestionsAvailable(
+//                            getQuestionTopic(rule.getTopicName()).getId(),
+//                            getQuestionDifficulty(rule.getDifficultyName()).getId(),
+//                            type,
+//                            currentUser.getId()
+//                    );
+//                    requirementDesc = String.format("Need %d Single Questions", requestedQty);
+//
+//                    if (available < requestedQty) {
+//                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedQty - available);
+//                    } else {
+//                        status = String.format("OK (Has: %d)", available);
+//                    }
+//                }
+//
+//                rulesAnalysisReport.append(String.format("- Rule #%d [%s - %s - %s]: %s -> %s\n",
+//                        ruleIndex++, topicName, diffName, type, requirementDesc, status));
+//            }
+//        } else {
+//            rulesAnalysisReport.append("No rules defined in this template.\n");
+//        }
+//
+//        String userContext = String.format("""
+//            === EXAM TEMPLATE ANALYSIS REQUEST ===
+//
+//            [1] EXAM METADATA
+//            - Title: %s
+//            - Subject: %s
+//            - Duration: %d minutes
+//            - Passing Score: %d
+//            - Token Cost: %s
+//
+//            [2] QUESTION BANK INVENTORY CHECK
+//            %s
+//
+//            Please analyze the feasibility of creating this exam based on the inventory check above.
+//            """,
+//                request.getTitle(),
+//                subjectName,
+//                request.getDuration(),
+//                request.getPassingScore(),
+//                request.getTokenCost() != null ? request.getTokenCost() : 0,
+//                rulesAnalysisReport.toString()
+//        );
+//
+//        String systemPrompt = """
+//            You are an AI Exam Assistant for a teacher.
+//            Based on the provided "EXAM TEMPLATE ANALYSIS REQUEST", generate a friendly but professional summary response in English.
+//
+//            Structure of response:
+//            1. **Overview**: Summarize the exam structure (Title, Subject, Time...).
+//            2. **Inventory Check**: Detailed analysis of whether the question bank has enough questions for each rule based on the data provided.
+//            3. **Recommendation**:
+//               - If strictly NOT enough questions: Warn the teacher clearly and suggest importing more specific topics/types.
+//               - If enough but barely (e.g., require 10, have 11): Suggest adding more for better randomization.
+//               - If plenty: Confirm the exam will be high quality.
+//
+//            Output as plain text or Markdown. Do not include JSON formatting.
+//
+//            """;
+//
+//        return primaryChatClientWithoutMemory.prompt()
+//                .system(systemPrompt)
+//                .user(userContext)
+//                .call()
+//                .content();
+//    }
+
     public String analyzeTemplateFeasibility(ExamTemplateV2Request request) {
         User currentUser = accountUtil.getCurrentUser();
 
@@ -353,26 +468,26 @@ public class AIChatService {
                             type,
                             currentUser.getId()
                     );
-                    requirementDesc = String.format("Need %d Reading Passages (Contexts)", requestedContexts);
+                    requirementDesc = String.format("Need %d Reading Passages (with %d qs/passage)", requestedContexts, requestedQty);
 
                     if (available < requestedContexts) {
-                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedContexts - available);
+                        status = String.format("INSUFFICIENT! (Has: %d contexts, Missing: %d)", available, requestedContexts - available);
                     } else {
-                        status = String.format("OK (Has: %d)", available);
+                        status = String.format("OK (Has: %d contexts)", available);
                     }
                 } else {
-                    available = questionV2Repository.countSingleQuestionsAvailable(
+                    available = questionV2Repository.countTotalQuestionsAvailable(
                             getQuestionTopic(rule.getTopicName()).getId(),
                             getQuestionDifficulty(rule.getDifficultyName()).getId(),
-                            type,
+                            type.getValue(),
                             currentUser.getId()
                     );
-                    requirementDesc = String.format("Need %d Single Questions", requestedQty);
+                    requirementDesc = String.format("Need %d Total Questions (Auto-fill)", requestedQty);
 
                     if (available < requestedQty) {
-                        status = String.format("INSUFFICIENT! (Has: %d, Missing: %d)", available, requestedQty - available);
+                        status = String.format("INSUFFICIENT! (Has: %d questions, Missing: %d)", available, requestedQty - available);
                     } else {
-                        status = String.format("OK (Has: %d)", available);
+                        status = String.format("OK (Has: %d questions)", available);
                     }
                 }
 
@@ -384,20 +499,20 @@ public class AIChatService {
         }
 
         String userContext = String.format("""
-            === EXAM TEMPLATE ANALYSIS REQUEST ===
-            
-            [1] EXAM METADATA
-            - Title: %s
-            - Subject: %s
-            - Duration: %d minutes
-            - Passing Score: %d
-            - Token Cost: %s
-            
-            [2] QUESTION BANK INVENTORY CHECK
-            %s
-            
-            Please analyze the feasibility of creating this exam based on the inventory check above.
-            """,
+        === EXAM TEMPLATE ANALYSIS REQUEST ===
+        
+        [1] EXAM METADATA
+        - Title: %s
+        - Subject: %s
+        - Duration: %d minutes
+        - Passing Score: %d
+        - Token Cost: %s
+        
+        [2] QUESTION BANK INVENTORY CHECK
+        %s
+        
+        Please analyze the feasibility of creating this exam based on the inventory check above.
+        """,
                 request.getTitle(),
                 subjectName,
                 request.getDuration(),
@@ -406,21 +521,23 @@ public class AIChatService {
                 rulesAnalysisReport.toString()
         );
 
+        // Prompt giữ nguyên, nhưng có thể tinh chỉnh nhẹ để AI hiểu rõ hơn về Auto-fill
         String systemPrompt = """
-            You are an AI Exam Assistant for a teacher.
-            Based on the provided "EXAM TEMPLATE ANALYSIS REQUEST", generate a friendly but professional summary response in English.
-            
-            Structure of response:
-            1. **Overview**: Summarize the exam structure (Title, Subject, Time...).
-            2. **Inventory Check**: Detailed analysis of whether the question bank has enough questions for each rule based on the data provided.
-            3. **Recommendation**:
-               - If strictly NOT enough questions: Warn the teacher clearly and suggest importing more specific topics/types.
-               - If enough but barely (e.g., require 10, have 11): Suggest adding more for better randomization.
-               - If plenty: Confirm the exam will be high quality.
-            
-            Output as plain text or Markdown. Do not include JSON formatting.
-
-            """;
+        You are an AI Exam Assistant for a teacher.
+        Based on the provided "EXAM TEMPLATE ANALYSIS REQUEST", generate a friendly but professional summary response in English.
+        
+        Structure of response:
+        1. **Overview**: Summarize the exam structure.
+        2. **Feasibility Analysis**: Detailed check of whether the question bank has enough resources.
+           - Note: If a rule is "Auto-fill" (Need X Total Questions), confirm if the total count (from both passages and single questions) is sufficient.
+           - If "Explicit" (Need X Passages), check the passage count.
+        3. **Recommendation**:
+           - If INSUFFICIENT: Warn clearly and suggest adding more questions to the specific Topic/Difficulty.
+           - If OK but tight (e.g., need 10, have 10): Suggest adding more for better randomization.
+           - If Plenty: Confirm high quality.
+        
+        Output as plain text or Markdown.
+        """;
 
         return primaryChatClientWithoutMemory.prompt()
                 .system(systemPrompt)

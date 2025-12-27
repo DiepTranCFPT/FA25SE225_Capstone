@@ -38,5 +38,8 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
     Page<User> findAllByDeletedFalse(Pageable pageable);
 
+    @Query("SELECT u FROM User u WHERE u.deleted = false AND NOT EXISTS (SELECT r FROM u.roles r WHERE r.name = 'ADMIN')")
+    Page<User> findAllByDeletedFalseAndRoleNotAdmin(Pageable pageable);
+
     List<User> findByGrantedPermissions_Name(String permissionName);
 }

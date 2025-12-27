@@ -75,4 +75,8 @@ public class ExamTemplateV2 {
 
     @Column(name = "score_mapping", columnDefinition = "TEXT")
     private String scoreMapping;
+
+    @Column(name = "deleted", nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
 }

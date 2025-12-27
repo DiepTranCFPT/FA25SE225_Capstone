@@ -109,7 +109,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         if (!templateRepository.existsById(id)) {
             throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
         }
-        templateRepository.deleteById(id);
+        templateRepository.softDeleteById(id);
     }
 
     @Override
@@ -124,7 +124,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     @Cacheable(value = "exam_templates", key = "#pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateV2Response>> getAllTemplates(int pageNo, int pageSize, String[] sorts) {
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        
+        // Repository findAll đã được override để lọc deleted = false
         Page<ExamTemplateV2> page = templateRepository.findAll(pageable);
+        
         List<ExamTemplateV2Response> items = page.getContent().stream().map(templateMapper::toResponse).toList();
         return PageResponse.<List<ExamTemplateV2Response>>builder()
                 .pageNo(pageNo)
@@ -177,6 +180,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public ExamRuleV2Response updateRule(String ruleId, ExamRuleV2Request request) {
         ExamRuleV2 rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
+        
+        if (rule.getTemplate().isDeleted()) {
+            throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
+        }
 
         User teacher = rule.getTemplate().getCreatedBy();
 
@@ -229,6 +236,10 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     public void deleteRule(String ruleId) {
         ExamRuleV2 rule = ruleRepository.findById(ruleId)
                 .orElseThrow(() -> new AppException(ErrorCode.EXAM_RULE_NOT_FOUND));
+        
+        if (rule.getTemplate().isDeleted()) {
+            throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
+        }
 
         String templateId = rule.getTemplate().getId();
         ruleRepository.delete(rule);
@@ -248,6 +259,9 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         Specification<ExamTemplateV2> spec = ExamTemplateSpecification.findActiveWithFilters(
                 subjectId, teacherId, minRating
         );
+        
+        // Add deleted = false condition
+        spec = spec.and((root, query, cb) -> cb.equal(root.get("deleted"), false));
 
         Page<ExamTemplateV2> page = templateRepository.findAll(spec, pageable);
 
@@ -290,6 +304,11 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     @Override
     @Cacheable(value = "exam_template_ratings", key = "#id + '_' + #pageNo + '_' + #pageSize + '_' + T(java.util.Arrays).toString(#sorts)")
     public PageResponse<List<ExamTemplateRatingResponse>> getRatingById(String id, int pageNo, int pageSize, String[] sorts) {
+        // Check if template exists and is not deleted
+        if (!templateRepository.existsById(id)) {
+             throw new AppException(ErrorCode.EXAM_TEMPLATE_NOT_FOUND);
+        }
+        
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
         Page<ExamAttemptV2> page = examAttemptV2Repository.findBySourceTemplateIdAndRatingNotNull(id, pageable);
         List<ExamTemplateRatingResponse> items = page.getContent().stream()

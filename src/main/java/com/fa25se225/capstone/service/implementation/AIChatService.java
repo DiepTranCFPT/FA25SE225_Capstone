@@ -243,6 +243,7 @@ public class AIChatService {
            - If parsing **CASE B**, extract the stimulus text/image description appearing before sub-questions (a).
            - Insert this text into the `context` object for **EACH** split question (a), (b), and (c).
            - If the context is an image URL, put it in `context.imageUrl`.
+           - (If context do not have title, generate brief, simple title for it).
         
         3. **ANSWER MAPPING**:
            - **For MCQ**: `answers` array must contain all options. Set `isCorrect: true` for the right one.
@@ -252,7 +253,6 @@ public class AIChatService {
            - Return ONLY valid JSON. 
            - **Escape all special characters** (double quotes `\\"`, newlines `\\n`). 
            - No markdown formatting.
-        
         **EXAMPLE JSON OUTPUT:**
         [
            // Example of MCQ

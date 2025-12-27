@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -132,6 +133,10 @@ public class QuestionTopicV2ServiceImpl implements QuestionTopicV2Service {
 
         return topics.stream()
                 .map(questionTopicV2Mapper::toResponse)
+                .sorted(Comparator.comparing(
+                        QuestionTopicV2Response::getName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+                ))
                 .toList();
     }
 

@@ -5,6 +5,7 @@ import com.fa25se225.capstone.entity.PercentagesConfig;
 import com.fa25se225.capstone.service.PercentagesConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +15,7 @@ public class PercentagesConfigController {
     private PercentagesConfigService percentagesConfigService;
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PercentagesConfig> getConfig() {
         PercentagesConfig config = percentagesConfigService.getConfig();
         if (config == null) {
@@ -23,6 +25,7 @@ public class PercentagesConfigController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PercentagesConfig> createConfig(@RequestBody UpdatePercentagesRequest request) {
         if (!percentagesConfigService.isValid(request)) {
             return ResponseEntity.badRequest().build();
@@ -32,6 +35,7 @@ public class PercentagesConfigController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PercentagesConfig> updateConfig(@RequestBody UpdatePercentagesRequest request) {
         if (!percentagesConfigService.isValid(request)) {
             return ResponseEntity.badRequest().build();

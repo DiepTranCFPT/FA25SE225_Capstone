@@ -37,6 +37,7 @@ import com.fa25se225.capstone.repository.TransactionStatusRepository;
 import com.fa25se225.capstone.repository.UserRepository;
 import com.fa25se225.capstone.service.LearningMaterialService;
 import com.fa25se225.capstone.service.MinioService;
+import com.fa25se225.capstone.service.NotificationService;
 import com.fa25se225.capstone.service.TeacherProfileService;
 import com.fa25se225.capstone.dto.response.TeacherProfileResponse;
 import com.fa25se225.capstone.utils.AccountUtil;
@@ -81,6 +82,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TeacherProfileService teacherProfileService;
     private final PercentagesConfigRepository percentagesConfigRepository;
     private final TeacherProfileRepository teacherProfileRepository;
+    private final NotificationService notificationService;
 
 
     @Value("${minio.bucket.materials}")
@@ -495,6 +497,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
             tokenTransaction.setStatus("Success");
             tokenTransactionRepository.saveAndFlush(tokenTransaction);
+            notificationService.sendNotify(teacher.getEmail(),"PAYMENT LEARNING","PAYMENT LEARNING "+learningMaterial.getTitle()+ " is "+ learningMaterial.getPrice() + " VND");
 
             User admin = accountUtil.getAccountAdmin();
             TokenTransaction adminTransaction = new TokenTransaction();

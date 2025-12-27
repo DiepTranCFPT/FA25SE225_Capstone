@@ -2,6 +2,7 @@
 package com.fa25se225.capstone.repository.v2;
 
 import com.fa25se225.capstone.constant.QuestionType;
+import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.QuestionV2;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,14 +23,21 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
     @Query("SELECT q FROM QuestionV2 q WHERE q.subject.id = :subjectId AND q.deleted = false")
     Page<QuestionV2> findBySubjectId(@Param("subjectId") String subjectId, Pageable pageable);
 
+    @Query("SELECT q FROM QuestionV2 q WHERE q.subject.id = :subjectId AND q.createdBy = :createdBy AND q.deleted = false ")
+    Page<QuestionV2> findBySubjectIdAndByCurrentUser(@Param("subjectId") String subjectId, @Param("createdBy") User createdBy, Pageable pageable);
+
     @Query("SELECT q FROM QuestionV2 q WHERE q.deleted = false")
     Page<QuestionV2> findAll(Pageable pageable);
 
     @Query("SELECT q FROM QuestionV2 q WHERE q.topic.id = :topicId AND q.deleted = false")
     Page<QuestionV2> findByTopicId(@Param("topicId") String topicId, Pageable pageable);
 
+    @Query("SELECT q FROM QuestionV2 q WHERE q.topic.id = :topicId AND q.createdBy = :createdBy AND q.deleted = false")
+    Page<QuestionV2> findByTopicIdAndByCurrentUser(@Param("topicId") String topicId, @Param("createdBy") User createdBy, Pageable pageable);
+
     @Query("SELECT q FROM QuestionV2 q WHERE q.createdBy.id = :userId AND q.deleted = false")
     Page<QuestionV2> findByCreatedById(@Param("userId") String userId, Pageable pageable);
+
 
     @Query("SELECT q FROM QuestionV2 q WHERE q.content LIKE %:keyword% AND q.deleted = false")
     Page<QuestionV2> findByContentContaining(@Param("keyword") String keyword, Pageable pageable);

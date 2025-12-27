@@ -189,4 +189,24 @@ public class QuestionV2Controller {
                 .body(exportData);
     }
 
+
+
+    @GetMapping("/me/topic/{topicId}")
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsByTopicByCurrentUser(
+            @PathVariable String topicId,
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts) {
+        return ApiResponse.success(questionV2Service.getQuestionsByTopicAndByCurrentUser(topicId, pageNo, pageSize, sorts));
+    }
+
+    @GetMapping("/me/subject/{subjectId}")
+    public ApiResponse<PageResponse<List<QuestionManageV2Response>>> getQuestionsBySubjectByCurrentUser(
+            @PathVariable String subjectId,
+            @RequestParam(defaultValue = "0", required = false) int pageNo,
+            @RequestParam(defaultValue = "10", required = false) int pageSize,
+            @RequestParam(required = false) String... sorts) {
+        return ApiResponse.success(questionV2Service.getQuestionsBySubjectAndByCurrentUser(subjectId, pageNo, pageSize, sorts));
+    }
+
 }

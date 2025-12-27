@@ -44,4 +44,8 @@ public interface QuestionV2Service {
 
     List<String> getDuplicateContextIdsForCurrentUser();
     List<String> getDuplicateQuestionIdsForCurrentUser();
+
+    PageResponse<List<QuestionManageV2Response>> getQuestionsByTopicAndByCurrentUser(String topicId, int pageNo, int pageSize, String[] sorts);
+
+    PageResponse<List<QuestionManageV2Response>> getQuestionsBySubjectAndByCurrentUser(String subjectId, int pageNo, int pageSize, String[] sorts);
 }

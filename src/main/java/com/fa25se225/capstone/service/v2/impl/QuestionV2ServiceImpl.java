@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -477,6 +476,53 @@ public class QuestionV2ServiceImpl implements QuestionV2Service {
     public List<String> getDuplicateQuestionIdsForCurrentUser() {
         User currentUser = accountUtil.getCurrentUser();
         return questionV2Repository.findDuplicateQuestionIdsForUser(currentUser.getId());
+    }
+
+    @Override
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsByTopicAndByCurrentUser(String topicId, int pageNo, int pageSize, String[] sorts) {
+        if (!questionTopicV2Repository.existsById(topicId)) {
+            throw new AppException(ErrorCode.QUESTION_TOPIC_V2_NOT_FOUND);
+        }
+        User currentUser = accountUtil.getCurrentUser();
+
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<QuestionV2> questionPage = questionV2Repository.findByTopicIdAndByCurrentUser(topicId, currentUser, pageable);
+
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
+
+        return PageResponse.<List<QuestionManageV2Response>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .sortBy(sorts)
+                .totalElement(questionPage.getTotalElements())
+                .totalPage(questionPage.getTotalPages())
+                .items(responses)
+                .build();
+    }
+
+    @Override
+    public PageResponse<List<QuestionManageV2Response>> getQuestionsBySubjectAndByCurrentUser(String subjectId, int pageNo, int pageSize, String[] sorts) {
+        if (!subjectRepository.existsById(subjectId)) {
+            throw new AppException(ErrorCode.SUBJECT_NOT_FOUND);
+        }
+        User currentUser = accountUtil.getCurrentUser();
+        Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
+        Page<QuestionV2> questionPage = questionV2Repository.findBySubjectIdAndByCurrentUser(subjectId, currentUser, pageable);
+
+        List<QuestionManageV2Response> responses = questionPage.getContent().stream()
+                .map(questionV2Mapper::toManageResponse)
+                .toList();
+
+        return PageResponse.<List<QuestionManageV2Response>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .sortBy(sorts)
+                .totalElement(questionPage.getTotalElements())
+                .totalPage(questionPage.getTotalPages())
+                .items(responses)
+                .build();
     }
 
     private PageResponse<List<QuestionContextV2Response>> getContextPageResponse(int pageNo, int pageSize, String[] sorts, Page<QuestionContextV2> page) {

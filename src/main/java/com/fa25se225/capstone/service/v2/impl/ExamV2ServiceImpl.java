@@ -37,6 +37,9 @@ import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -73,6 +76,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
     private final QuestionContextV2Repository contextRepository;
     private final NotificationService notificationService;
+    private final SuspiciousActivityService suspiciousActivityService;
 
 
     @Override
@@ -516,6 +520,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         if (!attempt.getAttemptSessionToken().equals(request.getAttemptSessionToken())) {
+            suspiciousActivityService.logSuspiciousActivity(attemptId, "CONCURRENT_LOGIN_DETECTED: Attempted submit with invalid session token.");
             throw new AppException(ErrorCode.CONCURRENT_LOGIN_DETECTED);
         }
 
@@ -800,6 +805,7 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         ExamAttemptV2 attempt = fetchAttemptAndRequireStatus(attemptId, AttemptStatusV2.IN_PROGRESS);
 
         if (!attempt.getAttemptSessionToken().equals(request.getAttemptSessionToken())) {
+            suspiciousActivityService.logSuspiciousActivity(attemptId, "CONCURRENT_LOGIN_DETECTED: Attempted save progress with invalid session token.");
             throw new AppException(ErrorCode.CONCURRENT_LOGIN_DETECTED);
         }
 

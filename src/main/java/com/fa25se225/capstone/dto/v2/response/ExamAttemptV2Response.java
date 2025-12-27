@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.dto.v2.response;
 
 import com.fa25se225.capstone.dto.response.APResult;
+import com.fa25se225.capstone.dto.v2.SuspiciousActivityLogResponse;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
@@ -11,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -31,5 +33,6 @@ public class ExamAttemptV2Response {
     private String comment;
     private Integer rating;
     private Boolean isLate;
+    private List<SuspiciousActivityLogResponse> suspiciousActivityLogs;
 
 }

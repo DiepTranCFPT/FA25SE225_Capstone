@@ -96,4 +96,7 @@ public class ExamAttemptV2 {
     @Column(name = "interaction_intervals")
     private String interactionIntervals;
 
+    @OneToMany(mappedBy = "examAttempt", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SuspiciousActivityLog> suspiciousActivityLogs = new ArrayList<>();
+
 }

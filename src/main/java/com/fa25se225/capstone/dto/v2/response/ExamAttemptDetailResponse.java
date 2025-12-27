@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.dto.v2.response;
 
 import com.fa25se225.capstone.dto.response.APResult;
+import com.fa25se225.capstone.dto.v2.SuspiciousActivityLogResponse;
 import com.fa25se225.capstone.dto.v2.response.SubjectV2Response;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import lombok.AllArgsConstructor;
@@ -31,4 +32,5 @@ public class ExamAttemptDetailResponse {
     private Boolean isLate;
     private APResult apResult;
     private List<ExamQuestionDetailResponse> questions;
+    private List<SuspiciousActivityLogResponse> suspiciousActivityLogs;
 }

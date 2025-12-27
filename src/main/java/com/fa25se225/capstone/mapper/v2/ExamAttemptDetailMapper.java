@@ -12,7 +12,7 @@ import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
-@Mapper(componentModel = "spring", uses = {ExamQuestionDetailMapper.class, SubjectV2Mapper.class})
+@Mapper(componentModel = "spring", uses = {ExamQuestionDetailMapper.class, SubjectV2Mapper.class, SuspiciousActivityLogMapper.class})
 public abstract class  ExamAttemptDetailMapper {
     @Autowired
     protected APScoreCalculator apScoreCalculator;

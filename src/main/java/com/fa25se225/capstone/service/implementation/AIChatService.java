@@ -259,7 +259,9 @@ public class AIChatService {
                 });
         response.forEach(question -> {
             question.setSubjectId(subjectId);
-            question.getContext().setSubjectId(subjectId);
+            if (question.getContext() != null) {
+                question.getContext().setSubjectId(subjectId);
+            }
             question.setTopicName(request.getTopicName());
         });
         return response;

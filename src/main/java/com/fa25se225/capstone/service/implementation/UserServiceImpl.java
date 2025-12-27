@@ -111,7 +111,6 @@ public class UserServiceImpl implements UserService {
         ParentProfile parent = parentProfileRepository.findByUserId(user.getId()).orElse(null);
         TeacherProfile teacher = teacherProfileRepository.findByUserId(user.getId()).orElse(null);
         return userMapper.toResponse(user, teacher, parent, student);
-
     }
 
     @Override
@@ -134,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()"),
+            @CacheEvict(value = "user", key="#root.target.getCurrentUserId()"),
             @CacheEvict(value = "users_list", allEntries = true)
     })
     public UserResponse update(UserUpdateRequest request) {
@@ -228,6 +227,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value="user", key="#userId")
     public UserResponse verifyTeacher(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

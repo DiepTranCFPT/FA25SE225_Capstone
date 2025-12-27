@@ -1,15 +1,15 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+# Build stage
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY . .
-RUN mvn clean package -DskipTests
+COPY pom.xml .
+COPY src ./src
+RUN mvn -DskipTests package
 
-FROM eclipse-temurin:17-jre-alpine
+# Run stage
+FROM eclipse-temurin:17-jre-jammy
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Cài đặt font nếu cần cho báo cáo/pdf (tùy chọn)
-RUN apk add --no-cache fontconfig ttf-dejavu
-
 EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]

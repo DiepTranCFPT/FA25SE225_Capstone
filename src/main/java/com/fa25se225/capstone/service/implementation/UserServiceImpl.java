@@ -103,7 +103,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    @Cacheable(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
+//    @Cacheable(value = "user", key = "T(org.springframework.security.core.context.SecurityContextHolder).getContext().getAuthentication().getName()")
     public UserResponse getMyProfile() {
         String email = getCurrentEmail();
         User user = findUserByEmailOrThrowException(email);

@@ -12,6 +12,7 @@ import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.PaymentStatus;
 import com.fa25se225.capstone.entity.PercentagesConfig;
 import com.fa25se225.capstone.entity.Permission;
+import com.fa25se225.capstone.entity.Role;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.TeacherProfile;
 import com.fa25se225.capstone.entity.TokenTransaction;
@@ -28,6 +29,7 @@ import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PaymentStatusRepository;
 import com.fa25se225.capstone.repository.PercentagesConfigRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
+import com.fa25se225.capstone.repository.RoleRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
 import com.fa25se225.capstone.repository.TeacherProfileRepository;
 import com.fa25se225.capstone.repository.TokenTransactionRepository;
@@ -84,6 +86,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final PercentagesConfigRepository percentagesConfigRepository;
     private final TeacherProfileRepository teacherProfileRepository;
     private final NotificationService notificationService;
+    private final RoleRepository roleRepository;
 
 
 
@@ -602,12 +605,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
     @Override
     public List<LearningMaterialWithStudentsResponse> getMaterialsWithRegisteredStudents() {
+        Role role = roleRepository.findById("STUDENT")
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_ROLE_NAME));
+
         User teacher = accountUtil.getCurrentUser();
         List<LearningMaterial> materials = learningMaterialRepository.findByAuthorIdNotDeleted(teacher.getId(), Pageable.unpaged()).getContent();
         return materials.stream().map(material -> {
             String permissionName = "LEARNING_" + material.getId();
-            List<User> students = userRepository.findByGrantedPermissions_Name(permissionName);
-            List<UserResponse> studentResponses = students.stream().map(userMapper::toResponse).toList();
+            List<UserResponse> studentResponses = userRepository.findByGrantedPermissions_Name(permissionName).stream().filter(u-> u.getRoles().contains(role)).map(userMapper::toResponse).toList();
             return new LearningMaterialWithStudentsResponse(
                 learningMaterialMapper.toResponse(material),
                 studentResponses,studentResponses.size()

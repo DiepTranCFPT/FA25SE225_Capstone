@@ -236,82 +236,195 @@ public class ExamV2ServiceImpl implements ExamV2Service {
         // List<ExamQuestionV2> bên trong là 1 khối (Block)
         List<List<ExamQuestionV2>> questionBlocks = new ArrayList<>();
 
+//        for (ExamRuleV2 rule : allRules) {
+//            double pointsPerQuestion = rule.getPoints();
+//
+//            if (rule.getNumberOfContexts() != null && rule.getNumberOfContexts() > 0) {
+//
+//                // 1. Random ra danh sách Context ID (Candidate Contexts)
+//                List<String> contextIds = questionRepository.findRandomContextIds(
+//                        rule.getTopic().getId(),
+//                        rule.getQuestionType().getValue(),
+//                        rule.getDifficulty().getId(),
+//                        rule.getTemplate().getCreatedBy().getId(),
+//                        rule.getNumberOfContexts()
+//                );
+//
+//                if (contextIds.size() < rule.getNumberOfContexts()) {
+//                    log.warn("Không đủ bài đọc (Context) cho rule: Topic={}, Yêu cầu {}, tìm thấy {}",
+//                            rule.getTopic().getName(), rule.getNumberOfContexts(), contextIds.size());
+//                }
+//
+//                // 2. Duyệt từng Context để lấy câu hỏi bên trong
+//                for (String ctxId : contextIds) {
+//                    QuestionContextV2 context = contextRepository.findByIdWithQuestions(ctxId).orElse(null);
+//
+//                    if (context != null) {
+//                        List<QuestionV2> validQuestions = context.getQuestions().stream()
+//                                .filter(q -> !q.getDeleted())
+//                                .filter(q -> q.getType() == rule.getQuestionType())
+//                                .filter(q -> q.getDifficulty().getId().equals(rule.getDifficulty().getId()))
+//                                .filter(q -> q.getTopic().getId().equals(rule.getTopic().getId()))
+//                                .collect(Collectors.toList());
+//
+//                        if (validQuestions.isEmpty()) {
+//                            continue;
+//                        }
+//
+//                        // 3. Xử lý số lượng câu hỏi TRONG mỗi Context
+//                        Collections.shuffle(validQuestions);
+//
+//                        int limitPerContext = rule.getNumberOfQuestions();
+//                        List<QuestionV2> selectedQuestions = validQuestions.stream()
+//                                .limit(limitPerContext)
+//                                .toList();
+//
+//                        // 4. Map sang ExamQuestion và thêm thành 1 khối
+//                        if (!selectedQuestions.isEmpty()) {
+//                            List<ExamQuestionV2> block = new ArrayList<>();
+//                            for (QuestionV2 q : selectedQuestions) {
+//                                block.add(ExamQuestionV2.builder()
+//                                        .exam(exam)
+//                                        .question(q)
+//                                        .points(pointsPerQuestion)
+//                                        .build());
+//                            }
+//                            questionBlocks.add(block);
+//                        }
+//                    }
+//                }
+//            }
+//
+//            // (SINGLE)
+//            else {
+//                List<QuestionV2> randomSingles = questionRepository.findRandomSingleQuestions(
+//                        rule.getTopic().getId(),
+//                        rule.getQuestionType().getValue(),
+//                        rule.getDifficulty().getId(),
+//                        rule.getTemplate().getCreatedBy().getId(),
+//                        rule.getNumberOfQuestions()
+//                );
+//
+//                if (randomSingles.size() < rule.getNumberOfQuestions()) {
+//                    log.warn("Không đủ câu đơn cho rule: topic={}, diff={}, need={}, found={}",
+//                            rule.getTopic().getName(), rule.getDifficulty().getName(),
+//                            rule.getNumberOfQuestions(), randomSingles.size());
+//                }
+//
+//                // Every single question is a separate block
+//                for (QuestionV2 q : randomSingles) {
+//                    List<ExamQuestionV2> block = new ArrayList<>();
+//                    block.add(ExamQuestionV2.builder()
+//                            .exam(exam)
+//                            .question(q)
+//                            .points(pointsPerQuestion)
+//                            .build());
+//                    questionBlocks.add(block);
+//                }
+//            }
+
+
         for (ExamRuleV2 rule : allRules) {
             double pointsPerQuestion = rule.getPoints();
 
-            if (rule.getNumberOfContexts() != null && rule.getNumberOfContexts() > 0) {
+            // --- is Explicit (exactly the number of context) or auto fill
+            boolean isExplicitContextMode = rule.getNumberOfContexts() != null && rule.getNumberOfContexts() > 0;
 
-                // 1. Random ra danh sách Context ID (Candidate Contexts)
-                List<String> contextIds = questionRepository.findRandomContextIds(
-                        rule.getTopic().getId(),
-                        rule.getQuestionType().getValue(),
-                        rule.getDifficulty().getId(),
-                        rule.getTemplate().getCreatedBy().getId(),
-                        rule.getNumberOfContexts()
-                );
+            // Mục tiêu tổng số câu hỏi cho Rule này
+            int targetTotalQuestions;
+            if (isExplicitContextMode) {
+                // Chế độ cũ: (Số bài đọc) * (Số câu mỗi bài)
+                // Lưu ý: Trong chế độ cũ, rule.getNumberOfQuestions() đóng vai trò là "Limit Per Context"
+                targetTotalQuestions = rule.getNumberOfContexts() * rule.getNumberOfQuestions();
+            } else {
+                // Chế độ Auto-fill: rule.getNumberOfQuestions() là Tổng số câu cần tìm
+                targetTotalQuestions = rule.getNumberOfQuestions();
+            }
 
-                if (contextIds.size() < rule.getNumberOfContexts()) {
-                    log.warn("Không đủ bài đọc (Context) cho rule: Topic={}, Yêu cầu {}, tìm thấy {}",
-                            rule.getTopic().getName(), rule.getNumberOfContexts(), contextIds.size());
+            int currentCount = 0; // Đếm số câu đã lấy được cho rule này
+
+            // BƯỚC 1: XỬ LÝ CÂU HỎI CÓ CONTEXT (Priority 1)
+            // Nếu là Explicit Mode: Lấy đúng số lượng Context quy định.
+            // Nếu là Auto-fill Mode: Lấy dư ra (ví dụ max 20 bài) để có đủ nguồn câu hỏi chọn lọc.
+            int contextLimitQuery = isExplicitContextMode ? rule.getNumberOfContexts() : 20;
+
+            List<String> contextIds = questionRepository.findRandomContextIds(
+                    rule.getTopic().getId(),
+                    rule.getQuestionType().getValue(),
+                    rule.getDifficulty().getId(),
+                    rule.getTemplate().getCreatedBy().getId(),
+                    contextLimitQuery
+            );
+
+            // Duyệt qua từng Context tìm được
+            for (String ctxId : contextIds) {
+                // Nếu Auto-fill mà đã đủ câu -> Dừng ngay
+                if (!isExplicitContextMode && currentCount >= targetTotalQuestions) {
+                    break;
                 }
 
-                // 2. Duyệt từng Context để lấy câu hỏi bên trong
-                for (String ctxId : contextIds) {
-                    QuestionContextV2 context = contextRepository.findByIdWithQuestions(ctxId).orElse(null);
+                QuestionContextV2 context = contextRepository.findByIdWithQuestions(ctxId).orElse(null);
+                if (context == null) continue;
 
-                    if (context != null) {
-                        List<QuestionV2> validQuestions = context.getQuestions().stream()
-                                .filter(q -> !q.getDeleted())
-                                .filter(q -> q.getType() == rule.getQuestionType())
-                                .filter(q -> q.getDifficulty().getId().equals(rule.getDifficulty().getId()))
-                                .filter(q -> q.getTopic().getId().equals(rule.getTopic().getId()))
-                                .collect(Collectors.toList());
+                // Lọc câu hỏi valid trong Context
+                List<QuestionV2> validQuestions = context.getQuestions().stream()
+                        .filter(q -> !q.getDeleted())
+                        .filter(q -> q.getType() == rule.getQuestionType())
+                        .filter(q -> q.getDifficulty().getId().equals(rule.getDifficulty().getId()))
+                        .filter(q -> q.getTopic().getId().equals(rule.getTopic().getId()))
+                        .collect(Collectors.toList());
 
-                        if (validQuestions.isEmpty()) {
-                            continue;
-                        }
+                if (validQuestions.isEmpty()) continue;
 
-                        // 3. Xử lý số lượng câu hỏi TRONG mỗi Context
-                        Collections.shuffle(validQuestions);
+                // Shuffle câu hỏi trong bài đọc này
+                Collections.shuffle(validQuestions);
 
-                        int limitPerContext = rule.getNumberOfQuestions();
-                        List<QuestionV2> selectedQuestions = validQuestions.stream()
-                                .limit(limitPerContext)
-                                .toList();
+                // Quyết định số lượng lấy từ bài này
+                int takeFromThisContext;
+                if (isExplicitContextMode) {
+                    // Lấy tối đa theo quy định "Số câu mỗi bài"
+                    takeFromThisContext = Math.min(validQuestions.size(), rule.getNumberOfQuestions());
+                } else {
+                    // Lấy tối đa số câu còn thiếu ("Greedy")
+                    int remainingNeeded = targetTotalQuestions - currentCount;
+                    takeFromThisContext = Math.min(validQuestions.size(), remainingNeeded);
+                }
 
-                        // 4. Map sang ExamQuestion và thêm thành 1 khối
-                        if (!selectedQuestions.isEmpty()) {
-                            List<ExamQuestionV2> block = new ArrayList<>();
-                            for (QuestionV2 q : selectedQuestions) {
-                                block.add(ExamQuestionV2.builder()
-                                        .exam(exam)
-                                        .question(q)
-                                        .points(pointsPerQuestion)
-                                        .build());
-                            }
-                            questionBlocks.add(block);
-                        }
+                List<QuestionV2> selectedQuestions = validQuestions.subList(0, takeFromThisContext);
+
+                // Map và thêm vào Block
+                if (!selectedQuestions.isEmpty()) {
+                    List<ExamQuestionV2> block = new ArrayList<>();
+                    for (QuestionV2 q : selectedQuestions) {
+                        block.add(ExamQuestionV2.builder()
+                                .exam(exam)
+                                .question(q)
+                                .points(pointsPerQuestion)
+                                .build());
                     }
+                    questionBlocks.add(block);
+                    currentCount += selectedQuestions.size();
                 }
             }
 
-            // (SINGLE)
-            else {
+            // BƯỚC 2: XỬ LÝ CÂU HỎI ĐƠN (Single Questions) - (Priority 2 / Fallback)
+            // Chỉ chạy bước này nếu:
+            // 1. Đang ở chế độ Auto-fill (isExplicitContextMode = false)
+            // 2. Vẫn chưa đủ số câu hỏi yêu cầu (remaining > 0)
+            // (Lưu ý: Chế độ Explicit Mode thường không mix câu đơn vào, trừ khi bạn muốn đổi logic đó)
+
+            int remainingNeeded = targetTotalQuestions - currentCount;
+
+            if (!isExplicitContextMode && remainingNeeded > 0) {
                 List<QuestionV2> randomSingles = questionRepository.findRandomSingleQuestions(
                         rule.getTopic().getId(),
                         rule.getQuestionType().getValue(),
                         rule.getDifficulty().getId(),
                         rule.getTemplate().getCreatedBy().getId(),
-                        rule.getNumberOfQuestions()
+                        remainingNeeded
                 );
 
-                if (randomSingles.size() < rule.getNumberOfQuestions()) {
-                    log.warn("Không đủ câu đơn cho rule: topic={}, diff={}, need={}, found={}",
-                            rule.getTopic().getName(), rule.getDifficulty().getName(),
-                            rule.getNumberOfQuestions(), randomSingles.size());
-                }
-
-                // Every single question is a separate block
+                // Mỗi câu đơn là 1 block riêng
                 for (QuestionV2 q : randomSingles) {
                     List<ExamQuestionV2> block = new ArrayList<>();
                     block.add(ExamQuestionV2.builder()
@@ -320,7 +433,14 @@ public class ExamV2ServiceImpl implements ExamV2Service {
                             .points(pointsPerQuestion)
                             .build());
                     questionBlocks.add(block);
+                    currentCount++;
                 }
+            }
+
+            // Log warning nếu vẫn không đủ
+            if (currentCount < targetTotalQuestions) {
+                log.warn("Rule {}: Cần {} câu, chỉ tìm được {} câu (Topic: {})",
+                        rule.getId(), targetTotalQuestions, currentCount, rule.getTopic().getName());
             }
         }
 

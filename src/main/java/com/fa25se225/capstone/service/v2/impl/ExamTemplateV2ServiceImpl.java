@@ -324,6 +324,28 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
     }
 
 
+//    private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedQuestions, Integer requestedContexts) {
+//        log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requestedQ={}, requestedCtx={}",
+//                topicId, difficultyId, type, creatorId, requestedQuestions, requestedContexts);
+//
+//        int contextCount = (requestedContexts != null) ? requestedContexts : 0;
+//
+//        if (contextCount > 0) {
+//            long availableContexts = questionV2Repository.countContextsAvailable(topicId, difficultyId, type, creatorId);
+//            if (availableContexts < contextCount) {
+//                log.warn("Insufficient contexts. Available: {}, Requested: {}", availableContexts, contextCount);
+//                throw new AppException(ErrorCode.INSUFFICIENT_CONTEXTS_IN_BANK);
+//            }
+//        } else {
+//            long availableCount = questionV2Repository.countSingleQuestionsAvailable(topicId, difficultyId, type, creatorId);
+//
+//            if (availableCount < requestedQuestions) {
+//                log.warn("Insufficient single questions. Available: {}, Requested: {}", availableCount, requestedQuestions);
+//                throw new AppException(ErrorCode.INSUFFICIENT_QUESTIONS_IN_BANK);
+//            }
+//        }
+//    }
+
     private void validateQuestionAvailability(String topicId, String difficultyId, QuestionType type, String creatorId, int requestedQuestions, Integer requestedContexts) {
         log.debug("Validating question availability: topic={}, diff={}, type={}, creator={}, requestedQ={}, requestedCtx={}",
                 topicId, difficultyId, type, creatorId, requestedQuestions, requestedContexts);
@@ -331,16 +353,19 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
         int contextCount = (requestedContexts != null) ? requestedContexts : 0;
 
         if (contextCount > 0) {
+            // Case 1: Chế độ Explicit (User yêu cầu chính xác số lượng bài đọc)
             long availableContexts = questionV2Repository.countContextsAvailable(topicId, difficultyId, type, creatorId);
+
             if (availableContexts < contextCount) {
                 log.warn("Insufficient contexts. Available: {}, Requested: {}", availableContexts, contextCount);
                 throw new AppException(ErrorCode.INSUFFICIENT_CONTEXTS_IN_BANK);
             }
         } else {
-            long availableCount = questionV2Repository.countSingleQuestionsAvailable(topicId, difficultyId, type, creatorId);
 
-            if (availableCount < requestedQuestions) {
-                log.warn("Insufficient single questions. Available: {}, Requested: {}", availableCount, requestedQuestions);
+            long totalQuestionsAvailable = questionV2Repository.countTotalQuestionsAvailable(topicId, difficultyId, type, creatorId);
+
+            if (totalQuestionsAvailable < requestedQuestions) {
+                log.warn("Insufficient total questions (Context+Single). Available: {}, Requested: {}", totalQuestionsAvailable, requestedQuestions);
                 throw new AppException(ErrorCode.INSUFFICIENT_QUESTIONS_IN_BANK);
             }
         }

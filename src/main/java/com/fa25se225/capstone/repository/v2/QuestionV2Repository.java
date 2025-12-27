@@ -146,4 +146,16 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
             @Param("questionType") QuestionType questionType,
             @Param("creatorId") String creatorId
     );
+
+
+    @Query(value = "SELECT COUNT(q.id) FROM questions_v2 q " +
+            "WHERE q.topic_id = :topicId " +
+            "AND q.difficulty_id = :difficultyId " +
+            "AND q.question_type = :questionType " +
+            "AND q.created_by = :creatorId " +
+            "AND q.deleted = false", nativeQuery = true)
+    long countTotalQuestionsAvailable(@Param("topicId") String topicId,
+                                      @Param("difficultyId") String difficultyId,
+                                      @Param("questionType") QuestionType questionType,
+                                      @Param("creatorId") String creatorId);
 }

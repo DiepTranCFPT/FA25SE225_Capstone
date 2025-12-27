@@ -1,6 +1,7 @@
 package com.fa25se225.capstone.service.v2.impl;
 
 import com.fa25se225.capstone.dto.v2.request.QuestionExportRequest;
+import com.fa25se225.capstone.dto.v2.response.QuestionTopicV2Response;
 import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.AnswerV2;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -55,6 +57,10 @@ public class QuestionExportServiceImpl implements QuestionExportService {
         List<QuestionV2> filteredQuestions = questions.stream()
                 .filter(q -> q.getSubject().getId().equals(subject.getId()))
                 .filter(q -> q.getCreatedBy().getId().equals(currentUser.getId()))
+                .sorted(Comparator.comparing(
+                        (QuestionV2 q) -> q.getTopic() == null ? null : q.getTopic().getName(),
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+                ))
                 .toList();
 
         if (filteredQuestions.isEmpty()) {

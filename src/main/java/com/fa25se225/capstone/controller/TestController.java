@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.controller;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,4 +47,16 @@ public class TestController {
                 .call().content();
         return content;
     }
+    @PostConstruct
+    public void testFfmpeg() {
+        try {
+            Process p = new ProcessBuilder("ffmpeg", "-version").start();
+            int code = p.waitFor();
+            System.out.println("FFMPEG exit code = " + code);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

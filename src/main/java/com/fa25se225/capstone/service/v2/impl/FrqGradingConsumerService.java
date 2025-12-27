@@ -3,9 +3,12 @@ package com.fa25se225.capstone.service.v2.impl;
 import com.fa25se225.capstone.dto.kafka.FrqGradingEvent;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
 import com.fa25se225.capstone.dto.v2.response.GradingUserAnswerAIResponse;
+import com.fa25se225.capstone.entity.Subject;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
 import com.fa25se225.capstone.entity.v2.ExamQuestionV2;
+import com.fa25se225.capstone.entity.v2.QuestionTopicV2;
+import com.fa25se225.capstone.entity.v2.QuestionV2;
 import com.fa25se225.capstone.entity.v2.StudentAnswerV2;
 import com.fa25se225.capstone.mapper.v2.ExamAttemptV2Mapper;
 import com.fa25se225.capstone.repository.v2.ExamAttemptV2Repository;
@@ -103,6 +106,32 @@ public class FrqGradingConsumerService {
         StringBuilder promptBuilder = new StringBuilder();
 
         promptBuilder.append("You are a strict and impartial examiner grading an Advanced Placement (AP) exam.\n");
+
+        try {
+            QuestionV2 question = answerEntity.getExamQuestion().getQuestion();
+            Subject subject = question.getSubject();
+            QuestionTopicV2 topic = question.getTopic();
+
+            if (subject != null || topic != null) {
+                promptBuilder.append("--- ACADEMIC CONTEXT ---\n");
+                if (subject != null) {
+                    promptBuilder.append("Subject: ").append(subject.getName()).append("\n");
+                    if (StringUtils.hasText(subject.getDescription())) {
+                        promptBuilder.append("Subject Description: ").append(subject.getDescription()).append("\n");
+                    }
+                }
+                if (topic != null) {
+                    promptBuilder.append("Topic: ").append(topic.getName()).append("\n");
+                    if (StringUtils.hasText(topic.getDescription())) {
+                        promptBuilder.append("Topic Description: ").append(topic.getDescription()).append("\n");
+                    }
+                }
+                promptBuilder.append("\n");
+            }
+        } catch (Exception e) {
+            log.warn("Error fetching subject/topic details for prompt: {}", e.getMessage());
+        }
+
         promptBuilder.append("Your goal is to grade the STUDENT ANSWER based on the provided CONTEXT, QUESTION, and RUBRIC (MODEL ANSWER).\n\n");
 
         if (StringUtils.hasText(contextContent)) {

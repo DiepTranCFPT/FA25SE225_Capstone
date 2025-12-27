@@ -59,7 +59,7 @@ public class FileUploadService {
         }
     }
 
-    @Scheduled(fixedDelayString = "864000000", initialDelayString = "60000")
+//    @Scheduled(fixedDelayString = "864000000", initialDelayString = "60000")
     @Transactional
     public void cleanupOrphanedImages() {
         log.info("Running orphaned file cleanup job...");

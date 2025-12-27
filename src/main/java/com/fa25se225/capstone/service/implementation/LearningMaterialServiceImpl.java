@@ -470,6 +470,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             BigDecimal teacherPercent = isVerified ? percentagesConfig.getPercentTeacherVerified() : percentagesConfig.getPercentTeacherUnverified();
             BigDecimal adminPercent = BigDecimal.ONE.subtract(teacherPercent);
 
+            teacherPayment.setAmount(teacherPayment.getAmount().add(teacherPercent.multiply(learningMaterial.getPrice())));
+
             Transaction transaction = new Transaction();
             transaction.setAmount(learningMaterial.getPrice());
             transaction.setPayment(payment);
@@ -494,12 +496,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                         return tokenTransactionTypeRepository.save(newType);
                     });
 
+
             TokenTransaction tokenTransaction = new TokenTransaction();
             tokenTransaction.setAmount(learningMaterial.getPrice().multiply(teacherPercent));
             tokenTransaction.setType(tokenTransactionType);
             tokenTransaction.setUser(teacher);
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
             tokenTransaction.setStatus("Success");
+            tokenTransaction.setBalanceAfter(teacherPayment.getAmount());
             TokenTransaction tt =  tokenTransactionRepository.saveAndFlush(tokenTransaction);
             notificationService.sendNotify(teacher.getEmail(),"PAYMENT LEARNING",student.getFirstName() + " "+student.getLastName()+" PAYMENT LEARNING "+learningMaterial.getTitle()+ " is "+ tt.getAmount() + " VND");
 

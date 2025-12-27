@@ -133,7 +133,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = "user", key="#root.target.getCurrentUserId()"),
+//            @CacheEvict(value = "user", key="#root.target.getCurrentUserId()"),
             @CacheEvict(value = "users_list", allEntries = true)
     })
     public UserResponse update(UserUpdateRequest request) {

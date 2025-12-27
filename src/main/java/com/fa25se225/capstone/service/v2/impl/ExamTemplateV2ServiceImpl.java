@@ -254,6 +254,14 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
             String subjectId, String teacherId, double minRating,
             int pageNo, int pageSize, String[] sorts) {
 
+        if (sorts != null) {
+            for (int i = 0; i < sorts.length; i++) {
+                if (sorts[i] != null && sorts[i].contains("isVerified")) {
+                    sorts[i] = sorts[i].replace("isVerified", "isTeacherVerified");
+                }
+            }
+        }
+
         Pageable pageable = pageHelper.pageEngine(pageNo, pageSize, sorts);
 
         Specification<ExamTemplateV2> spec = ExamTemplateSpecification.findActiveWithFilters(

@@ -79,4 +79,7 @@ public class ExamTemplateV2 {
     @Column(name = "deleted", nullable = false)
     @Builder.Default
     private boolean deleted = false;
+
+    @Formula("(SELECT tp.is_verified FROM teacher_profiles tp WHERE tp.user_id = created_by)")
+    private Boolean isTeacherVerified;
 }

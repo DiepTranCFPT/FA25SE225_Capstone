@@ -642,9 +642,14 @@ public class ExamV2ServiceImpl implements ExamV2Service {
 
 
         attempt.setScore(mcqTotalScore);
-        if (frqCount == 0) attempt.setStatus(AttemptStatusV2.COMPLETED);
+        if (frqCount == 0) {attempt.setStatus(AttemptStatusV2.COMPLETED);}
 
         var savedAttempt = attemptRepository.save(attempt);
+
+        if(savedAttempt.getStatus().equals(AttemptStatusV2.COMPLETED)){
+            String message = "Your exam attempt has been graded successfully.";
+            notificationService.sendNotify(savedAttempt.getUser().getEmail(), message, savedAttempt.getExam().getTitle());
+        }
 
         if (!gradingTasks.isEmpty()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

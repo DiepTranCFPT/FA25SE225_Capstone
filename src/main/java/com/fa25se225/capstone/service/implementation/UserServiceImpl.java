@@ -38,6 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 
 
@@ -138,11 +140,18 @@ public class UserServiceImpl implements UserService {
     })
     public UserResponse update(UserUpdateRequest request) {
         User user = findUserByEmailOrThrowException(getCurrentEmail());
-        userMapper.updateUser(user, request);
+        if (request.dob() != null) {
+            LocalDate dob = request.dob();
+
+            int age = Period.between(dob, LocalDate.now()).getYears();
+            if (age <= 23) {
+                throw new IllegalArgumentException("User must be older than 23 years old");
+            }
+        }        userMapper.updateUser(user, request);
         return userMapper.toResponse(userRepository.save(user));
     }
 
-    //
+
     @Override
     @Caching(evict = {
             @CacheEvict(value = "user", key = "#id"),

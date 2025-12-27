@@ -85,6 +85,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final NotificationService notificationService;
 
 
+
     @Value("${minio.bucket.materials}")
     private String bucketName;
 
@@ -134,6 +135,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
         User account = accountUtil.getCurrentUser();
         account.getGrantedPermissions().add(permission);
         userRepository.saveAndFlush(account);
+        String message = "Successfully created learning material with name : " + savedMaterial.getTitle();
+        notificationService.sendNotify(account.getEmail(), "REGISTER LEARNING",message);
 
         String nameFile = "Materials_" + savedMaterial.getId().trim();
         try {

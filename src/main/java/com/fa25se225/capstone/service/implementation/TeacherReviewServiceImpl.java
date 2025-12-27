@@ -44,7 +44,7 @@ public class TeacherReviewServiceImpl implements TeacherReviewService {
     }
     @Override
     @Transactional
-    @Cacheable(cacheNames = "teacherReview", key = "#userId", sync = true)
+//    @Cacheable(cacheNames = "teacherReview", key = "#userId", sync = true)
     public TeacherReviewResponse aiReviewTeacher(String userId) {
         TeacherProfile profileEntity = teacherProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

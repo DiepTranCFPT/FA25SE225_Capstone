@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
@@ -249,6 +250,7 @@ public class UserServiceImpl implements UserService {
         TeacherVerificationRequest teacherVerificationRequest = teacherVerificationRequestRepository.findByUserAndStatus(user,VerificationStatus.PENDING).orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
         teacherVerificationRequest.setStatus(VerificationStatus.APPROVED);
         teacherVerificationRequest.setNote("Approved");
+        teacherVerificationRequest.setReviewedAt(Instant.now());
         teacherVerificationRequestRepository.saveAndFlush(teacherVerificationRequest);
 
         String message = user.getEmail() + " is approved verify by the system";

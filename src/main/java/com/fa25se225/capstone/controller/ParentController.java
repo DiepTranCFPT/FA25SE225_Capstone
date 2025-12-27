@@ -1,10 +1,12 @@
 package com.fa25se225.capstone.controller;
 
+import com.fa25se225.capstone.dto.SubjectProgressDto;
 import com.fa25se225.capstone.dto.request.*;
 import com.fa25se225.capstone.dto.response.ApiResponse;
 import com.fa25se225.capstone.dto.response.ChildOverviewResponse;
 import com.fa25se225.capstone.dto.response.PageResponse;
 import com.fa25se225.capstone.dto.v2.response.ExamAttemptV2Response;
+import com.fa25se225.capstone.service.ParentProgressService;
 import com.fa25se225.capstone.service.ParentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,25 @@ import java.util.List;
 public class ParentController {
 
     private final ParentService parentService;
+
+    private final ParentProgressService parentProgressService;
+
+    @GetMapping("/children/{studentId}/subjects/progress")
+    public List<SubjectProgressDto> getChildSubjectProgress(
+            @PathVariable String studentId,
+            @RequestParam String parentId
+
+    ) {
+        return parentProgressService.getChildSubjectProgress(parentId, studentId);
+    }
+
+    @GetMapping("/children/{studentId}/subjects/completed")
+    public List<SubjectProgressDto> getChildCompletedSubjects(
+            @PathVariable String studentId,
+            @RequestParam String parentId
+    ) {
+        return parentProgressService.getChildCompletedSubjects(parentId, studentId);
+    }
 
     @PutMapping("/me")
     public ApiResponse<String> updateProfile(@RequestBody ParentProfileUpdateRequest request) {

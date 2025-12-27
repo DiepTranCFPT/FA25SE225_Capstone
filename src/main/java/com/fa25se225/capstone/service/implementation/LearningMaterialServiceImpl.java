@@ -499,8 +499,8 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             tokenTransaction.setUser(teacher);
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
             tokenTransaction.setStatus("Success");
-            tokenTransactionRepository.saveAndFlush(tokenTransaction);
-            notificationService.sendNotify(teacher.getEmail(),"PAYMENT LEARNING","PAYMENT LEARNING "+learningMaterial.getTitle()+ " is "+ learningMaterial.getPrice() + " VND");
+            TokenTransaction tt =  tokenTransactionRepository.saveAndFlush(tokenTransaction);
+            notificationService.sendNotify(teacher.getEmail(),"PAYMENT LEARNING",student.getFirstName() + " "+student.getLastName()+" PAYMENT LEARNING "+learningMaterial.getTitle()+ " is "+ tt.getAmount() + " VND");
 
             User admin = accountUtil.getAccountAdmin();
             TokenTransaction adminTransaction = new TokenTransaction();

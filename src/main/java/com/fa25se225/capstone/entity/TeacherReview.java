@@ -1,5 +1,6 @@
 package com.fa25se225.capstone.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +34,7 @@ public class TeacherReview {
     private String recommendation; // Qualified | Partially qualified | Not qualified
 
     @Lob
+    @Column(columnDefinition = "TEXT")
     private String feedback;
 
     private String reviewerType = "AI"; // AI | HUMAN (để mở rộng)

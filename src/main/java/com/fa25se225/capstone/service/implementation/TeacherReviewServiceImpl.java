@@ -66,7 +66,7 @@ public class TeacherReviewServiceImpl implements TeacherReviewService {
         r.setReviewerType("AI");
         r.setLatest(true);
 
-        TeacherReview saved = teacherReviewRepository.save(r);
+        TeacherReview saved = teacherReviewRepository.saveAndFlush(r);
         return teacherReviewMapper.toResponse(saved);
     }
 

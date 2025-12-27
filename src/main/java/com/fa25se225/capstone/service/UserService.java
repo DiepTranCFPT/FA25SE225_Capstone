@@ -36,4 +36,6 @@ public interface UserService {
     PageResponse<List<UserResponse>> getAllUsersHaveTeacherRole(int pageNo, int pageSize, String[] sorts);
 
     List<AdminUnverifiedTeacherResponse> getUnverifiedTeachersForAdmin() ;
+
+    UserResponse rejectTeacherVerification(String userId, String note);
 }

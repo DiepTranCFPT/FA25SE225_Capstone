@@ -138,4 +138,11 @@ public class UserController {
         return ApiResponse.success(userService.getProfileByUserId(userId));
     }
 
+    @PostMapping("/{userId}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Reject teacher verification request", description = "Reject a teacher's verification request by user ID. Admin only.")
+    public ApiResponse<UserResponse> rejectTeacherVerification(@PathVariable String userId, @RequestParam(required = false) String note) {
+        return ApiResponse.success(userService.rejectTeacherVerification(userId, note));
+    }
+
 }

@@ -248,6 +248,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value="user", key="#userId")
+    public UserResponse rejectTeacherVerification(String userId, String note) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        TeacherProfile teacherProfile = teacherProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        teacherProfile.setIsVerified(false);
+        teacherProfileRepository.saveAndFlush(teacherProfile);
+
+        TeacherProfileResponse teacherProfileResponse = teacherProfileService.getProfileByUserId(user.getId());
+        TeacherVerificationRequest teacherVerificationRequest = teacherVerificationRequestRepository
+                .findByUserAndStatus(user, VerificationStatus.PENDING)
+                .orElseThrow(() -> new AppException(ErrorCode.TEACHER_PROFILE_NOT_FOUND));
+        teacherVerificationRequest.setStatus(VerificationStatus.REJECTED);
+        teacherVerificationRequest.setNote(note != null ? note : "Rejected");
+        teacherVerificationRequestRepository.saveAndFlush(teacherVerificationRequest);
+
+        String message = user.getEmail() + " is rejected verify by the system. Reason: " + (note != null ? note : "Rejected");
+        notificationService.sendNotify(user.getEmail(), "VERIFY IS REJECTED", message);
+
+        return userMapper.toResponse(user, teacherProfileResponse);
+    }
+
+    @Override
     @Cacheable(value = "user", key = "#userId")
     public UserResponse getProfileByUserId(String userId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));

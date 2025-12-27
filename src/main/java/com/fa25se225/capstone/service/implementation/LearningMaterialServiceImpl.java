@@ -10,8 +10,10 @@ import com.fa25se225.capstone.entity.LearningMaterial;
 import com.fa25se225.capstone.entity.MaterialType;
 import com.fa25se225.capstone.entity.Payment;
 import com.fa25se225.capstone.entity.PaymentStatus;
+import com.fa25se225.capstone.entity.PercentagesConfig;
 import com.fa25se225.capstone.entity.Permission;
 import com.fa25se225.capstone.entity.Subject;
+import com.fa25se225.capstone.entity.TeacherProfile;
 import com.fa25se225.capstone.entity.TokenTransaction;
 import com.fa25se225.capstone.entity.TokenTransactionType;
 import com.fa25se225.capstone.entity.Transaction;
@@ -24,8 +26,10 @@ import com.fa25se225.capstone.repository.LearningMaterialRepository;
 import com.fa25se225.capstone.repository.MaterialTypeRepository;
 import com.fa25se225.capstone.repository.PaymentRepository;
 import com.fa25se225.capstone.repository.PaymentStatusRepository;
+import com.fa25se225.capstone.repository.PercentagesConfigRepository;
 import com.fa25se225.capstone.repository.PermissionRepository;
 import com.fa25se225.capstone.repository.SubjectRepository;
+import com.fa25se225.capstone.repository.TeacherProfileRepository;
 import com.fa25se225.capstone.repository.TokenTransactionRepository;
 import com.fa25se225.capstone.repository.TokenTransactionTypeRepository;
 import com.fa25se225.capstone.repository.TransactionRepository;
@@ -70,13 +74,14 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
     private final TransactionRepository transactionRepository;
     private final TransactionStatusRepository transactionStatusRepository;
 
-    private final BigDecimal percentTeacher = BigDecimal.valueOf(0.8);
-    private final BigDecimal percentAdmin = BigDecimal.valueOf(0.2);
     private final TokenTransactionRepository tokenTransactionRepository;
     private final TokenTransactionTypeRepository tokenTransactionTypeRepository;
     private final UserMapper userMapper;
     private final PaymentStatusRepository paymentStatus;
     private final TeacherProfileService teacherProfileService;
+    private final PercentagesConfigRepository percentagesConfigRepository;
+    private final TeacherProfileRepository teacherProfileRepository;
+
 
     @Value("${minio.bucket.materials}")
     private String bucketName;
@@ -452,18 +457,13 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             Payment teacherPayment = paymentRepository.findByUser(teacher).orElseThrow(
                     () -> new AppException(ErrorCode.PAYMENT_NOT_FOUND)
             );
-            teacherPayment.setAmount(teacherPayment.getAmount().add(learningMaterial.getPrice().multiply(percentTeacher)));
-            paymentRepository.saveAndFlush(payment);
-            paymentRepository.saveAndFlush(teacherPayment);
 
-            // Check if user already has this permission
-            boolean alreadyRegistered = student.getGrantedPermissions().stream()
-                    .anyMatch(p -> p.getName().equals(permissionName));
+            PercentagesConfig percentagesConfig = percentagesConfigRepository.findAll().get(0);
+            TeacherProfile teacherProfile = teacherProfileRepository.findByUserId(teacher.getId()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+            boolean isVerified = Boolean.TRUE.equals(teacherProfile.getIsVerified());
+            BigDecimal teacherPercent = isVerified ? percentagesConfig.getPercentTeacherVerified() : percentagesConfig.getPercentTeacherUnverified();
+            BigDecimal adminPercent = BigDecimal.ONE.subtract(teacherPercent);
 
-            if (alreadyRegistered) {
-                log.warn("Student with id: {} already registered for learning material: {}", student.getId(), learningMaterialId);
-                throw new AppException(ErrorCode.ALREADY_REGISTERED);
-            }
             Transaction transaction = new Transaction();
             transaction.setAmount(learningMaterial.getPrice());
             transaction.setPayment(payment);
@@ -473,7 +473,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
             transactionRepository.saveAndFlush(transaction);
 
             Transaction transactionTeacher = new Transaction();
-            transactionTeacher.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
+            transactionTeacher.setAmount(learningMaterial.getPrice().multiply(teacherPercent));
             transactionTeacher.setPayment(teacherPayment);
             transactionTeacher.setBalanceAfter(teacherPayment.getAmount());
             transactionTeacher.setExternalReference("_" + learningMaterialId);
@@ -489,7 +489,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                     });
 
             TokenTransaction tokenTransaction = new TokenTransaction();
-            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(percentTeacher));
+            tokenTransaction.setAmount(learningMaterial.getPrice().multiply(teacherPercent));
             tokenTransaction.setType(tokenTransactionType);
             tokenTransaction.setUser(teacher);
             tokenTransaction.setDescription("PAYMENT LEARNING_" + learningMaterialId);
@@ -498,7 +498,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
 
             User admin = accountUtil.getAccountAdmin();
             TokenTransaction adminTransaction = new TokenTransaction();
-            adminTransaction.setAmount(learningMaterial.getPrice().multiply(percentAdmin));
+            adminTransaction.setAmount(learningMaterial.getPrice().multiply(adminPercent));
             adminTransaction.setType(tokenTransactionType);
             adminTransaction.setUser(admin);
             adminTransaction.setDescription("SYSTEM_LEARNING" + learningMaterialId);
@@ -583,7 +583,7 @@ public class LearningMaterialServiceImpl implements LearningMaterialService {
                 .pageNo(pageNo)
                 .pageSize(pageSize)
                 .totalPage(totalPages)
-                .totalElement((long) registeredMaterials.size())
+                .totalElement(registeredMaterials.size())
                 .sortBy(sorts)
                 .items(responses)
                 .build();

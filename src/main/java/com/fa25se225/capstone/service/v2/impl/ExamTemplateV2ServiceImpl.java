@@ -362,7 +362,7 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
             }
         } else {
 
-            long totalQuestionsAvailable = questionV2Repository.countTotalQuestionsAvailable(topicId, difficultyId, type, creatorId);
+            long totalQuestionsAvailable = questionV2Repository.countTotalQuestionsAvailable(topicId, difficultyId, type.getValue(), creatorId);
 
             if (totalQuestionsAvailable < requestedQuestions) {
                 log.warn("Insufficient total questions (Context+Single). Available: {}, Requested: {}", totalQuestionsAvailable, requestedQuestions);

@@ -156,6 +156,6 @@ public interface QuestionV2Repository extends JpaRepository<QuestionV2, String> 
             "AND q.deleted = false", nativeQuery = true)
     long countTotalQuestionsAvailable(@Param("topicId") String topicId,
                                       @Param("difficultyId") String difficultyId,
-                                      @Param("questionType") QuestionType questionType,
+                                      @Param("questionType") String questionType,
                                       @Param("creatorId") String creatorId);
 }

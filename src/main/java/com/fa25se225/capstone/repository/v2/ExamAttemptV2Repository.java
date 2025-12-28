@@ -4,7 +4,7 @@ import com.fa25se225.capstone.dto.response.TopExamAdminStat;
 import com.fa25se225.capstone.entity.User;
 import com.fa25se225.capstone.entity.v2.AttemptStatusV2;
 import com.fa25se225.capstone.entity.v2.ExamAttemptV2;
-import feign.Param;
+import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -73,7 +73,7 @@ public interface ExamAttemptV2Repository extends JpaRepository<ExamAttemptV2, St
             "JOIN ea.sourceTemplate t " +
             "WHERE t.createdBy.id = :teacherId " +
             "AND ea.status = 'REVIEW_REQUESTED'")
-    long countPendingReviewsByTeacher(@org.springframework.data.repository.query.Param("teacherId") String teacherId);
+    long countPendingReviewsByTeacher(@Param("teacherId") String teacherId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM ExamAttemptV2 e WHERE e.id = :id")

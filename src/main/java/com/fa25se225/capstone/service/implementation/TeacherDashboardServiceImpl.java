@@ -65,7 +65,7 @@ public class TeacherDashboardServiceImpl implements TeacherDashboardService {
                 })
                 .toList();
 
-        long pendingCount = attemptRepository.countReviewRequested();
+        long pendingCount = attemptRepository.countPendingReviewsByTeacher(teacherId);
 
         return TeacherExamDashboardResponse.builder()
                 .totalStudentsTested(totalStudents)

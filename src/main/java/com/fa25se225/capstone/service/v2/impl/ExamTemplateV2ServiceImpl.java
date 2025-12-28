@@ -256,8 +256,12 @@ public class ExamTemplateV2ServiceImpl implements ExamTemplateV2Service {
 
         if (sorts != null) {
             for (int i = 0; i < sorts.length; i++) {
-                if (sorts[i] != null && sorts[i].contains("isVerified")) {
-                    sorts[i] = sorts[i].replace("isVerified", "isTeacherVerified");
+                if (sorts[i] != null) {
+                    if (sorts[i].contains("isVerified")) {
+                        sorts[i] = sorts[i].replace("isVerified", "isTeacherVerified");
+                    } else if (sorts[i].contains("pendingReview")) {
+                        sorts[i] = sorts[i].replace("pendingReview", "pendingReviewCount");
+                    }
                 }
             }
         }

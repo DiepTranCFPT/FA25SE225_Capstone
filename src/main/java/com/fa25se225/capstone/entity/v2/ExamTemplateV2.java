@@ -82,4 +82,7 @@ public class ExamTemplateV2 {
 
     @Formula("(SELECT tp.is_verified FROM teacher_profiles tp WHERE tp.user_id = created_by)")
     private Boolean isTeacherVerified;
+
+    @Formula("(SELECT COUNT(ea.id) FROM exam_attempts_v2 ea WHERE ea.template_id = id AND ea.status IN ('REVIEW_REQUESTED', 'PENDING_GRADING') AND ea.deleted = false)")
+    private Integer pendingReviewCount;
 }

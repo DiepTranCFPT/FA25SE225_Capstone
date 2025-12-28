@@ -12,7 +12,7 @@ import java.util.Set;
 
 public interface UserService {
     UserResponse getMyProfile();
-    PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String... sorts);
+    PageResponse<List<UserResponse>> getAllUserSortBy(int pageNo, int pageSize, String[] sorts);
     UserResponse update(UserUpdateRequest request);
     UserResponse updateUserRole(String id, UserRoleUpdateRequest request);
     void delete(String userId);

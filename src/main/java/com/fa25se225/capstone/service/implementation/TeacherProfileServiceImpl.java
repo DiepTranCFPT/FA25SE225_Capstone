@@ -50,7 +50,7 @@ public class TeacherProfileServiceImpl implements TeacherProfileService {
     @PreAuthorize("hasRole('TEACHER')")
     @Caching(evict = {
             @CacheEvict(value = "teacher_profile", key = "#id"),
-            @CacheEvict(value = "user", key = "#result.userId")
+            @CacheEvict(value = "user", allEntries = true)
     })
     public TeacherProfileResponse updateProfile(String id, TeacherProfileRequest request) {
         validateAge(request.getDateOfBirth());

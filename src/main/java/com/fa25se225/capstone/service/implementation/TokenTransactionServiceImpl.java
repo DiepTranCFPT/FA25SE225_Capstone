@@ -13,6 +13,7 @@ import com.fa25se225.capstone.utils.AccountUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -86,7 +87,11 @@ public class TokenTransactionServiceImpl implements TokenTransactionService {
         } else {
             transaction.setStatus(STATUS_PENDING);
         }
-        transaction.setDescription(transaction.getDescription() + " | Admin note: " + dto.getAdminNote());
+        if(StringUtils.hasLength(dto.getAdminNote())) {
+            transaction.setDescription(dto.getAdminNote());
+        }else{
+            transaction.setDescription("Withdraw request by teacher");
+        }
         tokenTransactionRepository.save(transaction);
         return toDTO(transaction);
     }
